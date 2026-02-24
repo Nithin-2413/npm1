@@ -2,8 +2,8 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { AnimatedAvatar, AVATAR_ANIMALS, AvatarAnimal, getAvatarLabel } from "@/components/AnimatedAvatar";
-import { motion } from "framer-motion";
-import { ChevronRight, Sparkles } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import { ChevronRight, Sparkles, X, ChevronDown } from "lucide-react";
 
 const ROLES = [
   { value: "qa_engineer", label: "QA Engineer", icon: "🧪" },
@@ -21,6 +21,7 @@ const Onboarding = () => {
   const [displayName, setDisplayName] = useState(user?.name || "");
   const [role, setRole] = useState("");
   const [email] = useState(user?.email || "");
+  const [showGallery, setShowGallery] = useState(false);
 
   const handleFinish = () => {
     // Persist choices
@@ -58,27 +59,74 @@ const Onboarding = () => {
         </div>
 
         <div className="glass-panel-strong p-8 rounded-2xl space-y-6">
-          {/* Avatar Selection */}
+          {/* Avatar Selection Card */}
           <div>
             <label className="font-mono text-[10px] text-muted-foreground uppercase tracking-wider flex items-center gap-1.5 mb-3">
               <Sparkles className="w-3 h-3" /> Pick your avatar
             </label>
-            <div className="flex flex-wrap gap-3 justify-center">
-              {AVATAR_ANIMALS.map((animal) => (
-                <div key={animal} className="flex flex-col items-center gap-1">
-                  <AnimatedAvatar
-                    animal={animal}
-                    size="md"
-                    selected={selectedAvatar === animal}
-                    onClick={() => setSelectedAvatar(animal)}
-                  />
-                  <span className={`font-mono text-[8px] ${selectedAvatar === animal ? "text-primary font-semibold" : "text-muted-foreground"}`}>
-                    {getAvatarLabel(animal)}
-                  </span>
-                </div>
-              ))}
-            </div>
+            <button
+              type="button"
+              onClick={() => setShowGallery(true)}
+              className="w-full flex items-center gap-4 p-4 rounded-xl border border-glass-border bg-muted/10 hover:border-primary/30 hover:bg-muted/20 transition-all group"
+            >
+              <AnimatedAvatar animal={selectedAvatar} size="lg" />
+              <div className="flex-1 text-left">
+                <p className="font-mono text-sm font-semibold text-foreground">{getAvatarLabel(selectedAvatar)}</p>
+                <p className="font-mono text-[10px] text-muted-foreground mt-0.5">Tap to browse gallery</p>
+              </div>
+              <ChevronDown className="w-4 h-4 text-muted-foreground group-hover:text-primary transition-colors" />
+            </button>
           </div>
+
+          {/* Avatar Gallery Modal */}
+          <AnimatePresence>
+            {showGallery && (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm"
+                onClick={() => setShowGallery(false)}
+              >
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.9, y: 20 }}
+                  animate={{ opacity: 1, scale: 1, y: 0 }}
+                  exit={{ opacity: 0, scale: 0.95, y: 10 }}
+                  transition={{ duration: 0.25, ease: "easeOut" }}
+                  onClick={(e) => e.stopPropagation()}
+                  className="glass-panel-strong rounded-2xl p-6 w-full max-w-sm mx-4"
+                >
+                  <div className="flex items-center justify-between mb-5">
+                    <h3 className="font-mono text-xs font-semibold text-foreground uppercase tracking-wider">Choose Avatar</h3>
+                    <button
+                      onClick={() => setShowGallery(false)}
+                      className="p-1 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted/20 transition-colors"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  </div>
+                  <div className="grid grid-cols-5 gap-3">
+                    {AVATAR_ANIMALS.map((animal) => (
+                      <div key={animal} className="flex flex-col items-center gap-1.5">
+                        <AnimatedAvatar
+                          animal={animal}
+                          size="md"
+                          selected={selectedAvatar === animal}
+                          onClick={() => {
+                            setSelectedAvatar(animal);
+                            setShowGallery(false);
+                          }}
+                        />
+                        <span className={`font-mono text-[7px] ${selectedAvatar === animal ? "text-primary font-semibold" : "text-muted-foreground"}`}>
+                          {getAvatarLabel(animal)}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </motion.div>
+              </motion.div>
+            )}
+          </AnimatePresence>
 
           {/* Display Name */}
           <div>
