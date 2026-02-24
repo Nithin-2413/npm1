@@ -48,8 +48,9 @@ const CONSOLE_LOGS = [
 
 const Execute = () => {
   const [command, setCommand] = useState("Navigate to signup page, fill form with random data, select country, accept terms, submit");
+  const [isRunning, setIsRunning] = useState(false);
   const [expandedAction, setExpandedAction] = useState<number | null>(null);
-  const [elapsed, setElapsed] = useState(4.2);
+  const [elapsed, setElapsed] = useState(0);
   const [consoleFilter, setConsoleFilter] = useState<string>("all");
   const [showDiagnosis, setShowDiagnosis] = useState(false);
   const [showFix, setShowFix] = useState(false);
@@ -59,38 +60,64 @@ const Execute = () => {
   const progress = Math.round(((doneCount + 0.5) / MOCK_ACTIONS.length) * 100);
 
   useEffect(() => {
+    if (!isRunning) return;
     const timer = setInterval(() => setElapsed(prev => +(prev + 0.1).toFixed(1)), 100);
     return () => clearInterval(timer);
-  }, []);
+  }, [isRunning]);
 
   const filteredConsole = consoleFilter === "all" ? CONSOLE_LOGS : CONSOLE_LOGS.filter(l => l.type === consoleFilter);
   const networkErrors = NETWORK_LOG.filter(r => r.status >= 400).length;
 
   return (
     <div className="max-w-7xl mx-auto space-y-6">
-      {/* Command & Status Header */}
+      {/* Command & Controls */}
       <GlassPanel glow="cyan" delay={0}>
-        <div className="flex items-start justify-between gap-4 flex-wrap">
-          <div className="flex-1 min-w-0">
+        <div className="space-y-4">
+          <div>
             <div className="font-mono text-xs text-muted-foreground mb-1">Command:</div>
             <textarea
               value={command}
               onChange={(e) => setCommand(e.target.value)}
               rows={2}
-              className="w-full font-mono text-sm text-foreground bg-muted/20 rounded-lg px-3 py-2 border border-glass-border outline-none focus:ring-1 focus:ring-primary/40 resize-none placeholder:text-muted-foreground/50"
+              disabled={isRunning}
+              className="w-full font-mono text-sm text-foreground bg-muted/20 rounded-lg px-3 py-2 border border-glass-border outline-none focus:ring-1 focus:ring-primary/40 resize-none placeholder:text-muted-foreground/50 disabled:opacity-60 disabled:cursor-not-allowed"
               placeholder="Enter your test command..."
             />
           </div>
-          <div className="flex items-center gap-2 shrink-0">
-            <button className="flex items-center gap-1.5 px-3 py-2 rounded-xl font-mono text-xs border border-primary/30 text-primary hover:bg-primary/10 transition-colors">
-              <Play className="w-3 h-3" /> Run
-            </button>
-            <button className="flex items-center gap-1.5 px-3 py-2 rounded-xl font-mono text-xs border border-amber-500/40 text-amber-500 hover:bg-amber-500/10 transition-colors">
-              <Pause className="w-3 h-3" /> Pause
-            </button>
-            <button className="flex items-center gap-1.5 px-3 py-2 rounded-xl font-mono text-xs border border-destructive/30 text-destructive hover:bg-destructive/10 transition-colors">
-              <X className="w-3 h-3" /> Cancel
-            </button>
+          <div className="flex items-center justify-center gap-3">
+            <AnimatePresence mode="wait">
+              {!isRunning ? (
+                <motion.button
+                  key="run"
+                  initial={{ scale: 0.9, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  exit={{ scale: 0.9, opacity: 0 }}
+                  onClick={() => { setIsRunning(true); setElapsed(0); }}
+                  disabled={!command.trim()}
+                  className="flex items-center gap-2 px-6 py-2.5 rounded-xl font-mono text-xs font-semibold bg-foreground text-background hover:opacity-90 active:scale-[0.97] transition-all disabled:opacity-40 disabled:cursor-not-allowed"
+                >
+                  <Play className="w-3.5 h-3.5" /> Run
+                </motion.button>
+              ) : (
+                <motion.div
+                  key="controls"
+                  initial={{ scale: 0.9, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  exit={{ scale: 0.9, opacity: 0 }}
+                  className="flex items-center gap-2"
+                >
+                  <button className="flex items-center gap-1.5 px-4 py-2 rounded-xl font-mono text-xs border border-amber-500/40 text-amber-500 hover:bg-amber-500/10 transition-colors">
+                    <Pause className="w-3 h-3" /> Pause
+                  </button>
+                  <button
+                    onClick={() => setIsRunning(false)}
+                    className="flex items-center gap-1.5 px-4 py-2 rounded-xl font-mono text-xs border border-destructive/30 text-destructive hover:bg-destructive/10 transition-colors"
+                  >
+                    <X className="w-3 h-3" /> Cancel
+                  </button>
+                </motion.div>
+              )}
+            </AnimatePresence>
           </div>
         </div>
       </GlassPanel>
