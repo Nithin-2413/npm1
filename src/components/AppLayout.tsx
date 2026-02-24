@@ -6,6 +6,7 @@ import { NotificationPanel } from "@/components/NotificationPanel";
 import { GlobalSearchModal } from "@/components/GlobalSearchModal";
 import { KeyboardShortcutsModal } from "@/components/KeyboardShortcutsModal";
 import { SystemPulse } from "@/components/SystemPulse";
+import { AnimatedAvatar, AvatarAnimal, getAvatarEmoji } from "@/components/AnimatedAvatar";
 import {
   LayoutDashboard, Play, FileCode2, ClipboardList,
   Settings, Menu, Search,
@@ -35,6 +36,16 @@ const AppLayout = () => {
   const navigate = useNavigate();
   const { user, logout } = useAuth();
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [avatar, setAvatar] = useState<AvatarAnimal>(() => {
+    return (localStorage.getItem("npm_avatar") as AvatarAnimal) || "lion";
+  });
+
+  // Listen for avatar changes from Profile page
+  useEffect(() => {
+    const handler = (e: Event) => setAvatar((e as CustomEvent).detail);
+    window.addEventListener("avatar-changed", handler);
+    return () => window.removeEventListener("avatar-changed", handler);
+  }, []);
 
   // Keyboard navigation shortcuts (G + key)
   useEffect(() => {
@@ -153,9 +164,7 @@ const AppLayout = () => {
             <div className="p-4 border-t space-y-3" style={{ borderColor: "hsl(var(--glass-border) / 0.3)" }}>
               {user && (
                 <div className="flex items-center gap-2">
-                  <div className="w-6 h-6 rounded-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center text-[8px] font-bold text-primary-foreground shrink-0">
-                    {user.name?.slice(0, 2).toUpperCase() || "U"}
-                  </div>
+                  <AnimatedAvatar animal={avatar} size="sm" />
                   <span className="font-mono text-[10px] text-muted-foreground truncate flex-1">{user.email}</span>
                   <button
                     onClick={handleLogout}
@@ -222,9 +231,7 @@ const AppLayout = () => {
 
             {/* Profile */}
             <Link to="/profile" className="flex items-center gap-2 pl-2 ml-1 border-l border-glass-border hover:opacity-80 transition-opacity">
-              <div className="w-7 h-7 rounded-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center text-[10px] font-bold text-primary-foreground">
-                {user?.name?.slice(0, 2).toUpperCase() || "U"}
-              </div>
+              <AnimatedAvatar animal={avatar} size="sm" />
               <span className="font-mono text-xs text-muted-foreground hidden sm:inline">{user?.name || "user"}</span>
             </Link>
           </div>
