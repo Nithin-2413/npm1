@@ -54,9 +54,9 @@ const Login = () => {
         {/* Logo */}
         <div className="text-center mb-8">
           <span className="text-4xl animate-float inline-block">🌊</span>
-          <h1 className="text-2xl font-black tracking-tight gradient-text mt-3" style={{ fontFamily: "'Sen', sans-serif" }}>NPM</h1>
+          <h1 className="text-2xl font-black tracking-tight gradient-text mt-3" style={{ fontFamily: "'Sen', sans-serif" }}>LUMEN</h1>
           <p className="font-mono text-[10px] text-muted-foreground tracking-widest uppercase mt-1">
-            Neural Precision Monitor
+            Lumen Technologies
           </p>
         </div>
 
@@ -132,7 +132,7 @@ const Login = () => {
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="agent@npm.dev"
+                placeholder="agent@lumen.dev"
                 className="w-full px-4 py-2.5 rounded-xl border border-glass-border bg-muted/20 font-mono text-sm text-foreground placeholder:text-muted-foreground outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/20 transition-all"
                 required
               />
