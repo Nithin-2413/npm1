@@ -17,7 +17,7 @@ export const LiquidProgress = ({ value, label, showPercentage = true }: LiquidPr
 
   const circumference = 2 * Math.PI * 42;
   const strokeOffset = circumference - (displayed / 100) * circumference;
-  const glowColor = displayed >= 80 ? "hsl(var(--primary))" : displayed >= 50 ? "hsl(142 76% 56%)" : "hsl(38 92% 60%)";
+  const glowColor = "hsl(var(--primary))";
 
   return (
     <div className="flex items-center gap-4">
@@ -50,7 +50,7 @@ export const LiquidProgress = ({ value, label, showPercentage = true }: LiquidPr
           <defs>
             <linearGradient id="progressGradient" x1="0%" y1="0%" x2="100%" y2="100%">
               <stop offset="0%" stopColor="hsl(var(--primary))" />
-              <stop offset="50%" stopColor="hsl(var(--secondary))" />
+              <stop offset="50%" stopColor="hsl(var(--primary) / 0.6)" />
               <stop offset="100%" stopColor="hsl(var(--primary))" />
             </linearGradient>
           </defs>
