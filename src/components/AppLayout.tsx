@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { Link, useLocation, Outlet } from "react-router-dom";
+import { Link, useLocation, Outlet, useNavigate } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   LayoutDashboard, Play, FileCode2, ClipboardList, FileText,
@@ -19,8 +20,15 @@ const NAV_ITEMS = [
 
 const AppLayout = () => {
   const location = useLocation();
+  const navigate = useNavigate();
+  const { user, logout } = useAuth();
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [searchOpen, setSearchOpen] = useState(false);
+
+  const handleLogout = () => {
+    logout();
+    navigate("/login");
+  };
 
   return (
     <div className="min-h-screen bg-background flex w-full">
@@ -78,13 +86,24 @@ const AppLayout = () => {
               })}
             </nav>
 
-            {/* Status */}
-            <div className="p-4 border-t border-glass-border">
+            {/* Status & Logout */}
+            <div className="p-4 border-t border-glass-border space-y-3">
               <div className="flex items-center gap-2">
-                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-                <span className="font-mono text-[10px] text-emerald-400">System Online</span>
+                <span className="w-2 h-2 rounded-full bg-primary animate-pulse" />
+                <span className="font-mono text-[10px] text-primary">System Online</span>
               </div>
-              <p className="font-mono text-[9px] text-muted-foreground mt-1">v2.4.1 • Liquid Engine</p>
+              {user && (
+                <div className="flex items-center justify-between">
+                  <span className="font-mono text-[10px] text-muted-foreground truncate">{user.email}</span>
+                  <button
+                    onClick={handleLogout}
+                    className="font-mono text-[10px] text-destructive hover:text-destructive/80 transition-colors"
+                  >
+                    Logout
+                  </button>
+                </div>
+              )}
+              <p className="font-mono text-[9px] text-muted-foreground">v2.4.1 • Liquid Engine</p>
             </div>
           </motion.aside>
         )}
@@ -126,10 +145,10 @@ const AppLayout = () => {
 
             {/* Profile */}
             <div className="flex items-center gap-2 pl-2 border-l border-glass-border">
-              <div className="w-7 h-7 rounded-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center text-[10px] font-bold text-background">
-                QA
+              <div className="w-7 h-7 rounded-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center text-[10px] font-bold text-primary-foreground">
+                {user?.name?.slice(0, 2).toUpperCase() || "U"}
               </div>
-              <span className="font-mono text-xs text-muted-foreground hidden sm:inline">qa_admin</span>
+              <span className="font-mono text-xs text-muted-foreground hidden sm:inline">{user?.name || "user"}</span>
             </div>
           </div>
         </header>
