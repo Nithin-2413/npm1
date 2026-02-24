@@ -103,9 +103,9 @@ export const LiveBrowserPreview = () => {
       {/* Browser chrome */}
       <div className="flex items-center gap-2 px-3 py-2 border-b border-glass-border bg-muted/30 rounded-t-xl">
         <div className="flex gap-1.5">
-          <span className="w-2.5 h-2.5 rounded-full bg-destructive/60" />
-          <span className="w-2.5 h-2.5 rounded-full bg-amber-400/60" />
-          <span className="w-2.5 h-2.5 rounded-full bg-emerald-400/60" />
+          <span className="w-2.5 h-2.5 rounded-full bg-destructive" />
+          <span className="w-2.5 h-2.5 rounded-full bg-amber-400" />
+          <span className="w-2.5 h-2.5 rounded-full bg-emerald-400" />
         </div>
         <div className="flex-1 bg-muted/30 rounded-lg px-3 py-1 font-mono text-[10px] text-muted-foreground truncate">
           {frame.url}
