@@ -202,18 +202,24 @@ const AppLayout = () => {
           )}
 
           {/* Search — now opens modal */}
-          <div className="flex-1 max-w-xs mx-auto">
+          <div className="flex-1 max-w-[180px] mx-auto">
             <button
               onClick={() => {
                 window.dispatchEvent(new CustomEvent("open-search"));
               }}
-              className="w-full glass-panel-strong flex items-center gap-2 px-3 py-1.5 rounded-xl text-left group hover:ring-1 hover:ring-primary/20 transition-all"
+              className="w-full flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-left group transition-all duration-300"
+              style={{
+                background: "hsl(var(--glass-bg) / 0.15)",
+                backdropFilter: "blur(20px)",
+                border: "1px solid hsl(var(--glass-border) / 0.2)",
+                boxShadow: "inset 0 1px 0 0 hsl(0 0% 100% / 0.05)",
+              }}
             >
-              <Search className="w-3.5 h-3.5 text-muted-foreground" />
-              <span className="flex-1 font-mono text-xs text-muted-foreground group-hover:text-foreground/60 transition-colors">
-                Search everything...
+              <Search className="w-3 h-3 text-muted-foreground/60" />
+              <span className="flex-1 text-[10px] text-muted-foreground/50 group-hover:text-muted-foreground transition-colors" style={{ fontFamily: "'Sen', sans-serif" }}>
+                Search...
               </span>
-              <kbd className="font-mono text-[9px] px-1.5 py-0.5 rounded border border-glass-border text-muted-foreground">⌘K</kbd>
+              <kbd className="text-[8px] px-1 py-px rounded text-muted-foreground/40" style={{ fontFamily: "'Sen', sans-serif", border: "1px solid hsl(var(--glass-border) / 0.15)" }}>⌘K</kbd>
             </button>
           </div>
 
