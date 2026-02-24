@@ -192,7 +192,7 @@ const AppLayout = () => {
           )}
 
           {/* Search — now opens modal */}
-          <div className="flex-1 max-w-md">
+          <div className="flex-1 max-w-xs mx-auto">
             <button
               onClick={() => {
                 window.dispatchEvent(new CustomEvent("open-search"));
