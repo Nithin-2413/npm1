@@ -6,7 +6,7 @@ import { StatusBadge, StatusType } from "@/components/StatusBadge";
 import { ActionBadge, ActionType } from "@/components/ActionBadge";
 import { LiquidProgress } from "@/components/LiquidProgress";
 import { LiveBrowserPreview } from "@/components/LiveBrowserPreview";
-import { Pause, X, Camera, ChevronDown, Brain, Wrench, AlertTriangle, Zap, ArrowRight } from "lucide-react";
+import { Play, Pause, X, Camera, ChevronDown, Brain, Wrench, AlertTriangle, Zap, ArrowRight } from "lucide-react";
 
 interface ExecutionAction {
   type: ActionType;
@@ -47,6 +47,7 @@ const CONSOLE_LOGS = [
 ];
 
 const Execute = () => {
+  const [command, setCommand] = useState("Navigate to signup page, fill form with random data, select country, accept terms, submit");
   const [expandedAction, setExpandedAction] = useState<number | null>(null);
   const [elapsed, setElapsed] = useState(4.2);
   const [consoleFilter, setConsoleFilter] = useState<string>("all");
@@ -72,15 +73,22 @@ const Execute = () => {
         <div className="flex items-start justify-between gap-4 flex-wrap">
           <div className="flex-1 min-w-0">
             <div className="font-mono text-xs text-muted-foreground mb-1">Command:</div>
-            <pre className="font-mono text-sm text-foreground bg-muted/20 rounded-lg px-3 py-2 border border-glass-border whitespace-pre-wrap">
-              Navigate to signup page, fill form with random data, select country, accept terms, submit
-            </pre>
+            <textarea
+              value={command}
+              onChange={(e) => setCommand(e.target.value)}
+              rows={2}
+              className="w-full font-mono text-sm text-foreground bg-muted/20 rounded-lg px-3 py-2 border border-glass-border outline-none focus:ring-1 focus:ring-primary/40 resize-none placeholder:text-muted-foreground/50"
+              placeholder="Enter your test command..."
+            />
           </div>
           <div className="flex items-center gap-2 shrink-0">
-            <button className="flex items-center gap-1.5 px-3 py-2 rounded-xl font-mono text-xs border border-amber-400/30 text-amber-400 hover:bg-amber-400/10 transition-colors">
+            <button className="flex items-center gap-1.5 px-3 py-2 rounded-xl font-mono text-xs border border-primary/30 text-primary hover:bg-primary/10 transition-colors">
+              <Play className="w-3 h-3" /> Run
+            </button>
+            <button className="flex items-center gap-1.5 px-3 py-2 rounded-xl font-mono text-xs border border-amber-500/40 text-amber-500 hover:bg-amber-500/10 transition-colors">
               <Pause className="w-3 h-3" /> Pause
             </button>
-            <button className="flex items-center gap-1.5 px-3 py-2 rounded-xl font-mono text-xs border border-destructive/30 text-destructive hover:bg-destructive/10 transition-colors animate-pulse">
+            <button className="flex items-center gap-1.5 px-3 py-2 rounded-xl font-mono text-xs border border-destructive/30 text-destructive hover:bg-destructive/10 transition-colors">
               <X className="w-3 h-3" /> Cancel
             </button>
           </div>
