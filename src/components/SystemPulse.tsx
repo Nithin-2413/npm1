@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from "react";
 import { motion } from "framer-motion";
-import { Shield, ShieldCheck, Wifi, Activity, Zap, BarChart3 } from "lucide-react";
+import { Shield, ShieldCheck, Repeat, Activity, Zap, BarChart3 } from "lucide-react";
 
 interface SystemPulseProps {
   className?: string;
@@ -29,14 +29,14 @@ export const SystemPulse = ({ className = "" }: SystemPulseProps) => {
     blueprintsRun: 47,
     successRate: 94,
     avgSpeed: 3.2,
-    activeAgents: 5,
+    iterations: 23,
   });
 
   const [chartData, setChartData] = useState({
     runs: generateSparkData(12, 2, 12),
     success: generateSparkData(12, 70, 100),
     speed: generateSparkData(12, 1, 6),
-    agents: generateSparkData(12, 1, 8),
+    iterations: generateSparkData(12, 5, 30),
   });
 
   // Simulate periodic updates
@@ -46,13 +46,13 @@ export const SystemPulse = ({ className = "" }: SystemPulseProps) => {
         blueprintsRun: prev.blueprintsRun + Math.floor(Math.random() * 3),
         successRate: Math.min(100, Math.max(75, prev.successRate + (Math.random() - 0.5) * 4)),
         avgSpeed: Math.max(0.5, +(prev.avgSpeed + (Math.random() - 0.5) * 0.8).toFixed(1)),
-        activeAgents: Math.max(1, Math.min(10, prev.activeAgents + Math.round((Math.random() - 0.5) * 2))),
+        iterations: Math.max(1, prev.iterations + Math.floor(Math.random() * 3)),
       }));
       setChartData(prev => ({
         runs: [...prev.runs.slice(1), Math.round(2 + Math.random() * 10)],
         success: [...prev.success.slice(1), Math.round(70 + Math.random() * 30)],
         speed: [...prev.speed.slice(1), Math.round(1 + Math.random() * 5)],
-        agents: [...prev.agents.slice(1), Math.round(1 + Math.random() * 7)],
+        iterations: [...prev.iterations.slice(1), Math.round(5 + Math.random() * 25)],
       }));
     }, 3000);
     return () => clearInterval(timer);
@@ -87,13 +87,13 @@ export const SystemPulse = ({ className = "" }: SystemPulseProps) => {
       max: 7,
     },
     {
-      label: "Agents",
-      value: stats.activeAgents,
+      label: "Iterations",
+      value: stats.iterations,
       suffix: "",
-      icon: Wifi,
+      icon: Repeat,
       color: "bg-violet-400",
-      data: chartData.agents,
-      max: 10,
+      data: chartData.iterations,
+      max: 35,
     },
   ], [stats, chartData]);
 
