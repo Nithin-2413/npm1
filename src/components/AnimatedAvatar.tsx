@@ -13,7 +13,7 @@ const AVATAR_CONFIG: Record<AvatarAnimal, { emoji: string; label: string }> = {
   lion:     { emoji: "🦁", label: "Simba" },
   puppy:    { emoji: "🐶", label: "Buddy" },
   peacock:  { emoji: "🦚", label: "Plume" },
-  dove:     { emoji: "🕊️", label: "Grace" },
+  dove:     { emoji: "🐰", label: "Bunny" },
   squirrel: { emoji: "🐿️", label: "Nutkin" },
   panda:    { emoji: "🐼", label: "Bamboo" },
 };
