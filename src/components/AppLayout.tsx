@@ -67,13 +67,25 @@ const AppLayout = () => {
     if (goLight) root.classList.add("light");
     else root.classList.remove("light");
     setIsDark(!goLight);
+    const newTheme = goLight ? "light" : "dark";
     try {
       const saved = localStorage.getItem("npm-settings");
       const settings = saved ? JSON.parse(saved) : {};
-      settings.theme = goLight ? "light" : "dark";
+      settings.theme = newTheme;
       localStorage.setItem("npm-settings", JSON.stringify(settings));
     } catch {}
+    window.dispatchEvent(new CustomEvent("theme-changed", { detail: newTheme }));
   };
+
+  // Listen for theme changes from Settings page
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const theme = (e as CustomEvent).detail as string;
+      setIsDark(theme !== "light");
+    };
+    window.addEventListener("theme-changed", handler);
+    return () => window.removeEventListener("theme-changed", handler);
+  }, []);
 
   const handleLogout = () => {
     setProfileOpen(false);
