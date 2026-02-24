@@ -70,32 +70,6 @@ export const LiquidProgress = ({ value, label, showPercentage = true }: LiquidPr
           )}
         </div>
 
-        {/* Orbiting dot */}
-        <motion.div
-          className="absolute w-2 h-2 rounded-full"
-          style={{
-            background: glowColor,
-            boxShadow: `0 0 8px ${glowColor}, 0 0 16px ${glowColor}`,
-            top: "50%",
-            left: "50%",
-          }}
-          animate={{
-            rotate: 360,
-          }}
-          transition={{
-            duration: 3,
-            repeat: Infinity,
-            ease: "linear",
-          }}
-          initial={false}
-        >
-          <div
-            className="w-2 h-2 rounded-full"
-            style={{
-              transform: "translate(-50%, -50%) translateY(-42px)",
-            }}
-          />
-        </motion.div>
       </div>
 
       {/* Label & status */}
