@@ -347,9 +347,9 @@ const BlueprintEditor = () => {
               <Variable className="w-4 h-4 text-primary" />
               <h3 className="font-mono text-[10px] font-semibold tracking-wider uppercase text-primary">Variables</h3>
             </div>
-            <div className="space-y-2.5">
+            <div className="space-y-2.5 overflow-hidden">
               {variables.map((v, i) => (
-                <div key={i} className="flex items-center gap-2 font-mono text-[11px]">
+                <div key={i} className="flex items-center gap-2 font-mono text-[11px] min-w-0">
                   <input
                     value={v.name}
                     disabled={isViewMode}
@@ -358,7 +358,7 @@ const BlueprintEditor = () => {
                       updated[i].name = e.target.value.toUpperCase().replace(/[^A-Z0-9_]/g, "");
                       setVariables(updated);
                     }}
-                    className="w-28 bg-muted/20 border border-glass-border rounded-lg px-2 py-1.5 text-secondary outline-none focus:ring-1 focus:ring-primary/40 disabled:opacity-60"
+                    className="w-24 shrink-0 bg-muted/20 border border-glass-border rounded-lg px-2 py-1.5 text-secondary outline-none focus:ring-1 focus:ring-primary/40 disabled:opacity-60"
                   />
                   <input
                     value={v.defaultValue}
@@ -368,7 +368,7 @@ const BlueprintEditor = () => {
                       updated[i].defaultValue = e.target.value;
                       setVariables(updated);
                     }}
-                    className="flex-1 bg-muted/20 border border-glass-border rounded-lg px-2 py-1.5 text-foreground/70 outline-none focus:ring-1 focus:ring-primary/40 disabled:opacity-60"
+                    className="flex-1 min-w-0 bg-muted/20 border border-glass-border rounded-lg px-2 py-1.5 text-foreground/70 outline-none focus:ring-1 focus:ring-primary/40 disabled:opacity-60"
                   />
                   {!isViewMode && (
                     <button
