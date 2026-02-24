@@ -282,3 +282,8 @@
     animation: terminal-blink 1s step-end infinite;
   }
 }
+
+@keyframes gold-shine {
+  0% { background-position: 200% center; }
+  100% { background-position: -200% center; }
+}

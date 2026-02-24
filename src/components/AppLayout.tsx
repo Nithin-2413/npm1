@@ -113,8 +113,8 @@ const AppLayout = () => {
             <div className="p-5 flex items-center gap-3 border-b" style={{ borderColor: "hsl(var(--glass-border) / 0.3)" }}>
               <span className="text-2xl animate-float">🌊</span>
               <div>
-                <h1 className="text-lg font-black tracking-tight gradient-text">NPM</h1>
-                <p className="font-mono text-[8px] text-muted-foreground tracking-widest uppercase">Neural Precision Monitor</p>
+                <h1 className="text-lg font-black tracking-tight bg-clip-text text-transparent animate-pulse-glow" style={{ fontFamily: "'Sen', sans-serif", backgroundImage: "linear-gradient(135deg, #d4a026, #f5d778, #e8b830, #f5d778, #d4a026)", backgroundSize: "200% auto", animation: "gold-shine 3s linear infinite" }}>NPM</h1>
+                <p className="text-[8px] text-muted-foreground tracking-widest uppercase" style={{ fontFamily: "'Sen', sans-serif" }}>Neural Precision Monitor</p>
               </div>
               <button
                 onClick={() => setSidebarOpen(false)}
