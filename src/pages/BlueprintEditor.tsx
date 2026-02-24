@@ -1,11 +1,12 @@
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
 import { GlassPanel } from "@/components/GlassPanel";
 import { ActionBadge, ActionType } from "@/components/ActionBadge";
+import { toast } from "sonner";
 import {
   Save, Play, X, Plus, Trash2, GripVertical, Wand2,
-  ChevronRight, Variable
+  ChevronUp, ChevronDown, Variable, Copy
 } from "lucide-react";
 
 interface EditorAction {
@@ -49,7 +50,7 @@ const BlueprintEditor = () => {
     ]},
   ];
 
-  const addAction = (type: ActionType) => {
+  const addAction = useCallback((type: ActionType) => {
     const newAction: EditorAction = {
       id: Date.now().toString(),
       type,
@@ -58,18 +59,52 @@ const BlueprintEditor = () => {
       timeout: 5000,
       optional: false,
     };
-    setActions([...actions, newAction]);
+    setActions(prev => [...prev, newAction]);
     setSelectedAction(newAction.id);
-  };
+  }, []);
 
-  const removeAction = (id: string) => {
-    setActions(actions.filter(a => a.id !== id));
-    if (selectedAction === id) setSelectedAction(null);
-  };
+  const removeAction = useCallback((id: string) => {
+    setActions(prev => prev.filter(a => a.id !== id));
+    setSelectedAction(prev => prev === id ? null : prev);
+  }, []);
 
-  const updateAction = (id: string, updates: Partial<EditorAction>) => {
-    setActions(actions.map(a => a.id === id ? { ...a, ...updates } : a));
-  };
+  const updateAction = useCallback((id: string, updates: Partial<EditorAction>) => {
+    setActions(prev => prev.map(a => a.id === id ? { ...a, ...updates } : a));
+  }, []);
+
+  const moveAction = useCallback((id: string, direction: "up" | "down") => {
+    setActions(prev => {
+      const idx = prev.findIndex(a => a.id === id);
+      if (idx < 0) return prev;
+      const target = direction === "up" ? idx - 1 : idx + 1;
+      if (target < 0 || target >= prev.length) return prev;
+      const next = [...prev];
+      [next[idx], next[target]] = [next[target], next[idx]];
+      return next;
+    });
+  }, []);
+
+  const duplicateAction = useCallback((id: string) => {
+    setActions(prev => {
+      const idx = prev.findIndex(a => a.id === id);
+      if (idx < 0) return prev;
+      const clone = { ...prev[idx], id: Date.now().toString() };
+      const next = [...prev];
+      next.splice(idx + 1, 0, clone);
+      return next;
+    });
+  }, []);
+
+  const saveDraft = useCallback(() => {
+    const data = { name, actions, variables };
+    localStorage.setItem(`blueprint-draft-${name}`, JSON.stringify(data));
+    toast.success(`Blueprint "${name}" saved as draft`);
+  }, [name, actions, variables]);
+
+  const saveAndRun = useCallback(() => {
+    saveDraft();
+    toast.success(`Blueprint "${name}" saved. Navigating to execute...`);
+  }, [saveDraft, name]);
 
   const selected = actions.find(a => a.id === selectedAction);
 
@@ -90,10 +125,10 @@ const BlueprintEditor = () => {
         </div>
         <div className="flex items-center gap-2">
           <span className="font-mono text-[9px] text-muted-foreground">Auto-saved 2m ago</span>
-          <button className="flex items-center gap-1.5 px-3 py-2 rounded-xl font-mono text-xs border border-glass-border text-muted-foreground hover:text-foreground transition-colors">
+          <button onClick={saveDraft} className="flex items-center gap-1.5 px-3 py-2 rounded-xl font-mono text-xs border border-glass-border text-muted-foreground hover:text-foreground transition-colors">
             <Save className="w-3 h-3" /> Save Draft
           </button>
-          <button className="flex items-center gap-1.5 px-4 py-2 rounded-xl font-mono text-xs bg-primary/20 text-primary border border-primary/30 hover:bg-primary/30 transition-colors">
+          <button onClick={saveAndRun} className="flex items-center gap-1.5 px-4 py-2 rounded-xl font-mono text-xs bg-primary/20 text-primary border border-primary/30 hover:bg-primary/30 transition-colors">
             <Play className="w-3 h-3" /> Save & Run
           </button>
         </div>
@@ -132,6 +167,7 @@ const BlueprintEditor = () => {
             <span className="text-lg">📐</span>
             <h3 className="font-mono text-sm font-semibold tracking-wider uppercase text-primary">Flow Builder</h3>
             <div className="flex-1 h-px bg-gradient-to-r from-primary/30 to-transparent" />
+            <span className="font-mono text-[10px] text-muted-foreground">{actions.length} actions</span>
           </div>
 
           {/* Start node */}
@@ -142,28 +178,62 @@ const BlueprintEditor = () => {
             {actions.map((action, i) => (
               <motion.div
                 key={action.id}
+                layout
                 initial={{ opacity: 0, x: -10 }}
                 animate={{ opacity: 1, x: 0 }}
-                className={`flex items-center gap-2 px-3 py-2.5 rounded-lg border cursor-pointer transition-all ${
+                exit={{ opacity: 0, x: -10 }}
+                className={`flex items-center gap-2 px-3 py-2.5 rounded-lg border cursor-pointer transition-all group ${
                   selectedAction === action.id
                     ? "border-primary/40 bg-primary/10 ring-1 ring-primary/20"
                     : "border-glass-border hover:border-primary/20 hover:bg-muted/10"
                 }`}
                 onClick={() => setSelectedAction(action.id)}
               >
-                <GripVertical className="w-3 h-3 text-muted-foreground/40 cursor-grab" />
+                <div className="flex flex-col gap-0.5">
+                  <button
+                    onClick={(e) => { e.stopPropagation(); moveAction(action.id, "up"); }}
+                    disabled={i === 0}
+                    className="text-muted-foreground/40 hover:text-foreground disabled:opacity-20 transition-colors"
+                  >
+                    <ChevronUp className="w-3 h-3" />
+                  </button>
+                  <button
+                    onClick={(e) => { e.stopPropagation(); moveAction(action.id, "down"); }}
+                    disabled={i === actions.length - 1}
+                    className="text-muted-foreground/40 hover:text-foreground disabled:opacity-20 transition-colors"
+                  >
+                    <ChevronDown className="w-3 h-3" />
+                  </button>
+                </div>
                 <ActionBadge type={action.type} />
                 <span className="font-mono text-xs text-foreground/70 flex-1 truncate">
                   {action.selector || action.value || "(empty)"}
                 </span>
-                <button
-                  onClick={(e) => { e.stopPropagation(); removeAction(action.id); }}
-                  className="text-muted-foreground hover:text-destructive transition-colors opacity-0 group-hover:opacity-100"
-                >
-                  <X className="w-3 h-3" />
-                </button>
+                <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <button
+                    onClick={(e) => { e.stopPropagation(); duplicateAction(action.id); }}
+                    className="text-muted-foreground hover:text-primary transition-colors"
+                    title="Duplicate"
+                  >
+                    <Copy className="w-3 h-3" />
+                  </button>
+                  <button
+                    onClick={(e) => { e.stopPropagation(); removeAction(action.id); }}
+                    className="text-muted-foreground hover:text-destructive transition-colors"
+                    title="Delete"
+                  >
+                    <X className="w-3 h-3" />
+                  </button>
+                </div>
               </motion.div>
             ))}
+          </div>
+
+          {/* End node */}
+          <div className="flex items-center gap-2 mt-2 ml-5 pl-4 border-l-2 border-glass-border">
+            <div className="px-3 py-2 rounded-lg bg-destructive/10 border border-destructive/20">
+              <span className="text-destructive font-mono text-xs font-bold">■ END</span>
+            </div>
           </div>
 
           {/* Add action */}
@@ -192,13 +262,9 @@ const BlueprintEditor = () => {
                     onChange={(e) => updateAction(selected.id, { type: e.target.value as ActionType })}
                     className="w-full bg-muted/20 border border-glass-border rounded-xl px-3 py-2 font-mono text-xs text-foreground outline-none cursor-pointer"
                   >
-                    <option className="bg-background" value="navigate">Navigate</option>
-                    <option className="bg-background" value="fill">Fill</option>
-                    <option className="bg-background" value="click">Click</option>
-                    <option className="bg-background" value="select">Select</option>
-                    <option className="bg-background" value="wait">Wait</option>
-                    <option className="bg-background" value="assert">Assert</option>
-                    <option className="bg-background" value="screenshot">Screenshot</option>
+                    {["navigate", "fill", "click", "select", "wait", "assert", "screenshot"].map(t => (
+                      <option key={t} className="bg-background" value={t}>{t.charAt(0).toUpperCase() + t.slice(1)}</option>
+                    ))}
                   </select>
                 </div>
 
@@ -264,23 +330,33 @@ const BlueprintEditor = () => {
             </div>
             <div className="space-y-2">
               {variables.map((v, i) => (
-                <div key={i} className="flex items-center gap-2 font-mono text-[11px]">
-                  <span className="text-secondary w-28 truncate">{`{{${v.name}}}`}</span>
-                  <input
-                    value={v.defaultValue}
-                    onChange={(e) => {
-                      const updated = [...variables];
-                      updated[i].defaultValue = e.target.value;
-                      setVariables(updated);
-                    }}
-                    className="flex-1 bg-muted/20 border border-glass-border rounded-lg px-2 py-1 text-foreground/70 outline-none focus:ring-1 focus:ring-primary/40"
-                  />
-                  <button
-                    onClick={() => setVariables(variables.filter((_, j) => j !== i))}
-                    className="text-muted-foreground hover:text-destructive transition-colors"
-                  >
-                    <Trash2 className="w-3 h-3" />
-                  </button>
+                <div key={i} className="space-y-1">
+                  <div className="flex items-center gap-2 font-mono text-[11px]">
+                    <input
+                      value={v.name}
+                      onChange={(e) => {
+                        const updated = [...variables];
+                        updated[i].name = e.target.value.toUpperCase().replace(/[^A-Z0-9_]/g, "");
+                        setVariables(updated);
+                      }}
+                      className="w-28 bg-muted/20 border border-glass-border rounded-lg px-2 py-1 text-secondary outline-none focus:ring-1 focus:ring-primary/40"
+                    />
+                    <input
+                      value={v.defaultValue}
+                      onChange={(e) => {
+                        const updated = [...variables];
+                        updated[i].defaultValue = e.target.value;
+                        setVariables(updated);
+                      }}
+                      className="flex-1 bg-muted/20 border border-glass-border rounded-lg px-2 py-1 text-foreground/70 outline-none focus:ring-1 focus:ring-primary/40"
+                    />
+                    <button
+                      onClick={() => setVariables(variables.filter((_, j) => j !== i))}
+                      className="text-muted-foreground hover:text-destructive transition-colors"
+                    >
+                      <Trash2 className="w-3 h-3" />
+                    </button>
+                  </div>
                 </div>
               ))}
               <button
