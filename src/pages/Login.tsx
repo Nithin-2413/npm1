@@ -25,7 +25,11 @@ const Login = () => {
       } else {
         await login(email, password);
       }
-      navigate("/");
+      if (isSignup) {
+        navigate("/onboarding");
+      } else {
+        navigate("/");
+      }
     } catch (err: any) {
       setError(err.message || "Authentication failed");
     } finally {
