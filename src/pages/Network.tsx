@@ -108,17 +108,19 @@ const Network = () => {
             const maxDur = 340;
             const dur = parseInt(req.duration);
             const barWidth = (dur / maxDur) * 100;
+            const barColor = dur < 80 ? "bg-emerald-400/40" : dur < 180 ? "bg-amber-400/40" : "bg-red-400/40";
+            const durTextColor = dur < 80 ? "text-emerald-400" : dur < 180 ? "text-amber-400" : "text-red-400";
             return (
               <div key={req.id} className="flex items-center gap-2 font-mono text-[10px]">
                 <span className={`w-10 font-semibold ${req.method === "POST" ? "text-secondary" : "text-primary"}`}>{req.method}</span>
                 <span className="w-32 truncate text-foreground/70">{req.url.split("/").pop()}</span>
                 <div className="flex-1 h-4 bg-muted/10 rounded-full overflow-hidden relative">
                   <div
-                    className={`h-full rounded-full ${req.status >= 400 ? "bg-destructive/40" : req.status >= 300 ? "bg-muted-foreground/30" : "bg-primary/30"}`}
+                    className={`h-full rounded-full ${barColor}`}
                     style={{ width: `${barWidth}%` }}
                   />
                 </div>
-                <span className="w-14 text-right text-muted-foreground">{req.duration}</span>
+                <span className={`w-14 text-right ${durTextColor}`}>{req.duration}</span>
               </div>
             );
           })}
