@@ -4,9 +4,9 @@ import { Save, Key, Copy, Eye, EyeOff, Trash2, Plus } from "lucide-react";
 import { AnimatedAvatar, AVATAR_ANIMALS, AvatarAnimal, getAvatarLabel } from "@/components/AnimatedAvatar";
 
 const Profile = () => {
-  const [name, setName] = useState("QA Admin");
+  const [name, setName] = useState(() => localStorage.getItem("npm_display_name") || "QA Admin");
   const [email] = useState("qa_admin@npmmonitor.dev");
-  const [bio, setBio] = useState("Senior QA Engineer. Automating everything through liquid glass.");
+  const [bio, setBio] = useState(() => localStorage.getItem("npm_bio") || "Senior QA Engineer. Automating everything through liquid glass.");
   const [showKey, setShowKey] = useState(false);
   const [selectedAvatar, setSelectedAvatar] = useState<AvatarAnimal>(() => {
     return (localStorage.getItem("npm_avatar") as AvatarAnimal) || "lion";
@@ -67,7 +67,14 @@ const Profile = () => {
               <label className="font-mono text-[10px] text-muted-foreground uppercase tracking-wider block mb-1">Bio</label>
               <textarea value={bio} onChange={(e) => setBio(e.target.value)} rows={2} className="w-full bg-muted/20 border border-glass-border rounded-xl px-3 py-2 font-mono text-xs text-foreground outline-none focus:ring-1 focus:ring-primary/40 resize-none" />
             </div>
-            <button className="flex items-center gap-1.5 px-4 py-2 rounded-xl font-mono text-xs bg-primary/10 text-primary border border-primary/30 hover:bg-primary/20 transition-colors">
+            <button
+              onClick={() => {
+                localStorage.setItem("npm_display_name", name);
+                localStorage.setItem("npm_bio", bio);
+                window.dispatchEvent(new CustomEvent("profile-updated", { detail: { name, bio } }));
+              }}
+              className="flex items-center gap-1.5 px-4 py-2 rounded-xl font-mono text-xs bg-primary/10 text-primary border border-primary/30 hover:bg-primary/20 transition-colors"
+            >
               <Save className="w-3 h-3" /> Save Changes
             </button>
           </div>
