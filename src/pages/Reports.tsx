@@ -1,6 +1,6 @@
 import { useState, useCallback } from "react";
 import { motion } from "framer-motion";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { GlassPanel } from "@/components/GlassPanel";
 import { StatusBadge, StatusType } from "@/components/StatusBadge";
 import { toast } from "sonner";
@@ -35,6 +35,7 @@ const INITIAL_REPORTS: Report[] = [
 ];
 
 const Reports = () => {
+  const navigate = useNavigate();
   const [reports, setReports] = useState<Report[]>(INITIAL_REPORTS);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<"all" | StatusType>("all");
@@ -171,68 +172,99 @@ const Reports = () => {
         </motion.div>
       )}
 
-      {/* Table */}
-      <GlassPanel glow="none">
-        <div className="grid grid-cols-[32px_auto_1fr_100px_70px_70px_70px_60px_60px] gap-2 px-3 py-2.5 font-mono text-[9px] text-muted-foreground uppercase tracking-wider border-b border-glass-border items-center">
-          <input
-            type="checkbox"
-            checked={selectedIds.length === paginated.length && paginated.length > 0}
-            onChange={toggleAll}
-            className="accent-primary w-3.5 h-3.5"
-          />
-          <span className="w-8">St</span>
-          <span>Command</span>
-          <span>Time</span>
-          <span>Duration</span>
-          <span>Actions</span>
-          <span>Network</span>
-          <span>Errors</span>
-          <span></span>
-        </div>
-
-        <div className="divide-y divide-glass-border/30">
-          {paginated.length === 0 ? (
+      {/* Reports List */}
+      <div className="space-y-2">
+        {paginated.length === 0 ? (
+          <GlassPanel glow="none">
             <div className="px-3 py-8 text-center font-mono text-xs text-muted-foreground">
               No reports match your filters.
             </div>
-          ) : paginated.map((report) => (
-            <div
-              key={report.id}
-              className={`grid grid-cols-[32px_auto_1fr_100px_70px_70px_70px_60px_60px] gap-2 px-3 py-2.5 items-center hover:bg-muted/10 transition-colors ${
-                selectedIds.includes(report.id) ? "bg-primary/5" : ""
-              }`}
-            >
+          </GlassPanel>
+        ) : paginated.map((report) => (
+          <motion.div
+            key={report.id}
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            className={`glass-panel p-4 hover:bg-muted/5 transition-all group cursor-pointer ${
+              selectedIds.includes(report.id) ? "ring-1 ring-primary/30 bg-primary/5" : ""
+            }`}
+            onClick={() => navigate(`/reports/${report.id}`)}
+          >
+            <div className="flex items-center gap-4">
+              {/* Checkbox */}
               <input
                 type="checkbox"
                 checked={selectedIds.includes(report.id)}
-                onChange={() => toggleSelect(report.id)}
-                className="accent-primary w-3.5 h-3.5"
+                onChange={(e) => { e.stopPropagation(); toggleSelect(report.id); }}
+                onClick={(e) => e.stopPropagation()}
+                className="accent-primary w-3.5 h-3.5 shrink-0"
               />
-              <StatusBadge status={report.status} className="border-0 bg-transparent px-0 gap-0 w-8" />
-              <div className="min-w-0">
-                <Link to={`/reports/${report.id}`} className="font-mono text-xs text-foreground hover:text-primary transition-colors truncate block">
-                  {report.command}
-                </Link>
-                {report.blueprint && (
-                  <span className="font-mono text-[9px] text-secondary">📐 {report.blueprint}</span>
-                )}
+
+              {/* Status */}
+              <StatusBadge status={report.status} className="shrink-0" />
+
+              {/* Main Info */}
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2">
+                  <span className="font-mono text-sm text-foreground font-medium truncate">
+                    {report.command}
+                  </span>
+                </div>
+                <div className="flex items-center gap-3 mt-1">
+                  {report.blueprint && (
+                    <span className="font-mono text-[10px] text-secondary flex items-center gap-1">
+                      📐 {report.blueprint}
+                    </span>
+                  )}
+                  <span className="font-mono text-[10px] text-muted-foreground">
+                    {report.id}
+                  </span>
+                </div>
               </div>
-              <span className="font-mono text-[10px] text-muted-foreground">{report.startTime.split(" ")[1]}</span>
-              <span className="font-mono text-[10px] text-muted-foreground">{report.duration}</span>
-              <span className="font-mono text-[10px] text-primary">{report.actionsCompleted}</span>
-              <span className="font-mono text-[10px] text-muted-foreground">{report.networkRequests}</span>
-              <span className={`font-mono text-[10px] font-bold ${report.errors > 0 ? "text-destructive" : "text-muted-foreground"}`}>{report.errors}</span>
-              <div className="flex gap-1">
-                <Link to={`/reports/${report.id}`} className="p-1 rounded text-muted-foreground hover:text-primary transition-colors">
+
+              {/* Metrics */}
+              <div className="hidden md:flex items-center gap-5 shrink-0">
+                <div className="text-center">
+                  <div className="font-mono text-xs font-semibold text-primary">{report.actionsCompleted}</div>
+                  <div className="font-mono text-[8px] text-muted-foreground uppercase">Actions</div>
+                </div>
+                <div className="text-center">
+                  <div className="font-mono text-xs font-semibold text-foreground/80">{report.duration}</div>
+                  <div className="font-mono text-[8px] text-muted-foreground uppercase">Duration</div>
+                </div>
+                <div className="text-center">
+                  <div className="font-mono text-xs font-semibold text-muted-foreground">{report.networkRequests}</div>
+                  <div className="font-mono text-[8px] text-muted-foreground uppercase">Requests</div>
+                </div>
+                <div className="text-center">
+                  <div className={`font-mono text-xs font-bold ${report.errors > 0 ? "text-destructive" : "text-emerald-400"}`}>
+                    {report.errors}
+                  </div>
+                  <div className="font-mono text-[8px] text-muted-foreground uppercase">Errors</div>
+                </div>
+              </div>
+
+              {/* Time & Action */}
+              <div className="flex items-center gap-3 shrink-0">
+                <span className="font-mono text-[10px] text-muted-foreground hidden sm:block">
+                  {report.startTime.split(" ")[1]}
+                </span>
+                <Link
+                  to={`/reports/${report.id}`}
+                  onClick={(e) => e.stopPropagation()}
+                  className="p-1.5 rounded-lg border border-glass-border text-muted-foreground hover:text-primary hover:border-primary/30 transition-colors opacity-0 group-hover:opacity-100"
+                >
                   <Eye className="w-3.5 h-3.5" />
                 </Link>
               </div>
             </div>
-          ))}
-        </div>
+          </motion.div>
+        ))}
+      </div>
 
-        {/* Pagination */}
-        <div className="flex items-center justify-between px-3 py-3 border-t border-glass-border">
+      {/* Pagination */}
+      {filtered.length > perPage && (
+        <div className="flex items-center justify-between glass-panel p-3">
           <span className="font-mono text-[10px] text-muted-foreground">
             Showing {filtered.length === 0 ? 0 : (page - 1) * perPage + 1}-{Math.min(page * perPage, filtered.length)} of {filtered.length}
           </span>
@@ -264,7 +296,7 @@ const Reports = () => {
             </button>
           </div>
         </div>
-      </GlassPanel>
+      )}
     </div>
   );
 };
