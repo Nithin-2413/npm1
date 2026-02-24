@@ -120,9 +120,10 @@ const AppLayout = () => {
                     to={item.path}
                     className={`flex items-center gap-3 px-3 py-2.5 rounded-xl font-mono text-xs transition-all group ${
                       isActive
-                        ? `${NAV_COLOR_CLASSES[item.color].bg} ${NAV_COLOR_CLASSES[item.color].text} ${NAV_COLOR_CLASSES[item.color].border} border`
+                        ? `${NAV_COLOR_CLASSES[item.color].bg} ${NAV_COLOR_CLASSES[item.color].text} ${NAV_COLOR_CLASSES[item.color].border} border backdrop-blur-md shadow-sm`
                         : "text-muted-foreground hover:text-foreground hover:bg-muted/20 border border-transparent"
                     }`}
+                    style={isActive ? { background: `hsl(var(--glass-bg) / 0.45)` } : undefined}
                   >
                     <item.icon className="w-4 h-4 shrink-0" />
                     <span className="flex-1">{item.label}</span>
