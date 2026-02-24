@@ -2,12 +2,11 @@ import { useState, useCallback } from "react";
 import { motion } from "framer-motion";
 import { Link, useNavigate } from "react-router-dom";
 import { GlassPanel } from "@/components/GlassPanel";
-import { GlassModal } from "@/components/GlassModal";
 import { StatusBadge, StatusType } from "@/components/StatusBadge";
 import { toast } from "sonner";
 import {
   Search, Download, Eye, Trash2,
-  ChevronLeft, ChevronRight, RotateCcw, Share2
+  ChevronLeft, ChevronRight
 } from "lucide-react";
 
 interface Report {
@@ -43,7 +42,6 @@ const Reports = () => {
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [page, setPage] = useState(1);
   const [dateRange, setDateRange] = useState("7");
-  const [viewingReport, setViewingReport] = useState<Report | null>(null);
   const perPage = 8;
 
   const filtered = reports
@@ -190,7 +188,7 @@ const Reports = () => {
             className={`glass-panel p-4 hover:bg-muted/5 transition-all group cursor-pointer ${
               selectedIds.includes(report.id) ? "ring-1 ring-primary/30 bg-primary/5" : ""
             }`}
-            onClick={() => setViewingReport(report)}
+            onClick={() => navigate(`/reports/${report.id}`)}
           >
             <div className="flex items-start gap-4 flex-wrap md:flex-nowrap">
               {/* Checkbox */}
@@ -249,12 +247,13 @@ const Reports = () => {
                 <span className="font-mono text-[10px] text-muted-foreground hidden sm:block">
                   {report.startTime.split(" ")[1]}
                 </span>
-                <button
-                  onClick={(e) => { e.stopPropagation(); setViewingReport(report); }}
+                <Link
+                  to={`/reports/${report.id}`}
+                  onClick={(e) => e.stopPropagation()}
                   className="p-1.5 rounded-lg border border-glass-border text-muted-foreground hover:text-primary hover:border-primary/30 transition-colors opacity-0 group-hover:opacity-100"
                 >
                   <Eye className="w-3.5 h-3.5" />
-                </button>
+                </Link>
               </div>
             </div>
           </motion.div>
@@ -296,64 +295,6 @@ const Reports = () => {
           </div>
         </div>
       )}
-      {/* Glass Modal for viewing report */}
-      <GlassModal
-        open={!!viewingReport}
-        onClose={() => setViewingReport(null)}
-        title={viewingReport?.id}
-        subtitle={viewingReport ? `${viewingReport.startTime} • ${viewingReport.duration}` : ""}
-        maxWidth="max-w-2xl"
-      >
-        {viewingReport && (
-          <div className="space-y-5">
-            <div className="flex items-center gap-3">
-              <StatusBadge status={viewingReport.status} size="md" />
-              <span className="font-mono text-xs text-muted-foreground">{viewingReport.actionsCompleted} actions</span>
-            </div>
-
-            <div className="glass-panel-strong p-3 rounded-xl">
-              <div className="font-mono text-[10px] text-muted-foreground uppercase mb-1">Command</div>
-              <pre className="font-mono text-xs text-foreground/80 whitespace-pre-wrap">{viewingReport.command}</pre>
-            </div>
-
-            {viewingReport.blueprint && (
-              <div className="flex items-center gap-2">
-                <span className="font-mono text-[10px] text-muted-foreground">Blueprint:</span>
-                <span className="font-mono text-xs text-secondary">📐 {viewingReport.blueprint}</span>
-              </div>
-            )}
-
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-              {[
-                { label: "Duration", value: viewingReport.duration, color: "text-primary" },
-                { label: "Actions", value: viewingReport.actionsCompleted, color: "text-foreground/80" },
-                { label: "Requests", value: String(viewingReport.networkRequests), color: "text-muted-foreground" },
-                { label: "Errors", value: String(viewingReport.errors), color: viewingReport.errors > 0 ? "text-destructive" : "text-emerald-400" },
-              ].map(m => (
-                <div key={m.label} className="text-center glass-panel-strong p-3 rounded-xl">
-                  <div className={`font-mono text-lg font-bold ${m.color}`}>{m.value}</div>
-                  <div className="font-mono text-[9px] text-muted-foreground uppercase">{m.label}</div>
-                </div>
-              ))}
-            </div>
-
-            <div className="flex items-center gap-2 pt-2 border-t border-[hsl(var(--foreground)/0.06)]">
-              <Link
-                to={`/reports/${viewingReport.id}`}
-                className="flex items-center gap-1.5 px-4 py-2 rounded-xl font-mono text-xs font-semibold bg-primary/20 text-primary border border-primary/30 hover:bg-primary/30 transition-colors"
-              >
-                <Eye className="w-3 h-3" /> Full Report
-              </Link>
-              <button className="flex items-center gap-1.5 px-3 py-2 rounded-xl font-mono text-xs border border-glass-border text-muted-foreground hover:text-foreground transition-colors">
-                <RotateCcw className="w-3 h-3" /> Re-run
-              </button>
-              <button className="flex items-center gap-1.5 px-3 py-2 rounded-xl font-mono text-xs border border-glass-border text-muted-foreground hover:text-foreground transition-colors">
-                <Share2 className="w-3 h-3" /> Share
-              </button>
-            </div>
-          </div>
-        )}
-      </GlassModal>
     </div>
   );
 };
