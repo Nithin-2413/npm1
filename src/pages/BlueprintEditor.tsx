@@ -115,6 +115,8 @@ function actionsToEdges(actions: EditorAction[]): Edge[] {
       id: `e-${ids[i]}-${ids[i + 1]}`,
       source: ids[i],
       target: ids[i + 1],
+      sourceHandle: "bottom",
+      targetHandle: "top",
       type: "smoothstep",
       animated: true,
       style: { stroke: "hsl(190 100% 50% / 0.4)", strokeWidth: 2 },
@@ -178,6 +180,23 @@ const FlowCanvas = () => {
   }, []);
 
   const onPaneClick = useCallback(() => setSelectedNodeId(null), []);
+
+  const onNodesDelete = useCallback((deletedNodes: Node[]) => {
+    const deletedIds = deletedNodes
+      .filter(n => n.id !== "start" && n.id !== "end")
+      .map(n => n.id);
+    if (deletedIds.length === 0) return;
+    const updated = actionsData.filter(a => !deletedIds.includes(a.id));
+    syncNodesFromActions(updated);
+    if (selectedNodeId && deletedIds.includes(selectedNodeId)) setSelectedNodeId(null);
+    toast.success(`Deleted ${deletedIds.length} action(s)`);
+  }, [actionsData, selectedNodeId, syncNodesFromActions]);
+
+  const onEdgeClick = useCallback((_: React.MouseEvent, edge: Edge) => {
+    if (isViewMode) return;
+    setEdges(eds => eds.filter(e => e.id !== edge.id));
+    toast.success("Connection removed");
+  }, [isViewMode, setEdges]);
 
   const addAction = useCallback((type: ActionType, position?: { x: number; y: number }) => {
     const newId = Date.now().toString();
@@ -350,6 +369,8 @@ const FlowCanvas = () => {
             onNodesChange={!isViewMode ? onNodesChange : undefined}
             onEdgesChange={!isViewMode ? onEdgesChange : undefined}
             onConnect={!isViewMode ? onConnect : undefined}
+            onNodesDelete={!isViewMode ? onNodesDelete : undefined}
+            onEdgeClick={onEdgeClick}
             onNodeClick={onNodeClick}
             onPaneClick={onPaneClick}
             onDragOver={onDragOver}
