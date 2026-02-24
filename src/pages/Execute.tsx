@@ -80,7 +80,7 @@ const Execute = () => {
               onChange={(e) => setCommand(e.target.value)}
               rows={2}
               disabled={isRunning}
-              className="w-full font-mono text-sm text-foreground bg-muted/20 rounded-lg px-3 py-2 border border-glass-border outline-none focus:ring-1 focus:ring-primary/40 resize-none placeholder:text-muted-foreground/50 disabled:opacity-60 disabled:cursor-not-allowed"
+              className="w-full font-mono text-sm text-foreground/80 bg-muted/10 rounded-lg px-3 py-2 border border-glass-border/40 outline-none focus:ring-1 focus:ring-primary/40 resize-none placeholder:text-muted-foreground/30 disabled:opacity-60 disabled:cursor-not-allowed"
               placeholder="Enter your test command..."
             />
           </div>
