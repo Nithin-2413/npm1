@@ -161,25 +161,13 @@ const AppLayout = () => {
               <SystemPulse />
             </div>
 
-            {/* User & Logout */}
-            <div className="p-4 border-t space-y-3" style={{ borderColor: "hsl(var(--glass-border) / 0.3)" }}>
-              {user && (
-                <div className="flex items-center gap-2">
-                  <AnimatedAvatar animal={avatar} size="sm" />
-                  <span className="font-mono text-[10px] text-muted-foreground truncate flex-1">{user.email}</span>
-                  <button
-                    onClick={handleLogout}
-                    className="font-mono text-[10px] text-destructive hover:text-destructive/80 transition-colors shrink-0"
-                  >
-                    Logout
-                  </button>
-                </div>
-              )}
-              <div className="text-center mt-2">
+            {/* Bottom Branding */}
+            <div className="p-4 border-t" style={{ borderColor: "hsl(var(--glass-border) / 0.3)" }}>
+              <div className="text-center">
                 <h2 className="text-sm font-black tracking-tight bg-clip-text text-transparent" style={{ fontFamily: "'Sen', sans-serif", backgroundImage: "linear-gradient(135deg, #7a5c12, #b8942e, #e2c56d, #f5e2a0, #e2c56d, #b8942e, #7a5c12)", backgroundSize: "300% auto", animation: "gold-shine 4s linear infinite" }}>LUMEN</h2>
                 <p className="text-[7px] text-muted-foreground tracking-widest uppercase" style={{ fontFamily: "'Sen', sans-serif" }}>Lumen Technologies</p>
+                <p className="font-mono text-[8px] text-muted-foreground/50 mt-1">v2.4.1</p>
               </div>
-              <p className="font-mono text-[9px] text-muted-foreground mt-1">v2.4.1</p>
             </div>
           </motion.aside>
         )}
