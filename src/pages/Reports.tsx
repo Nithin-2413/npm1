@@ -190,26 +190,24 @@ const Reports = () => {
             }`}
             onClick={() => navigate(`/reports/${report.id}`)}
           >
-            <div className="flex items-center gap-4">
+            <div className="flex items-start gap-4 flex-wrap md:flex-nowrap">
               {/* Checkbox */}
               <input
                 type="checkbox"
                 checked={selectedIds.includes(report.id)}
                 onChange={(e) => { e.stopPropagation(); toggleSelect(report.id); }}
                 onClick={(e) => e.stopPropagation()}
-                className="accent-primary w-3.5 h-3.5 shrink-0"
+                className="accent-primary w-3.5 h-3.5 shrink-0 mt-1"
               />
 
               {/* Status */}
-              <StatusBadge status={report.status} className="shrink-0" />
+              <StatusBadge status={report.status} className="shrink-0 mt-0.5" />
 
               {/* Main Info */}
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2">
-                  <span className="font-mono text-sm text-foreground font-medium truncate">
-                    {report.command}
-                  </span>
-                </div>
+              <div className="flex-1 min-w-0 overflow-hidden">
+                <span className="font-mono text-sm text-foreground font-medium block truncate">
+                  {report.command}
+                </span>
                 <div className="flex items-center gap-3 mt-1">
                   {report.blueprint && (
                     <span className="font-mono text-[10px] text-secondary flex items-center gap-1">
