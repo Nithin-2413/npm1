@@ -152,23 +152,18 @@ const AppLayout = () => {
               boxShadow: "inset 1px 0 0 0 hsl(0 0% 100% / 0.08), inset 0 1px 0 0 hsl(0 0% 100% / 0.06), 4px 0 30px -4px hsl(0 0% 0% / 0.15)",
             }}
           >
-            {/* Logo */}
-            <div className="p-5 flex items-center justify-center gap-3 border-b" style={{ borderColor: "hsl(var(--glass-border) / 0.3)" }}>
-              <span className="text-2xl animate-float">🌊</span>
-              <div className="text-center">
-                <h1 className="text-xl font-black tracking-tight bg-clip-text text-transparent" style={{ fontFamily: "'Sen', sans-serif", backgroundImage: "linear-gradient(135deg, #7a5c12, #b8942e, #e2c56d, #f5e2a0, #e2c56d, #b8942e, #7a5c12)", backgroundSize: "300% auto", animation: "gold-shine 4s linear infinite" }}>NPM</h1>
-                <p className="text-[8px] text-muted-foreground tracking-widest uppercase leading-tight" style={{ fontFamily: "'Sen', sans-serif" }}>NextSure Prime<br/>Matrix</p>
-              </div>
+            {/* Collapse button */}
+            <div className="p-3 flex justify-end border-b" style={{ borderColor: "hsl(var(--glass-border) / 0.3)" }}>
               <button
                 onClick={() => setSidebarOpen(false)}
-                className="ml-auto text-muted-foreground hover:text-foreground transition-colors"
+                className="text-muted-foreground hover:text-foreground transition-colors"
               >
                 <ChevronLeft className="w-4 h-4" />
               </button>
             </div>
 
             {/* Nav */}
-            <nav className="flex-1 p-3 space-y-1">
+            <nav className="p-3 space-y-1">
               {NAV_ITEMS.map((item) => {
                 const isActive = location.pathname === item.path;
                 return (
@@ -197,6 +192,13 @@ const AppLayout = () => {
                 );
               })}
             </nav>
+
+            {/* NPM Logo — centered */}
+            <div className="flex-1 flex flex-col items-center justify-center gap-2 py-4">
+              <span className="text-2xl animate-float">🌊</span>
+              <h1 className="text-xl font-black tracking-tight bg-clip-text text-transparent" style={{ fontFamily: "'Sen', sans-serif", backgroundImage: "linear-gradient(135deg, #7a5c12, #b8942e, #e2c56d, #f5e2a0, #e2c56d, #b8942e, #7a5c12)", backgroundSize: "300% auto", animation: "gold-shine 4s linear infinite" }}>NPM</h1>
+              <p className="text-[8px] text-muted-foreground tracking-widest uppercase leading-tight text-center" style={{ fontFamily: "'Sen', sans-serif" }}>NextSure Prime<br/>Matrix</p>
+            </div>
 
             {/* System Pulse */}
             <div className="px-4 py-3 border-t" style={{ borderColor: "hsl(var(--glass-border) / 0.3)" }}>
