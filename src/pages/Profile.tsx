@@ -1,12 +1,21 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { GlassPanel } from "@/components/GlassPanel";
-import { Camera, Save, Key, Copy, Eye, EyeOff, Trash2, Plus } from "lucide-react";
+import { Save, Key, Copy, Eye, EyeOff, Trash2, Plus } from "lucide-react";
+import { AnimatedAvatar, AVATAR_ANIMALS, AvatarAnimal, getAvatarLabel } from "@/components/AnimatedAvatar";
 
 const Profile = () => {
   const [name, setName] = useState("QA Admin");
   const [email] = useState("qa_admin@npmmonitor.dev");
   const [bio, setBio] = useState("Senior QA Engineer. Automating everything through liquid glass.");
   const [showKey, setShowKey] = useState(false);
+  const [selectedAvatar, setSelectedAvatar] = useState<AvatarAnimal>(() => {
+    return (localStorage.getItem("npm_avatar") as AvatarAnimal) || "lion";
+  });
+
+  useEffect(() => {
+    localStorage.setItem("npm_avatar", selectedAvatar);
+    window.dispatchEvent(new CustomEvent("avatar-changed", { detail: selectedAvatar }));
+  }, [selectedAvatar]);
 
   const apiKeys = [
     { id: "key_1", name: "Production", key: "npm_sk_prod_••••••••Kx9f", created: "2026-01-15", lastUsed: "2m ago" },
@@ -22,17 +31,29 @@ const Profile = () => {
         <p className="font-mono text-xs text-muted-foreground mt-1">Account management</p>
       </div>
 
+      {/* Avatar Selection */}
+      <GlassPanel title="Choose Avatar" icon="✨" glow="purple">
+        <div className="flex flex-wrap items-center gap-4">
+          {AVATAR_ANIMALS.map((animal) => (
+            <div key={animal} className="flex flex-col items-center gap-1.5">
+              <AnimatedAvatar
+                animal={animal}
+                size="md"
+                selected={selectedAvatar === animal}
+                onClick={() => setSelectedAvatar(animal)}
+              />
+              <span className={`font-mono text-[9px] ${selectedAvatar === animal ? "text-primary font-semibold" : "text-muted-foreground"}`}>
+                {getAvatarLabel(animal)}
+              </span>
+            </div>
+          ))}
+        </div>
+      </GlassPanel>
+
       {/* Profile Card */}
       <GlassPanel glow="cyan">
         <div className="flex items-start gap-6">
-          <div className="relative group">
-            <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-primary to-secondary flex items-center justify-center text-2xl font-bold text-background">
-              QA
-            </div>
-            <button className="absolute inset-0 rounded-2xl bg-background/50 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
-              <Camera className="w-5 h-5 text-foreground" />
-            </button>
-          </div>
+          <AnimatedAvatar animal={selectedAvatar} size="lg" />
           <div className="flex-1 space-y-3">
             <div>
               <label className="font-mono text-[10px] text-muted-foreground uppercase tracking-wider block mb-1">Name</label>
