@@ -17,6 +17,7 @@ import Network from "./pages/Network";
 import Settings from "./pages/Settings";
 import Profile from "./pages/Profile";
 import Login from "./pages/Login";
+import Onboarding from "./pages/Onboarding";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -50,6 +51,7 @@ const App = () => {
         <AuthProvider>
           <Routes>
             <Route path="/login" element={<Login />} />
+            <Route path="/onboarding" element={<Onboarding />} />
             <Route element={<ProtectedRoute><AppLayout /></ProtectedRoute>}>
               <Route path="/" element={<Dashboard />} />
               <Route path="/execute" element={<Execute />} />
