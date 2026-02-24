@@ -156,7 +156,7 @@ const AppLayout = () => {
             <div className="p-4 flex items-center border-b" style={{ borderColor: "hsl(var(--glass-border) / 0.3)" }}>
               <div className="flex-1 flex flex-col items-center gap-1">
                 <span className="text-2xl animate-float">🌊</span>
-                <h1 className="text-xl font-black tracking-tight bg-clip-text text-transparent" style={{ fontFamily: "'Sen', sans-serif", backgroundImage: "linear-gradient(135deg, #7a5c12, #b8942e, #e2c56d, #f5e2a0, #e2c56d, #b8942e, #7a5c12)", backgroundSize: "300% auto", animation: "gold-shine 4s linear infinite" }}>NPM</h1>
+                <h1 className="text-xl font-black tracking-tight bg-clip-text text-transparent" style={{ fontFamily: "'Sen', sans-serif", backgroundImage: "linear-gradient(135deg, #7a5c12, #b8942e, #e2c56d, #f5e2a0, #e2c56d, #b8942e, #7a5c12)", backgroundSize: "300% auto", animation: "gold-shine 10s linear infinite" }}>NPM</h1>
                 <p className="text-[8px] text-muted-foreground tracking-widest uppercase leading-tight text-center" style={{ fontFamily: "'Sen', sans-serif" }}>NextSure Prime<br/>Matrix</p>
               </div>
               <button
@@ -206,7 +206,7 @@ const AppLayout = () => {
             {/* Bottom Branding */}
             <div className="p-4 border-t" style={{ borderColor: "hsl(var(--glass-border) / 0.3)" }}>
               <div className="text-center">
-                <h2 className="text-sm font-black tracking-tight bg-clip-text text-transparent" style={{ fontFamily: "'Sen', sans-serif", backgroundImage: "linear-gradient(135deg, #7a5c12, #b8942e, #e2c56d, #f5e2a0, #e2c56d, #b8942e, #7a5c12)", backgroundSize: "300% auto", animation: "gold-shine 4s linear infinite" }}>LUMEN</h2>
+                <h2 className="text-sm font-black tracking-tight bg-clip-text text-transparent" style={{ fontFamily: "'Sen', sans-serif", backgroundImage: "linear-gradient(135deg, #7a5c12, #b8942e, #e2c56d, #f5e2a0, #e2c56d, #b8942e, #7a5c12)", backgroundSize: "300% auto", animation: "gold-shine 10s linear infinite" }}>LUMEN</h2>
                 <p className="text-[7px] text-muted-foreground tracking-widest uppercase" style={{ fontFamily: "'Sen', sans-serif" }}>Lumen Technologies</p>
                 <p className="font-mono text-[8px] text-muted-foreground/50 mt-1">v2.4.1</p>
               </div>
