@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { GlassPanel } from "@/components/GlassPanel";
-import { Save, Key, Copy, Eye, EyeOff, Trash2, Plus } from "lucide-react";
+import { Save, Copy, Trash2, Plus, Eye, EyeOff } from "lucide-react";
 import { AnimatedAvatar, AVATAR_ANIMALS, AvatarAnimal, getAvatarLabel } from "@/components/AnimatedAvatar";
 
 const Profile = () => {
@@ -17,10 +17,10 @@ const Profile = () => {
     window.dispatchEvent(new CustomEvent("avatar-changed", { detail: selectedAvatar }));
   }, [selectedAvatar]);
 
-  const apiKeys = [
-    { id: "key_1", name: "Production", key: "npm_sk_prod_••••••••Kx9f", created: "2026-01-15", lastUsed: "2m ago" },
-    { id: "key_2", name: "Development", key: "npm_sk_dev_••••••••Ab3d", created: "2026-02-01", lastUsed: "1h ago" },
-  ];
+  const [apiKeys, setApiKeys] = useState([
+    { id: "key_1", name: "Production", key: "npm_sk_prod_" + crypto.randomUUID().slice(0, 16), created: "2026-01-15", lastUsed: "2m ago", visible: false },
+    { id: "key_2", name: "Development", key: "npm_sk_dev_" + crypto.randomUUID().slice(0, 16), created: "2026-02-01", lastUsed: "1h ago", visible: false },
+  ]);
 
   return (
     <div className="max-w-3xl mx-auto space-y-6">
@@ -81,21 +81,9 @@ const Profile = () => {
         </div>
       </GlassPanel>
 
-      {/* Stats */}
-      <GlassPanel title="Statistics" icon="📊" glow="purple">
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          {[
-            { label: "Executions", value: "1,247", color: "text-primary" },
-            { label: "Blueprints", value: "12", color: "text-secondary" },
-            { label: "Success Rate", value: "94.2%", color: "text-emerald-400" },
-            { label: "Member Since", value: "Jan 2026", color: "text-muted-foreground" },
-          ].map((stat) => (
-            <div key={stat.label} className="text-center glass-panel-strong p-3 rounded-lg">
-              <div className={`font-mono text-xl font-bold ${stat.color}`}>{stat.value}</div>
-              <div className="font-mono text-[9px] text-muted-foreground uppercase">{stat.label}</div>
-            </div>
-          ))}
-        </div>
+      {/* Member Since */}
+      <GlassPanel title="Member Since" icon="📅" glow="purple">
+        <p className="font-mono text-sm text-muted-foreground">January 2026</p>
       </GlassPanel>
 
       {/* API Keys */}
@@ -106,19 +94,46 @@ const Profile = () => {
               <div>
                 <span className="font-mono text-xs font-semibold text-foreground">{apiKey.name}</span>
                 <div className="flex items-center gap-2 mt-1">
-                  <span className="font-mono text-[11px] text-muted-foreground">{apiKey.key}</span>
-                  <button className="text-muted-foreground hover:text-foreground transition-colors">
+                  <span className="font-mono text-[11px] text-muted-foreground">
+                    {apiKey.visible ? apiKey.key : apiKey.key.slice(0, 11) + "••••••••"}
+                  </span>
+                  <button
+                    onClick={() => setApiKeys(keys => keys.map(k => k.id === apiKey.id ? { ...k, visible: !k.visible } : k))}
+                    className="text-muted-foreground hover:text-foreground transition-colors"
+                  >
+                    {apiKey.visible ? <EyeOff className="w-3 h-3" /> : <Eye className="w-3 h-3" />}
+                  </button>
+                  <button
+                    onClick={() => navigator.clipboard.writeText(apiKey.key)}
+                    className="text-muted-foreground hover:text-foreground transition-colors"
+                  >
                     <Copy className="w-3 h-3" />
                   </button>
                 </div>
                 <span className="font-mono text-[9px] text-muted-foreground">Created: {apiKey.created} • Last used: {apiKey.lastUsed}</span>
               </div>
-              <button className="p-2 rounded-lg border border-destructive/30 text-destructive hover:bg-destructive/10 transition-colors">
+              <button
+                onClick={() => setApiKeys(keys => keys.filter(k => k.id !== apiKey.id))}
+                className="p-2 rounded-lg border border-destructive/30 text-destructive hover:bg-destructive/10 transition-colors"
+              >
                 <Trash2 className="w-3.5 h-3.5" />
               </button>
             </div>
           ))}
-          <button className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl font-mono text-xs border border-dashed border-glass-border text-muted-foreground hover:text-primary hover:border-primary/30 transition-colors">
+          <button
+            onClick={() => {
+              const newKey = {
+                id: crypto.randomUUID(),
+                name: `Key ${apiKeys.length + 1}`,
+                key: "npm_sk_" + crypto.randomUUID().replace(/-/g, "").slice(0, 24),
+                created: new Date().toISOString().split("T")[0],
+                lastUsed: "just now",
+                visible: true,
+              };
+              setApiKeys(keys => [...keys, newKey]);
+            }}
+            className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl font-mono text-xs border border-dashed border-glass-border text-muted-foreground hover:text-primary hover:border-primary/30 transition-colors"
+          >
             <Plus className="w-3.5 h-3.5" /> Generate New API Key
           </button>
         </div>
