@@ -92,16 +92,24 @@ const Settings = () => {
   const [settings, setSettings] = useState<SettingsState>(loadSettings);
   const [dirty, setDirty] = useState(false);
 
-  // Theme is already applied on app startup via useThemeInit in App.tsx
-  // Only re-apply when user explicitly changes theme via the set() function
+  // Sync theme when changed externally (header toggle)
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const theme = (e as CustomEvent).detail as string;
+      setSettings(prev => prev.theme === theme ? prev : { ...prev, theme });
+    };
+    window.addEventListener("theme-changed", handler);
+    return () => window.removeEventListener("theme-changed", handler);
+  }, []);
 
   const set = useCallback(<K extends keyof SettingsState>(key: K, val: SettingsState[K]) => {
     setSettings(prev => ({ ...prev, [key]: val }));
     setDirty(true);
 
-    // Apply theme immediately
+    // Apply theme immediately and notify header
     if (key === "theme") {
       applyTheme(val as string);
+      window.dispatchEvent(new CustomEvent("theme-changed", { detail: val }));
     }
   }, []);
 
