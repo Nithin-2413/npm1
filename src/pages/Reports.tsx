@@ -1,11 +1,12 @@
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
 import { GlassPanel } from "@/components/GlassPanel";
 import { StatusBadge, StatusType } from "@/components/StatusBadge";
+import { toast } from "sonner";
 import {
-  Search, Download, Filter, Eye, RotateCcw, Trash2, MoreHorizontal,
-  ChevronLeft, ChevronRight, ArrowUpDown
+  Search, Download, Eye, Trash2,
+  ChevronLeft, ChevronRight
 } from "lucide-react";
 
 interface Report {
@@ -20,7 +21,7 @@ interface Report {
   errors: number;
 }
 
-const REPORTS: Report[] = [
+const INITIAL_REPORTS: Report[] = [
   { id: "exec_001", command: "Navigate to signup, fill form, submit", blueprint: "signup_flow_v1", status: "success", startTime: "2026-02-24 14:32", duration: "6.5s", actionsCompleted: "7/7", networkRequests: 8, errors: 0 },
   { id: "exec_002", command: "Run blueprint: login_flow_v1", blueprint: "login_flow_v1", status: "success", startTime: "2026-02-24 14:25", duration: "2.1s", actionsCompleted: "5/5", networkRequests: 4, errors: 0 },
   { id: "exec_003", command: "Test checkout with expired card", status: "failure", startTime: "2026-02-24 14:18", duration: "4.8s", actionsCompleted: "2/4", networkRequests: 6, errors: 2 },
@@ -34,21 +35,23 @@ const REPORTS: Report[] = [
 ];
 
 const Reports = () => {
+  const [reports, setReports] = useState<Report[]>(INITIAL_REPORTS);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<"all" | StatusType>("all");
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [page, setPage] = useState(1);
+  const [dateRange, setDateRange] = useState("7");
   const perPage = 8;
 
-  const filtered = REPORTS
+  const filtered = reports
     .filter(r => {
-      const matchSearch = !search || r.command.toLowerCase().includes(search.toLowerCase());
+      const matchSearch = !search || r.command.toLowerCase().includes(search.toLowerCase()) || r.id.toLowerCase().includes(search.toLowerCase());
       const matchStatus = statusFilter === "all" || r.status === statusFilter;
       return matchSearch && matchStatus;
     });
 
   const paginated = filtered.slice((page - 1) * perPage, page * perPage);
-  const totalPages = Math.ceil(filtered.length / perPage);
+  const totalPages = Math.max(1, Math.ceil(filtered.length / perPage));
 
   const toggleSelect = (id: string) => {
     setSelectedIds(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]);
@@ -62,6 +65,25 @@ const Reports = () => {
     }
   };
 
+  const exportReports = useCallback((ids?: string[]) => {
+    const toExport = ids ? reports.filter(r => ids.includes(r.id)) : filtered;
+    const json = JSON.stringify(toExport, null, 2);
+    const blob = new Blob([json], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `npm-reports-${new Date().toISOString().slice(0, 10)}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+    toast.success(`Exported ${toExport.length} report(s)`);
+  }, [reports, filtered]);
+
+  const deleteReports = useCallback((ids: string[]) => {
+    setReports(prev => prev.filter(r => !ids.includes(r.id)));
+    setSelectedIds([]);
+    toast.success(`Deleted ${ids.length} report(s)`);
+  }, []);
+
   return (
     <div className="max-w-7xl mx-auto space-y-6">
       {/* Header */}
@@ -70,16 +92,23 @@ const Reports = () => {
           <h1 className="text-2xl font-black tracking-tight gradient-text flex items-center gap-2">
             <span>📋</span> Execution Reports
           </h1>
-          <p className="font-mono text-xs text-muted-foreground mt-1">{REPORTS.length} total executions</p>
+          <p className="font-mono text-xs text-muted-foreground mt-1">{reports.length} total executions</p>
         </div>
         <div className="flex items-center gap-2">
-          <select className="glass-panel-strong px-3 py-2 rounded-xl font-mono text-xs text-foreground bg-transparent outline-none cursor-pointer">
-            <option className="bg-background">Last 7 Days</option>
-            <option className="bg-background">Last 30 Days</option>
-            <option className="bg-background">Last 90 Days</option>
-            <option className="bg-background">All Time</option>
+          <select
+            value={dateRange}
+            onChange={(e) => setDateRange(e.target.value)}
+            className="glass-panel-strong px-3 py-2 rounded-xl font-mono text-xs text-foreground bg-transparent outline-none cursor-pointer"
+          >
+            <option className="bg-background" value="7">Last 7 Days</option>
+            <option className="bg-background" value="30">Last 30 Days</option>
+            <option className="bg-background" value="90">Last 90 Days</option>
+            <option className="bg-background" value="all">All Time</option>
           </select>
-          <button className="flex items-center gap-2 px-3 py-2 rounded-xl font-mono text-xs border border-glass-border text-muted-foreground hover:text-foreground transition-colors">
+          <button
+            onClick={() => exportReports()}
+            className="flex items-center gap-2 px-3 py-2 rounded-xl font-mono text-xs border border-glass-border text-muted-foreground hover:text-foreground transition-colors"
+          >
             <Download className="w-3.5 h-3.5" /> Export
           </button>
         </div>
@@ -91,8 +120,8 @@ const Reports = () => {
           <Search className="w-3.5 h-3.5 text-muted-foreground" />
           <input
             value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search by command..."
+            onChange={(e) => { setSearch(e.target.value); setPage(1); }}
+            placeholder="Search by command or ID..."
             className="flex-1 bg-transparent font-mono text-xs text-foreground placeholder:text-muted-foreground outline-none"
           />
         </div>
@@ -121,10 +150,16 @@ const Reports = () => {
           className="glass-panel glass-glow-cyan p-3 flex items-center gap-3"
         >
           <span className="font-mono text-xs text-primary">{selectedIds.length} selected</span>
-          <button className="font-mono text-[10px] px-3 py-1.5 rounded-lg border border-destructive/30 text-destructive hover:bg-destructive/10 transition-colors flex items-center gap-1">
+          <button
+            onClick={() => deleteReports(selectedIds)}
+            className="font-mono text-[10px] px-3 py-1.5 rounded-lg border border-destructive/30 text-destructive hover:bg-destructive/10 transition-colors flex items-center gap-1"
+          >
             <Trash2 className="w-3 h-3" /> Delete
           </button>
-          <button className="font-mono text-[10px] px-3 py-1.5 rounded-lg border border-primary/30 text-primary hover:bg-primary/10 transition-colors flex items-center gap-1">
+          <button
+            onClick={() => exportReports(selectedIds)}
+            className="font-mono text-[10px] px-3 py-1.5 rounded-lg border border-primary/30 text-primary hover:bg-primary/10 transition-colors flex items-center gap-1"
+          >
             <Download className="w-3 h-3" /> Export
           </button>
           <button
@@ -138,7 +173,6 @@ const Reports = () => {
 
       {/* Table */}
       <GlassPanel glow="none">
-        {/* Table Header */}
         <div className="grid grid-cols-[32px_auto_1fr_100px_70px_70px_70px_60px_60px] gap-2 px-3 py-2.5 font-mono text-[9px] text-muted-foreground uppercase tracking-wider border-b border-glass-border items-center">
           <input
             type="checkbox"
@@ -156,9 +190,12 @@ const Reports = () => {
           <span></span>
         </div>
 
-        {/* Rows */}
         <div className="divide-y divide-glass-border/30">
-          {paginated.map((report) => (
+          {paginated.length === 0 ? (
+            <div className="px-3 py-8 text-center font-mono text-xs text-muted-foreground">
+              No reports match your filters.
+            </div>
+          ) : paginated.map((report) => (
             <div
               key={report.id}
               className={`grid grid-cols-[32px_auto_1fr_100px_70px_70px_70px_60px_60px] gap-2 px-3 py-2.5 items-center hover:bg-muted/10 transition-colors ${
@@ -197,7 +234,7 @@ const Reports = () => {
         {/* Pagination */}
         <div className="flex items-center justify-between px-3 py-3 border-t border-glass-border">
           <span className="font-mono text-[10px] text-muted-foreground">
-            Showing {(page - 1) * perPage + 1}-{Math.min(page * perPage, filtered.length)} of {filtered.length}
+            Showing {filtered.length === 0 ? 0 : (page - 1) * perPage + 1}-{Math.min(page * perPage, filtered.length)} of {filtered.length}
           </span>
           <div className="flex items-center gap-1">
             <button

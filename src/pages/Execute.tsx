@@ -1,10 +1,11 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { GlassPanel } from "@/components/GlassPanel";
 import { StatusBadge, StatusType } from "@/components/StatusBadge";
 import { ActionBadge, ActionType } from "@/components/ActionBadge";
 import { LiquidProgress } from "@/components/LiquidProgress";
-import { Pause, X, Maximize2, Camera, ChevronDown } from "lucide-react";
+import { LiveBrowserPreview } from "@/components/LiveBrowserPreview";
+import { Pause, X, Camera, ChevronDown } from "lucide-react";
 
 interface ExecutionAction {
   type: ActionType;
@@ -107,10 +108,23 @@ const Execute = () => {
       {/* Progress Bar */}
       <LiquidProgress value={progress} label={`Executing: ${MOCK_ACTIONS[runningIndex]?.target || "..."}`} />
 
+      {/* LIVE AUTOMATION VIEW — Terminal + Browser side by side */}
+      <div className="grid lg:grid-cols-2 gap-6">
+        {/* Live Terminal Logs */}
+        <GlassPanel title="Live Terminal" icon="🖥️" glow="cyan" delay={0.1}>
+          <LiveTerminal logs={CONSOLE_LOGS} />
+        </GlassPanel>
+
+        {/* Live Browser Preview */}
+        <GlassPanel title="Live Browser" icon="🌐" glow="purple" delay={0.15}>
+          <LiveBrowserPreview />
+        </GlassPanel>
+      </div>
+
       {/* Three column layout */}
       <div className="grid lg:grid-cols-3 gap-6">
         {/* Action Timeline */}
-        <GlassPanel title="Action Timeline" icon="📋" glow="cyan" delay={0.1}>
+        <GlassPanel title="Action Timeline" icon="📋" glow="cyan" delay={0.2}>
           <div className="space-y-1 max-h-[500px] overflow-y-auto">
             {MOCK_ACTIONS.map((action, i) => (
               <div key={i}>
@@ -147,30 +161,6 @@ const Execute = () => {
           </div>
         </GlassPanel>
 
-        {/* Browser Preview */}
-        <GlassPanel title="Browser Preview" icon="🖥️" glow="purple" delay={0.2}>
-          <div className="aspect-video bg-muted/20 rounded-xl border border-glass-border flex items-center justify-center relative overflow-hidden">
-            <div className="text-center space-y-2">
-              <span className="text-4xl animate-float">🌊</span>
-              <p className="font-mono text-[11px] text-muted-foreground">Live preview updating...</p>
-              <p className="font-mono text-[9px] text-primary animate-pulse">Capturing signup form</p>
-            </div>
-            <div className="absolute top-2 right-2 flex gap-1">
-              <button className="p-1.5 rounded-lg bg-muted/30 text-muted-foreground hover:text-foreground transition-colors">
-                <Camera className="w-3 h-3" />
-              </button>
-              <button className="p-1.5 rounded-lg bg-muted/30 text-muted-foreground hover:text-foreground transition-colors">
-                <Maximize2 className="w-3 h-3" />
-              </button>
-            </div>
-          </div>
-          {/* Highlight overlay info */}
-          <div className="mt-3 glass-panel-strong p-3 rounded-lg">
-            <div className="font-mono text-[10px] text-muted-foreground">Currently targeting:</div>
-            <div className="font-mono text-xs text-primary mt-1">input#terms-checkbox</div>
-          </div>
-        </GlassPanel>
-
         {/* Network Monitor */}
         <GlassPanel title="Network Monitor" icon="🔮" glow="cyan" delay={0.3}>
           <div className="flex items-center gap-3 mb-3">
@@ -182,72 +172,87 @@ const Execute = () => {
               <div key={i} className="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-muted/10 transition-colors font-mono text-[11px]">
                 <span className={`font-semibold w-10 ${req.method === "POST" ? "text-secondary" : "text-primary"}`}>{req.method}</span>
                 <span className="truncate flex-1 text-foreground/70">{req.url}</span>
-                <span className={req.status >= 400 ? "text-destructive" : req.status >= 300 ? "text-muted-foreground" : "text-emerald-400"}>{req.status}</span>
+                <span className={req.status >= 400 ? "text-destructive" : "text-emerald-400"}>{req.status}</span>
                 <span className="text-muted-foreground w-12 text-right">{req.duration}</span>
               </div>
             ))}
           </div>
         </GlassPanel>
-      </div>
 
-      {/* Console Logs */}
-      <GlassPanel title="Console Output" icon="🖥️" glow="none" delay={0.4}>
-        <div className="flex items-center gap-2 mb-3">
-          {["all", "info", "warn", "error"].map(f => (
-            <button
-              key={f}
-              onClick={() => setConsoleFilter(f)}
-              className={`font-mono text-[10px] px-2 py-1 rounded border transition-all capitalize ${
-                consoleFilter === f ? "border-primary/40 bg-primary/10 text-primary" : "border-transparent text-muted-foreground hover:text-foreground"
-              }`}
-            >
-              {f}
-            </button>
-          ))}
-        </div>
-        <div className="glass-panel-strong p-3 font-mono text-xs max-h-[200px] overflow-y-auto rounded-lg">
-          <div className="flex items-center gap-2 mb-2 pb-2 border-b border-glass-border">
-            <span className="w-2.5 h-2.5 rounded-full bg-destructive" />
-            <span className="w-2.5 h-2.5 rounded-full bg-amber-400" />
-            <span className="w-2.5 h-2.5 rounded-full bg-emerald-400" />
-            <span className="ml-2 text-muted-foreground text-[10px]">npm://console</span>
-          </div>
-          {filteredConsole.map((log, i) => (
-            <div key={i} className="flex gap-2 py-0.5">
-              <span className="text-muted-foreground shrink-0">[{log.time}]</span>
-              <span className={
-                log.type === "error" ? "text-destructive" :
-                log.type === "warn" ? "text-amber-400" :
-                "text-primary"
-              }>{log.text}</span>
+        {/* AI Diagnosis */}
+        <GlassPanel title="AI Diagnosis" icon="🧠" glow="pink" delay={0.35}>
+          <div className="glass-panel-strong p-4 space-y-2">
+            <div className="flex items-center justify-between">
+              <span className="font-mono text-xs font-semibold text-foreground">Missing Required Field</span>
+              <span className="font-mono text-[10px] font-bold text-destructive">Critical</span>
             </div>
-          ))}
-          <span className="inline-block w-2 h-4 bg-primary animate-terminal-blink ml-1" />
-        </div>
-      </GlassPanel>
+            <div className="font-mono text-[11px] text-muted-foreground space-y-1">
+              <p><span className="text-secondary">Component:</span> AuthController.register()</p>
+              <p><span className="text-primary">🎯 Root Cause:</span> POST /api/auth/register returned 422. Missing 'terms_accepted'.</p>
+              <p><span className="text-emerald-400">💡 Fix:</span> Add checkbox interaction before submission.</p>
+            </div>
+            <div className="flex gap-2 mt-3">
+              <button className="font-mono text-[10px] px-3 py-1.5 rounded-lg border border-primary/30 text-primary hover:bg-primary/10 transition-colors">
+                View Full Diagnosis
+              </button>
+              <button className="font-mono text-[10px] px-3 py-1.5 rounded-lg border border-emerald-400/30 text-emerald-400 hover:bg-emerald-400/10 transition-colors">
+                Retry with Fix
+              </button>
+            </div>
+          </div>
+        </GlassPanel>
+      </div>
+    </div>
+  );
+};
 
-      {/* AI Diagnosis (appears on error) */}
-      <GlassPanel title="AI Diagnosis" icon="🧠" glow="pink" delay={0.5}>
-        <div className="glass-panel-strong p-4 space-y-2">
-          <div className="flex items-center justify-between">
-            <span className="font-mono text-xs font-semibold text-foreground">Missing Required Field</span>
-            <span className="font-mono text-[10px] font-bold text-destructive">Critical</span>
-          </div>
-          <div className="font-mono text-[11px] text-muted-foreground space-y-1">
-            <p><span className="text-secondary">Component:</span> AuthController.register()</p>
-            <p><span className="text-primary">🎯 Root Cause:</span> POST /api/auth/register returned 422. The 'terms_accepted' field was missing.</p>
-            <p><span className="text-emerald-400">💡 Fix:</span> Add checkbox interaction for #terms-checkbox before submission.</p>
-          </div>
-          <div className="flex gap-2 mt-3">
-            <button className="font-mono text-[10px] px-3 py-1.5 rounded-lg border border-primary/30 text-primary hover:bg-primary/10 transition-colors">
-              View Full Diagnosis
-            </button>
-            <button className="font-mono text-[10px] px-3 py-1.5 rounded-lg border border-emerald-400/30 text-emerald-400 hover:bg-emerald-400/10 transition-colors">
-              Retry with Fix
-            </button>
-          </div>
-        </div>
-      </GlassPanel>
+// Streaming terminal component with auto-scroll
+const LiveTerminal = ({ logs }: { logs: typeof CONSOLE_LOGS }) => {
+  const [visibleLines, setVisibleLines] = useState<typeof CONSOLE_LOGS>([]);
+  const scrollRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    let i = 0;
+    const interval = setInterval(() => {
+      if (i < logs.length) {
+        setVisibleLines(prev => [...prev, logs[i]]);
+        i++;
+      } else {
+        i = 0;
+        setVisibleLines([]);
+      }
+    }, 1500);
+    return () => clearInterval(interval);
+  }, [logs]);
+
+  useEffect(() => {
+    if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+  }, [visibleLines]);
+
+  return (
+    <div ref={scrollRef} className="glass-panel-strong p-3 font-mono text-xs max-h-[300px] overflow-y-auto rounded-lg">
+      <div className="flex items-center gap-2 mb-2 pb-2 border-b border-glass-border">
+        <span className="w-2.5 h-2.5 rounded-full bg-destructive" />
+        <span className="w-2.5 h-2.5 rounded-full bg-amber-400" />
+        <span className="w-2.5 h-2.5 rounded-full bg-emerald-400" />
+        <span className="ml-2 text-muted-foreground text-[10px]">npm://live-terminal</span>
+      </div>
+      {visibleLines.map((log, i) => (
+        <motion.div
+          key={`${i}-${log.time}`}
+          initial={{ opacity: 0, x: -8 }}
+          animate={{ opacity: 1, x: 0 }}
+          className="flex gap-2 py-0.5"
+        >
+          <span className="text-muted-foreground shrink-0">[{log.time}]</span>
+          <span className={
+            log.type === "error" ? "text-destructive" :
+            log.type === "warn" ? "text-amber-400" :
+            "text-primary"
+          }>{log.text}</span>
+        </motion.div>
+      ))}
+      <span className="inline-block w-2 h-4 bg-primary animate-terminal-blink ml-1" />
     </div>
   );
 };

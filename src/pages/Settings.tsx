@@ -1,9 +1,10 @@
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { GlassPanel } from "@/components/GlassPanel";
+import { toast } from "sonner";
 import {
   Monitor, Globe, Wifi, Brain, FileCode2, ClipboardList,
   Zap, Database, ChevronRight, Save, RotateCcw, Trash2,
-  TestTube, Key
+  TestTube
 } from "lucide-react";
 
 interface SettingsSection {
@@ -23,11 +24,55 @@ const SECTIONS: SettingsSection[] = [
   { id: "advanced", label: "Advanced", icon: <Database className="w-4 h-4" /> },
 ];
 
+const DEFAULTS = {
+  theme: "dark",
+  glassIntensity: 75,
+  notifications: true,
+  emailNotifs: false,
+  browser: "chromium",
+  headless: true,
+  defaultTimeout: 15,
+  slowMotion: 0,
+  autoScreenshot: true,
+  videoRecording: false,
+  interceptAll: true,
+  captureHeaders: true,
+  captureBodies: true,
+  logConsole: true,
+  aiProvider: "groq",
+  aiModel: "qwen2.5-coder-32b",
+  temperature: 30,
+  streaming: true,
+  autoAnalyze: true,
+  autoSave: true,
+  validateSelectors: true,
+  reportFormat: "json",
+  autoExport: false,
+  retentionDays: 30,
+  includeScreenshots: true,
+  includeNetwork: true,
+  includeConsole: true,
+  parallelExec: 3,
+  maxRetries: 2,
+  debugMode: false,
+  integrations: { slack: false, github: true, email: false, webhooks: false } as Record<string, boolean>,
+};
+
+type SettingsState = typeof DEFAULTS;
+
+function loadSettings(): SettingsState {
+  try {
+    const saved = localStorage.getItem("npm-settings");
+    if (saved) return { ...DEFAULTS, ...JSON.parse(saved) };
+  } catch {}
+  return { ...DEFAULTS };
+}
+
 const Toggle = ({ checked, onChange, label }: { checked: boolean; onChange: () => void; label: string }) => (
   <label className="flex items-center justify-between cursor-pointer group">
     <span className="font-mono text-xs text-muted-foreground group-hover:text-foreground transition-colors">{label}</span>
     <div onClick={onChange} className={`w-9 h-5 rounded-full flex items-center transition-colors cursor-pointer ${checked ? "bg-primary/40" : "bg-muted/40"}`}>
-      <div className={`w-4 h-4 rounded-full bg-foreground transition-transform ${checked ? "translate-x-4.5" : "translate-x-0.5"}`} style={{ transform: checked ? "translateX(18px)" : "translateX(2px)" }} />
+      <div className="w-4 h-4 rounded-full bg-foreground transition-transform" style={{ transform: checked ? "translateX(18px)" : "translateX(2px)" }} />
     </div>
   </label>
 );
@@ -44,50 +89,41 @@ const Slider = ({ value, onChange, min, max, label, unit }: { value: number; onC
 
 const Settings = () => {
   const [activeSection, setActiveSection] = useState("general");
+  const [settings, setSettings] = useState<SettingsState>(loadSettings);
+  const [dirty, setDirty] = useState(false);
 
-  // General
-  const [theme, setTheme] = useState("dark");
-  const [glassIntensity, setGlassIntensity] = useState(75);
-  const [notifications, setNotifications] = useState(true);
-  const [emailNotifs, setEmailNotifs] = useState(false);
+  const set = useCallback(<K extends keyof SettingsState>(key: K, val: SettingsState[K]) => {
+    setSettings(prev => ({ ...prev, [key]: val }));
+    setDirty(true);
+  }, []);
 
-  // Browser
-  const [browser, setBrowser] = useState("chromium");
-  const [headless, setHeadless] = useState(true);
-  const [defaultTimeout, setDefaultTimeout] = useState(15);
-  const [slowMotion, setSlowMotion] = useState(0);
-  const [autoScreenshot, setAutoScreenshot] = useState(true);
-  const [videoRecording, setVideoRecording] = useState(false);
+  const saveSettings = useCallback(() => {
+    localStorage.setItem("npm-settings", JSON.stringify(settings));
+    setDirty(false);
+    toast.success("Settings saved successfully");
+  }, [settings]);
 
-  // Network
-  const [interceptAll, setInterceptAll] = useState(true);
-  const [captureHeaders, setCaptureHeaders] = useState(true);
-  const [captureBodies, setCaptureBodies] = useState(true);
-  const [logConsole, setLogConsole] = useState(true);
+  const resetDefaults = useCallback(() => {
+    setSettings({ ...DEFAULTS });
+    localStorage.removeItem("npm-settings");
+    setDirty(false);
+    toast.info("Settings reset to defaults");
+  }, []);
 
-  // AI
-  const [aiProvider, setAiProvider] = useState("groq");
-  const [aiModel, setAiModel] = useState("qwen2.5-coder-32b");
-  const [temperature, setTemperature] = useState(30);
-  const [streaming, setStreaming] = useState(true);
-  const [autoAnalyze, setAutoAnalyze] = useState(true);
+  const clearAllData = useCallback(() => {
+    localStorage.clear();
+    setSettings({ ...DEFAULTS });
+    setDirty(false);
+    toast.success("All data cleared");
+  }, []);
 
-  // Blueprints
-  const [autoSave, setAutoSave] = useState(true);
-  const [validateSelectors, setValidateSelectors] = useState(true);
-
-  // Reports
-  const [reportFormat, setReportFormat] = useState("json");
-  const [autoExport, setAutoExport] = useState(false);
-  const [retentionDays, setRetentionDays] = useState(30);
-  const [includeScreenshots, setIncludeScreenshots] = useState(true);
-  const [includeNetwork, setIncludeNetwork] = useState(true);
-  const [includeConsole, setIncludeConsole] = useState(true);
-
-  // Advanced
-  const [parallelExec, setParallelExec] = useState(3);
-  const [maxRetries, setMaxRetries] = useState(2);
-  const [debugMode, setDebugMode] = useState(false);
+  const toggleIntegration = useCallback((name: string) => {
+    setSettings(prev => ({
+      ...prev,
+      integrations: { ...prev.integrations, [name]: !prev.integrations[name] },
+    }));
+    setDirty(true);
+  }, []);
 
   const renderSection = () => {
     switch (activeSection) {
@@ -98,21 +134,21 @@ const Settings = () => {
               <h3 className="font-mono text-sm font-semibold text-foreground mb-4">Theme</h3>
               <div className="flex gap-2">
                 {["dark", "light", "auto"].map(t => (
-                  <button key={t} onClick={() => setTheme(t)}
+                  <button key={t} onClick={() => set("theme", t)}
                     className={`font-mono text-xs px-4 py-2 rounded-xl border transition-all capitalize ${
-                      theme === t ? "border-primary/40 bg-primary/10 text-primary" : "border-glass-border text-muted-foreground hover:text-foreground"
+                      settings.theme === t ? "border-primary/40 bg-primary/10 text-primary" : "border-glass-border text-muted-foreground hover:text-foreground"
                     }`}
                   >{t}</button>
                 ))}
               </div>
               <div className="mt-4">
-                <Slider value={glassIntensity} onChange={setGlassIntensity} min={0} max={100} label="Glassmorphism Intensity" unit="%" />
+                <Slider value={settings.glassIntensity} onChange={v => set("glassIntensity", v)} min={0} max={100} label="Glassmorphism Intensity" unit="%" />
               </div>
             </div>
             <div className="border-t border-glass-border pt-4 space-y-3">
               <h3 className="font-mono text-sm font-semibold text-foreground mb-2">Notifications</h3>
-              <Toggle checked={notifications} onChange={() => setNotifications(!notifications)} label="Enable Notifications" />
-              <Toggle checked={emailNotifs} onChange={() => setEmailNotifs(!emailNotifs)} label="Email Notifications" />
+              <Toggle checked={settings.notifications} onChange={() => set("notifications", !settings.notifications)} label="Enable Notifications" />
+              <Toggle checked={settings.emailNotifs} onChange={() => set("emailNotifs", !settings.emailNotifs)} label="Email Notifications" />
             </div>
           </div>
         );
@@ -123,33 +159,33 @@ const Settings = () => {
               <h3 className="font-mono text-sm font-semibold text-foreground mb-4">Browser Engine</h3>
               <div className="flex gap-2">
                 {["chromium", "firefox", "webkit"].map(b => (
-                  <button key={b} onClick={() => setBrowser(b)}
+                  <button key={b} onClick={() => set("browser", b)}
                     className={`font-mono text-xs px-4 py-2 rounded-xl border transition-all capitalize ${
-                      browser === b ? "border-primary/40 bg-primary/10 text-primary" : "border-glass-border text-muted-foreground hover:text-foreground"
+                      settings.browser === b ? "border-primary/40 bg-primary/10 text-primary" : "border-glass-border text-muted-foreground hover:text-foreground"
                     }`}
                   >{b}</button>
                 ))}
               </div>
             </div>
             <div className="space-y-3">
-              <Toggle checked={headless} onChange={() => setHeadless(!headless)} label="Headless Mode" />
-              <Slider value={defaultTimeout} onChange={setDefaultTimeout} min={5} max={60} label="Default Timeout" unit="s" />
-              <Slider value={slowMotion} onChange={setSlowMotion} min={0} max={5000} label="Slow Motion Delay" unit="ms" />
+              <Toggle checked={settings.headless} onChange={() => set("headless", !settings.headless)} label="Headless Mode" />
+              <Slider value={settings.defaultTimeout} onChange={v => set("defaultTimeout", v)} min={5} max={60} label="Default Timeout" unit="s" />
+              <Slider value={settings.slowMotion} onChange={v => set("slowMotion", v)} min={0} max={5000} label="Slow Motion Delay" unit="ms" />
             </div>
             <div className="border-t border-glass-border pt-4 space-y-3">
               <h3 className="font-mono text-sm font-semibold text-foreground mb-2">Screenshots & Video</h3>
-              <Toggle checked={autoScreenshot} onChange={() => setAutoScreenshot(!autoScreenshot)} label="Auto-screenshot on Error" />
-              <Toggle checked={videoRecording} onChange={() => setVideoRecording(!videoRecording)} label="Video Recording" />
+              <Toggle checked={settings.autoScreenshot} onChange={() => set("autoScreenshot", !settings.autoScreenshot)} label="Auto-screenshot on Error" />
+              <Toggle checked={settings.videoRecording} onChange={() => set("videoRecording", !settings.videoRecording)} label="Video Recording" />
             </div>
           </div>
         );
       case "network":
         return (
           <div className="space-y-3">
-            <Toggle checked={interceptAll} onChange={() => setInterceptAll(!interceptAll)} label="Intercept All Requests" />
-            <Toggle checked={logConsole} onChange={() => setLogConsole(!logConsole)} label="Log Console Messages" />
-            <Toggle checked={captureHeaders} onChange={() => setCaptureHeaders(!captureHeaders)} label="Capture Headers" />
-            <Toggle checked={captureBodies} onChange={() => setCaptureBodies(!captureBodies)} label="Capture Bodies" />
+            <Toggle checked={settings.interceptAll} onChange={() => set("interceptAll", !settings.interceptAll)} label="Intercept All Requests" />
+            <Toggle checked={settings.logConsole} onChange={() => set("logConsole", !settings.logConsole)} label="Log Console Messages" />
+            <Toggle checked={settings.captureHeaders} onChange={() => set("captureHeaders", !settings.captureHeaders)} label="Capture Headers" />
+            <Toggle checked={settings.captureBodies} onChange={() => set("captureBodies", !settings.captureBodies)} label="Capture Bodies" />
           </div>
         );
       case "ai":
@@ -159,9 +195,9 @@ const Settings = () => {
               <h3 className="font-mono text-sm font-semibold text-foreground mb-4">Provider</h3>
               <div className="flex gap-2">
                 {["groq", "openai", "anthropic"].map(p => (
-                  <button key={p} onClick={() => setAiProvider(p)}
+                  <button key={p} onClick={() => set("aiProvider", p)}
                     className={`font-mono text-xs px-4 py-2 rounded-xl border transition-all capitalize ${
-                      aiProvider === p ? "border-primary/40 bg-primary/10 text-primary" : "border-glass-border text-muted-foreground hover:text-foreground"
+                      settings.aiProvider === p ? "border-primary/40 bg-primary/10 text-primary" : "border-glass-border text-muted-foreground hover:text-foreground"
                     }`}
                   >{p}</button>
                 ))}
@@ -171,31 +207,31 @@ const Settings = () => {
               <div>
                 <span className="font-mono text-xs text-muted-foreground block mb-1">API Key</span>
                 <div className="flex gap-2">
-                  <input type="password" value="gsk_••••••••••••••••" readOnly className="flex-1 bg-muted/20 border border-glass-border rounded-xl px-3 py-2 font-mono text-xs text-foreground outline-none" />
-                  <button className="px-3 py-2 rounded-xl font-mono text-[10px] border border-primary/30 text-primary hover:bg-primary/10 transition-colors flex items-center gap-1">
+                  <input type="password" defaultValue="gsk_••••••••••••••••" className="flex-1 bg-muted/20 border border-glass-border rounded-xl px-3 py-2 font-mono text-xs text-foreground outline-none" />
+                  <button onClick={() => toast.info("API key connection test — configure DB first")} className="px-3 py-2 rounded-xl font-mono text-[10px] border border-primary/30 text-primary hover:bg-primary/10 transition-colors flex items-center gap-1">
                     <TestTube className="w-3 h-3" /> Test
                   </button>
                 </div>
               </div>
               <div>
                 <span className="font-mono text-xs text-muted-foreground block mb-1">Model</span>
-                <select value={aiModel} onChange={(e) => setAiModel(e.target.value)} className="w-full bg-muted/20 border border-glass-border rounded-xl px-3 py-2 font-mono text-xs text-foreground outline-none cursor-pointer">
+                <select value={settings.aiModel} onChange={(e) => set("aiModel", e.target.value)} className="w-full bg-muted/20 border border-glass-border rounded-xl px-3 py-2 font-mono text-xs text-foreground outline-none cursor-pointer">
                   <option className="bg-background" value="qwen2.5-coder-32b">qwen2.5-coder-32b-instruct</option>
                   <option className="bg-background" value="llama-3.3-70b">llama-3.3-70b-versatile</option>
                   <option className="bg-background" value="mixtral-8x7b">mixtral-8x7b-32768</option>
                 </select>
               </div>
-              <Slider value={temperature} onChange={setTemperature} min={0} max={100} label="Temperature" unit="%" />
-              <Toggle checked={streaming} onChange={() => setStreaming(!streaming)} label="Enable Streaming" />
-              <Toggle checked={autoAnalyze} onChange={() => setAutoAnalyze(!autoAnalyze)} label="Auto-analyze Errors" />
+              <Slider value={settings.temperature} onChange={v => set("temperature", v)} min={0} max={100} label="Temperature" unit="%" />
+              <Toggle checked={settings.streaming} onChange={() => set("streaming", !settings.streaming)} label="Enable Streaming" />
+              <Toggle checked={settings.autoAnalyze} onChange={() => set("autoAnalyze", !settings.autoAnalyze)} label="Auto-analyze Errors" />
             </div>
           </div>
         );
       case "blueprints":
         return (
           <div className="space-y-3">
-            <Toggle checked={autoSave} onChange={() => setAutoSave(!autoSave)} label="Auto-save Successful Flows" />
-            <Toggle checked={validateSelectors} onChange={() => setValidateSelectors(!validateSelectors)} label="Validate Selectors" />
+            <Toggle checked={settings.autoSave} onChange={() => set("autoSave", !settings.autoSave)} label="Auto-save Successful Flows" />
+            <Toggle checked={settings.validateSelectors} onChange={() => set("validateSelectors", !settings.validateSelectors)} label="Validate Selectors" />
           </div>
         );
       case "reports":
@@ -205,23 +241,23 @@ const Settings = () => {
               <span className="font-mono text-xs text-muted-foreground block mb-1">Default Format</span>
               <div className="flex gap-2">
                 {["json", "html", "markdown"].map(f => (
-                  <button key={f} onClick={() => setReportFormat(f)}
+                  <button key={f} onClick={() => set("reportFormat", f)}
                     className={`font-mono text-xs px-4 py-2 rounded-xl border transition-all uppercase ${
-                      reportFormat === f ? "border-primary/40 bg-primary/10 text-primary" : "border-glass-border text-muted-foreground hover:text-foreground"
+                      settings.reportFormat === f ? "border-primary/40 bg-primary/10 text-primary" : "border-glass-border text-muted-foreground hover:text-foreground"
                     }`}
                   >{f}</button>
                 ))}
               </div>
             </div>
             <div className="space-y-3">
-              <Toggle checked={autoExport} onChange={() => setAutoExport(!autoExport)} label="Auto-export Reports" />
-              <Slider value={retentionDays} onChange={setRetentionDays} min={7} max={365} label="Retention Period" unit=" days" />
+              <Toggle checked={settings.autoExport} onChange={() => set("autoExport", !settings.autoExport)} label="Auto-export Reports" />
+              <Slider value={settings.retentionDays} onChange={v => set("retentionDays", v)} min={7} max={365} label="Retention Period" unit=" days" />
             </div>
             <div className="border-t border-glass-border pt-4 space-y-3">
               <h3 className="font-mono text-sm font-semibold text-foreground mb-2">Include in Reports</h3>
-              <Toggle checked={includeScreenshots} onChange={() => setIncludeScreenshots(!includeScreenshots)} label="Screenshots" />
-              <Toggle checked={includeNetwork} onChange={() => setIncludeNetwork(!includeNetwork)} label="Network Logs" />
-              <Toggle checked={includeConsole} onChange={() => setIncludeConsole(!includeConsole)} label="Console Logs" />
+              <Toggle checked={settings.includeScreenshots} onChange={() => set("includeScreenshots", !settings.includeScreenshots)} label="Screenshots" />
+              <Toggle checked={settings.includeNetwork} onChange={() => set("includeNetwork", !settings.includeNetwork)} label="Network Logs" />
+              <Toggle checked={settings.includeConsole} onChange={() => set("includeConsole", !settings.includeConsole)} label="Console Logs" />
             </div>
           </div>
         );
@@ -229,22 +265,25 @@ const Settings = () => {
         return (
           <div className="space-y-4">
             {[
-              { name: "Slack", desc: "Send notifications to Slack channels", connected: false },
-              { name: "GitHub Actions", desc: "CI/CD integration templates", connected: true },
-              { name: "Email (SMTP)", desc: "Send report emails via SMTP", connected: false },
-              { name: "Webhooks", desc: "Custom webhook endpoints", connected: false },
+              { key: "slack", name: "Slack", desc: "Send notifications to Slack channels" },
+              { key: "github", name: "GitHub Actions", desc: "CI/CD integration templates" },
+              { key: "email", name: "Email (SMTP)", desc: "Send report emails via SMTP" },
+              { key: "webhooks", name: "Webhooks", desc: "Custom webhook endpoints" },
             ].map((int) => (
-              <div key={int.name} className="glass-panel-strong p-4 flex items-center justify-between">
+              <div key={int.key} className="glass-panel-strong p-4 flex items-center justify-between">
                 <div>
                   <span className="font-mono text-xs font-semibold text-foreground">{int.name}</span>
                   <p className="font-mono text-[10px] text-muted-foreground">{int.desc}</p>
                 </div>
-                <button className={`font-mono text-[10px] px-3 py-1.5 rounded-lg border transition-colors ${
-                  int.connected
-                    ? "border-emerald-400/30 text-emerald-400 bg-emerald-400/10"
-                    : "border-glass-border text-muted-foreground hover:text-foreground hover:border-primary/30"
-                }`}>
-                  {int.connected ? "✓ Connected" : "Connect"}
+                <button
+                  onClick={() => toggleIntegration(int.key)}
+                  className={`font-mono text-[10px] px-3 py-1.5 rounded-lg border transition-colors ${
+                    settings.integrations[int.key]
+                      ? "border-emerald-400/30 text-emerald-400 bg-emerald-400/10"
+                      : "border-glass-border text-muted-foreground hover:text-foreground hover:border-primary/30"
+                  }`}
+                >
+                  {settings.integrations[int.key] ? "✓ Connected" : "Connect"}
                 </button>
               </div>
             ))}
@@ -254,17 +293,17 @@ const Settings = () => {
         return (
           <div className="space-y-6">
             <div className="space-y-3">
-              <Slider value={parallelExec} onChange={setParallelExec} min={1} max={10} label="Parallel Executions" unit="" />
-              <Slider value={maxRetries} onChange={setMaxRetries} min={0} max={5} label="Max Retries" unit="" />
-              <Toggle checked={debugMode} onChange={() => setDebugMode(!debugMode)} label="Debug Mode" />
+              <Slider value={settings.parallelExec} onChange={v => set("parallelExec", v)} min={1} max={10} label="Parallel Executions" unit="" />
+              <Slider value={settings.maxRetries} onChange={v => set("maxRetries", v)} min={0} max={5} label="Max Retries" unit="" />
+              <Toggle checked={settings.debugMode} onChange={() => set("debugMode", !settings.debugMode)} label="Debug Mode" />
             </div>
             <div className="border-t border-glass-border pt-4 space-y-3">
               <h3 className="font-mono text-sm font-semibold text-foreground text-destructive mb-2">Danger Zone</h3>
               <div className="flex gap-2">
-                <button className="font-mono text-[10px] px-3 py-2 rounded-xl border border-glass-border text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1">
+                <button onClick={resetDefaults} className="font-mono text-[10px] px-3 py-2 rounded-xl border border-glass-border text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1">
                   <RotateCcw className="w-3 h-3" /> Reset to Defaults
                 </button>
-                <button className="font-mono text-[10px] px-3 py-2 rounded-xl border border-destructive/30 text-destructive hover:bg-destructive/10 transition-colors flex items-center gap-1">
+                <button onClick={clearAllData} className="font-mono text-[10px] px-3 py-2 rounded-xl border border-destructive/30 text-destructive hover:bg-destructive/10 transition-colors flex items-center gap-1">
                   <Trash2 className="w-3 h-3" /> Clear All Data
                 </button>
               </div>
@@ -286,7 +325,6 @@ const Settings = () => {
       </div>
 
       <div className="grid md:grid-cols-[200px_1fr] gap-6">
-        {/* Sidebar */}
         <div className="glass-panel p-2 space-y-0.5 h-fit">
           {SECTIONS.map((section) => (
             <button
@@ -305,14 +343,20 @@ const Settings = () => {
           ))}
         </div>
 
-        {/* Content */}
         <GlassPanel glow="none" className="min-h-[400px]">
           <div className="flex items-center justify-between mb-6">
             <h2 className="font-mono text-sm font-semibold text-foreground uppercase tracking-wider">
               {SECTIONS.find(s => s.id === activeSection)?.label}
             </h2>
-            <button className="flex items-center gap-1.5 px-4 py-2 rounded-xl font-mono text-xs bg-primary/10 text-primary border border-primary/30 hover:bg-primary/20 transition-colors">
-              <Save className="w-3 h-3" /> Save Changes
+            <button
+              onClick={saveSettings}
+              className={`flex items-center gap-1.5 px-4 py-2 rounded-xl font-mono text-xs border transition-colors ${
+                dirty
+                  ? "bg-primary/20 text-primary border-primary/40 hover:bg-primary/30"
+                  : "bg-primary/10 text-primary border-primary/30 hover:bg-primary/20"
+              }`}
+            >
+              <Save className="w-3 h-3" /> {dirty ? "Save Changes *" : "Save Changes"}
             </button>
           </div>
           {renderSection()}
