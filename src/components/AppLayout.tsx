@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Link, useLocation, Outlet, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { motion, AnimatePresence } from "framer-motion";
@@ -10,7 +10,7 @@ import { AnimatedAvatar, AvatarAnimal, getAvatarEmoji } from "@/components/Anima
 import {
   LayoutDashboard, Play, FileCode2, FileText,
   Settings, Menu, Search,
-  ChevronLeft, Keyboard
+  ChevronLeft, Keyboard, User, LogOut, Sun, Moon
 } from "lucide-react";
 
 const NAV_ITEMS = [
@@ -36,6 +36,9 @@ const AppLayout = () => {
   const navigate = useNavigate();
   const { user, logout } = useAuth();
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [profileOpen, setProfileOpen] = useState(false);
+  const [isDark, setIsDark] = useState(() => !document.documentElement.classList.contains("light"));
+  const profileRef = useRef<HTMLDivElement>(null);
   const [avatar, setAvatar] = useState<AvatarAnimal>(() => {
     return (localStorage.getItem("npm_avatar") as AvatarAnimal) || "lion";
   });
@@ -46,6 +49,37 @@ const AppLayout = () => {
     window.addEventListener("avatar-changed", handler);
     return () => window.removeEventListener("avatar-changed", handler);
   }, []);
+
+  // Close profile dropdown on outside click
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (profileRef.current && !profileRef.current.contains(e.target as Node)) {
+        setProfileOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, []);
+
+  const toggleTheme = () => {
+    const root = document.documentElement;
+    const goLight = !root.classList.contains("light");
+    if (goLight) root.classList.add("light");
+    else root.classList.remove("light");
+    setIsDark(!goLight);
+    try {
+      const saved = localStorage.getItem("npm-settings");
+      const settings = saved ? JSON.parse(saved) : {};
+      settings.theme = goLight ? "light" : "dark";
+      localStorage.setItem("npm-settings", JSON.stringify(settings));
+    } catch {}
+  };
+
+  const handleLogout = () => {
+    setProfileOpen(false);
+    logout();
+    navigate("/login");
+  };
 
   // Keyboard navigation shortcuts (G + key)
   useEffect(() => {
@@ -75,10 +109,6 @@ const AppLayout = () => {
     return () => { window.removeEventListener("keydown", handler); clearTimeout(gTimeout); };
   }, [navigate]);
 
-  const handleLogout = () => {
-    logout();
-    navigate("/login");
-  };
 
   return (
     <div className="min-h-screen bg-background flex w-full">
@@ -228,13 +258,68 @@ const AppLayout = () => {
             {/* Notifications */}
             <NotificationPanel />
 
-            {/* Profile */}
-            <Link to="/profile" className="flex items-center gap-1 pl-2 ml-1 border-l border-glass-border hover:opacity-80 transition-opacity">
-              <AnimatedAvatar animal={avatar} size="sm" />
-              <span className="text-xs text-muted-foreground hidden sm:inline" style={{ fontFamily: "'Sen', sans-serif" }}>
-                {((user?.name || "user").length > 7 ? (user?.name || "user").slice(0, 7) + "…" : (user?.name || "user"))}
-              </span>
-            </Link>
+            {/* Theme Toggle */}
+            <button
+              onClick={toggleTheme}
+              className="relative p-2 rounded-xl text-muted-foreground hover:text-foreground hover:bg-muted/20 transition-colors overflow-hidden"
+              title={isDark ? "Switch to light mode" : "Switch to dark mode"}
+            >
+              <motion.div
+                key={isDark ? "moon" : "sun"}
+                initial={{ y: -20, rotate: -90, opacity: 0 }}
+                animate={{ y: 0, rotate: 0, opacity: 1 }}
+                exit={{ y: 20, rotate: 90, opacity: 0 }}
+                transition={{ duration: 0.3, ease: "easeOut" }}
+              >
+                {isDark ? <Moon className="w-4 h-4" /> : <Sun className="w-4 h-4" />}
+              </motion.div>
+            </button>
+
+            {/* Profile Dropdown */}
+            <div ref={profileRef} className="relative pl-2 ml-1 border-l border-glass-border">
+              <button
+                onClick={() => setProfileOpen(!profileOpen)}
+                className="flex items-center gap-1 hover:opacity-80 transition-opacity"
+              >
+                <AnimatedAvatar animal={avatar} size="sm" />
+                <span className="text-xs text-muted-foreground hidden sm:inline" style={{ fontFamily: "'Sen', sans-serif" }}>
+                  {((user?.name || "user").length > 7 ? (user?.name || "user").slice(0, 7) + "…" : (user?.name || "user"))}
+                </span>
+              </button>
+
+              <AnimatePresence>
+                {profileOpen && (
+                  <motion.div
+                    initial={{ opacity: 0, scale: 0.95, y: -4 }}
+                    animate={{ opacity: 1, scale: 1, y: 0 }}
+                    exit={{ opacity: 0, scale: 0.95, y: -4 }}
+                    transition={{ duration: 0.15 }}
+                    className="absolute right-0 top-full mt-2 w-44 rounded-xl overflow-hidden z-50"
+                    style={{
+                      background: "hsl(var(--glass-bg) / 0.85)",
+                      backdropFilter: "blur(24px) saturate(1.6)",
+                      border: "1px solid hsl(var(--glass-border) / 0.4)",
+                      boxShadow: "0 8px 32px -8px hsl(0 0% 0% / 0.3), inset 0 1px 0 0 hsl(0 0% 100% / 0.06)",
+                    }}
+                  >
+                    <Link
+                      to="/profile"
+                      onClick={() => setProfileOpen(false)}
+                      className="flex items-center gap-2.5 px-3 py-2.5 font-mono text-[11px] text-foreground hover:bg-muted/20 transition-colors"
+                    >
+                      <User className="w-3.5 h-3.5" /> My Profile
+                    </Link>
+                    <div className="border-t" style={{ borderColor: "hsl(var(--glass-border) / 0.3)" }} />
+                    <button
+                      onClick={handleLogout}
+                      className="w-full flex items-center gap-2.5 px-3 py-2.5 font-mono text-[11px] text-destructive hover:bg-destructive/10 transition-colors"
+                    >
+                      <LogOut className="w-3.5 h-3.5" /> Logout
+                    </button>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
           </div>
         </header>
 
