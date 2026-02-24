@@ -272,22 +272,37 @@ const Dashboard = () => {
         <GlassPanel title="Activity (7 Days)" icon="📊" glow="purple" delay={0.3}>
           <div className="space-y-3">
             {ACTIVITY_DATA.map((d) => (
-              <div key={d.day} className="flex items-center gap-3">
-                <span className="font-mono text-[10px] text-muted-foreground w-8">{d.day}</span>
-                <div className="flex-1 flex items-center gap-1 h-5">
-                  <div
-                    className="h-full rounded-l bg-emerald-400/30 border border-emerald-400/20"
-                    style={{ width: `${(d.success / maxBar) * 100}%` }}
+              <motion.div
+                key={d.day}
+                className="flex items-center gap-3 group cursor-pointer"
+                whileHover={{ x: 4 }}
+                transition={{ duration: 0.2 }}
+              >
+                <span className="font-mono text-[10px] text-muted-foreground w-8 group-hover:text-foreground transition-colors">{d.day}</span>
+                <div className="flex-1 flex items-center gap-1 h-6 relative">
+                  <motion.div
+                    initial={{ width: 0 }}
+                    animate={{ width: `${(d.success / maxBar) * 100}%` }}
+                    transition={{ duration: 0.8, delay: 0.1 }}
+                    className="h-full rounded-l bg-emerald-400/30 border border-emerald-400/20 group-hover:bg-emerald-400/50 transition-colors"
                   />
                   {d.failure > 0 && (
-                    <div
-                      className="h-full rounded-r bg-destructive/30 border border-destructive/20"
-                      style={{ width: `${(d.failure / maxBar) * 100}%` }}
+                    <motion.div
+                      initial={{ width: 0 }}
+                      animate={{ width: `${(d.failure / maxBar) * 100}%` }}
+                      transition={{ duration: 0.8, delay: 0.2 }}
+                      className="h-full rounded-r bg-destructive/30 border border-destructive/20 group-hover:bg-destructive/50 transition-colors"
                     />
                   )}
+                  {/* Tooltip on hover */}
+                  <div className="absolute left-1/2 -translate-x-1/2 -top-8 px-2 py-1 rounded-lg border border-glass-border text-[9px] font-mono text-foreground opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10"
+                    style={{ background: "hsl(var(--glass-bg))" }}
+                  >
+                    ✓ {d.success} &nbsp; ✗ {d.failure}
+                  </div>
                 </div>
-                <span className="font-mono text-[9px] text-muted-foreground w-8 text-right">{d.success + d.failure}</span>
-              </div>
+                <span className="font-mono text-[9px] text-muted-foreground w-8 text-right group-hover:text-foreground transition-colors">{d.success + d.failure}</span>
+              </motion.div>
             ))}
             <div className="flex items-center gap-4 pt-2 border-t border-glass-border">
               <div className="flex items-center gap-1">
