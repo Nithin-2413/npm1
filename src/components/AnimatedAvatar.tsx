@@ -5,8 +5,12 @@ import avatarPeacock from "@/assets/avatar-peacock.jpg";
 import avatarFox from "@/assets/avatar-fox.jpg";
 import avatarSquirrel from "@/assets/avatar-squirrel.jpg";
 import avatarPanda from "@/assets/avatar-panda.jpg";
+import avatarMonkey from "@/assets/avatar-monkey.jpg";
+import avatarPenguin from "@/assets/avatar-penguin.jpg";
+import avatarDuck from "@/assets/avatar-duck.jpg";
+import avatarPolarbear from "@/assets/avatar-polarbear.jpg";
 
-export type AvatarAnimal = "lion" | "puppy" | "peacock" | "dove" | "squirrel" | "panda";
+export type AvatarAnimal = "lion" | "puppy" | "peacock" | "dove" | "squirrel" | "panda" | "monkey" | "penguin" | "duck" | "polarbear";
 
 interface AnimatedAvatarProps {
   animal: AvatarAnimal;
@@ -22,6 +26,10 @@ const AVATAR_CONFIG: Record<AvatarAnimal, { image: string; label: string }> = {
   dove:     { image: avatarFox, label: "Foxy" },
   squirrel: { image: avatarSquirrel, label: "Nutkin" },
   panda:    { image: avatarPanda, label: "Bamboo" },
+  monkey:   { image: avatarMonkey, label: "Coco" },
+  penguin:  { image: avatarPenguin, label: "Waddle" },
+  duck:     { image: avatarDuck, label: "Quacky" },
+  polarbear:{ image: avatarPolarbear, label: "Frost" },
 };
 
 const SIZE_CLASSES = {
@@ -85,7 +93,7 @@ export const AnimatedAvatar = ({ animal, size = "md", selected, onClick }: Anima
   );
 };
 
-export const AVATAR_ANIMALS: AvatarAnimal[] = ["lion", "puppy", "peacock", "dove", "squirrel", "panda"];
+export const AVATAR_ANIMALS: AvatarAnimal[] = ["lion", "puppy", "peacock", "dove", "squirrel", "panda", "monkey", "penguin", "duck", "polarbear"];
 
 export const getAvatarLabel = (animal: AvatarAnimal) => AVATAR_CONFIG[animal].label;
 export const getAvatarEmoji = (animal: AvatarAnimal) => AVATAR_CONFIG[animal].image;
