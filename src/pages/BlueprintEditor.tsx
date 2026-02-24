@@ -1,12 +1,29 @@
-import { useState, useCallback } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { Link, useNavigate, useLocation } from "react-router-dom";
+import { useState, useCallback, useRef, useMemo, DragEvent } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
+import {
+  ReactFlow,
+  Background,
+  Controls,
+  MiniMap,
+  addEdge,
+  useNodesState,
+  useEdgesState,
+  type Connection,
+  type Edge,
+  type Node,
+  BackgroundVariant,
+  Panel,
+  MarkerType,
+  ReactFlowProvider,
+  useReactFlow,
+} from "@xyflow/react";
+import "@xyflow/react/dist/style.css";
 import { GlassPanel } from "@/components/GlassPanel";
 import { ActionBadge, ActionType } from "@/components/ActionBadge";
+import { FlowActionNode, StartNode, EndNode, type FlowActionData } from "@/components/FlowActionNode";
 import { toast } from "sonner";
 import {
-  Save, Play, X, Plus, Trash2, GripVertical, Wand2,
-  ChevronUp, ChevronDown, Variable, Copy, ArrowLeft
+  Save, Play, Plus, Trash2, Wand2, Variable, ArrowLeft, ZoomIn, ZoomOut, Maximize2,
 } from "lucide-react";
 
 interface EditorAction {
@@ -52,19 +69,76 @@ const ACTION_LIBRARY: { category: string; actions: { type: ActionType; label: st
   ]},
 ];
 
-const BlueprintEditor = () => {
+const defaultActions: EditorAction[] = [
+  { id: "1", type: "navigate", selector: "", value: "https://example.com/signup", timeout: 5000, optional: false },
+  { id: "2", type: "fill", selector: "input#email", value: "{{USER_EMAIL}}", timeout: 5000, optional: false },
+  { id: "3", type: "fill", selector: "input#password", value: "{{PASSWORD}}", timeout: 5000, optional: false },
+  { id: "4", type: "click", selector: "button#submit", value: "", timeout: 5000, optional: false },
+];
+
+function actionsToNodes(actions: EditorAction[], isViewMode: boolean): Node[] {
+  const nodes: Node[] = [
+    { id: "start", type: "startNode", position: { x: 250, y: 0 }, data: {}, draggable: !isViewMode },
+  ];
+  actions.forEach((a, i) => {
+    nodes.push({
+      id: a.id,
+      type: "actionNode",
+      position: { x: 250, y: 100 + i * 120 },
+      data: {
+        actionId: a.id,
+        type: a.type,
+        selector: a.selector,
+        value: a.value,
+        timeout: a.timeout,
+        optional: a.optional,
+        isViewMode,
+      } as FlowActionData,
+      draggable: !isViewMode,
+    });
+  });
+  nodes.push({
+    id: "end",
+    type: "endNode",
+    position: { x: 250, y: 100 + actions.length * 120 },
+    data: {},
+    draggable: !isViewMode,
+  });
+  return nodes;
+}
+
+function actionsToEdges(actions: EditorAction[]): Edge[] {
+  const edges: Edge[] = [];
+  const ids = ["start", ...actions.map(a => a.id), "end"];
+  for (let i = 0; i < ids.length - 1; i++) {
+    edges.push({
+      id: `e-${ids[i]}-${ids[i + 1]}`,
+      source: ids[i],
+      target: ids[i + 1],
+      type: "smoothstep",
+      animated: true,
+      style: { stroke: "hsl(190 100% 50% / 0.4)", strokeWidth: 2 },
+      markerEnd: { type: MarkerType.ArrowClosed, color: "hsl(190 100% 50% / 0.5)" },
+    });
+  }
+  return edges;
+}
+
+const nodeTypes = {
+  actionNode: FlowActionNode,
+  startNode: StartNode,
+  endNode: EndNode,
+};
+
+const FlowCanvas = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const isViewMode = location.pathname.endsWith("/view");
+  const reactFlowWrapper = useRef<HTMLDivElement>(null);
+  const { screenToFlowPosition } = useReactFlow();
 
   const [name, setName] = useState("New Blueprint");
-  const [selectedAction, setSelectedAction] = useState<string | null>(null);
-  const [actions, setActions] = useState<EditorAction[]>([
-    { id: "1", type: "navigate", selector: "", value: "https://example.com/signup", timeout: 5000, optional: false },
-    { id: "2", type: "fill", selector: "input#email", value: "{{USER_EMAIL}}", timeout: 5000, optional: false },
-    { id: "3", type: "fill", selector: "input#password", value: "{{PASSWORD}}", timeout: 5000, optional: false },
-    { id: "4", type: "click", selector: "button#submit", value: "", timeout: 5000, optional: false },
-  ]);
+  const [actionsData, setActionsData] = useState<EditorAction[]>(defaultActions);
   const [variables, setVariables] = useState<{ name: string; defaultValue: string; type: string }[]>([
     { name: "USER_EMAIL", defaultValue: "test@example.com", type: "text" },
     { name: "PASSWORD", defaultValue: "S3cureP@ss!", type: "secret" },
@@ -72,64 +146,132 @@ const BlueprintEditor = () => {
     { name: "HEADLESS", defaultValue: "true", type: "boolean" },
   ]);
 
-  const addAction = useCallback((type: ActionType) => {
-    const newAction: EditorAction = {
-      id: Date.now().toString(),
-      type, selector: "", value: "", timeout: 5000, optional: false,
-    };
-    setActions(prev => [...prev, newAction]);
-    setSelectedAction(newAction.id);
+  const initialNodes = useMemo(() => actionsToNodes(actionsData, isViewMode), []);
+  const initialEdges = useMemo(() => actionsToEdges(actionsData), []);
+
+  const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
+  const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
+  const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
+
+  const syncNodesFromActions = useCallback((newActions: EditorAction[]) => {
+    setActionsData(newActions);
+    setNodes(actionsToNodes(newActions, isViewMode));
+    setEdges(actionsToEdges(newActions));
+  }, [isViewMode, setNodes, setEdges]);
+
+  const onConnect = useCallback((connection: Connection) => {
+    setEdges((eds) => addEdge({
+      ...connection,
+      type: "smoothstep",
+      animated: true,
+      style: { stroke: "hsl(190 100% 50% / 0.4)", strokeWidth: 2 },
+      markerEnd: { type: MarkerType.ArrowClosed, color: "hsl(190 100% 50% / 0.5)" },
+    }, eds));
+  }, [setEdges]);
+
+  const onNodeClick = useCallback((_: React.MouseEvent, node: Node) => {
+    if (node.id === "start" || node.id === "end") {
+      setSelectedNodeId(null);
+      return;
+    }
+    setSelectedNodeId(node.id);
   }, []);
+
+  const onPaneClick = useCallback(() => setSelectedNodeId(null), []);
+
+  const addAction = useCallback((type: ActionType, position?: { x: number; y: number }) => {
+    const newId = Date.now().toString();
+    const newAction: EditorAction = {
+      id: newId, type, selector: "", value: "", timeout: 5000, optional: false,
+    };
+    const updated = [...actionsData, newAction];
+    setActionsData(updated);
+
+    const newNode: Node = {
+      id: newId,
+      type: "actionNode",
+      position: position || { x: 250, y: 100 + (actionsData.length) * 120 },
+      data: {
+        actionId: newId, type, selector: "", value: "", timeout: 5000, optional: false, isViewMode,
+      } as FlowActionData,
+      draggable: !isViewMode,
+    };
+
+    setNodes(prev => {
+      const withoutEnd = prev.filter(n => n.id !== "end");
+      const endNode = prev.find(n => n.id === "end");
+      return [
+        ...withoutEnd,
+        newNode,
+        { ...endNode!, position: position ? { x: position.x, y: position.y + 120 } : { x: 250, y: 100 + updated.length * 120 } },
+      ];
+    });
+    setEdges(actionsToEdges(updated));
+    setSelectedNodeId(newId);
+  }, [actionsData, isViewMode, setNodes, setEdges]);
 
   const removeAction = useCallback((id: string) => {
-    setActions(prev => prev.filter(a => a.id !== id));
-    setSelectedAction(prev => prev === id ? null : prev);
-  }, []);
+    const updated = actionsData.filter(a => a.id !== id);
+    syncNodesFromActions(updated);
+    if (selectedNodeId === id) setSelectedNodeId(null);
+  }, [actionsData, selectedNodeId, syncNodesFromActions]);
 
   const updateAction = useCallback((id: string, updates: Partial<EditorAction>) => {
-    setActions(prev => prev.map(a => a.id === id ? { ...a, ...updates } : a));
-  }, []);
+    const updated = actionsData.map(a => a.id === id ? { ...a, ...updates } : a);
+    setActionsData(updated);
+    setNodes(prev => prev.map(n => {
+      if (n.id !== id) return n;
+      const action = updated.find(a => a.id === id)!;
+      return {
+        ...n,
+        data: {
+          actionId: action.id,
+          type: action.type,
+          selector: action.selector,
+          value: action.value,
+          timeout: action.timeout,
+          optional: action.optional,
+          isViewMode,
+        } as FlowActionData,
+      };
+    }));
+  }, [actionsData, isViewMode, setNodes]);
 
-  const moveAction = useCallback((id: string, direction: "up" | "down") => {
-    setActions(prev => {
-      const idx = prev.findIndex(a => a.id === id);
-      if (idx < 0) return prev;
-      const target = direction === "up" ? idx - 1 : idx + 1;
-      if (target < 0 || target >= prev.length) return prev;
-      const next = [...prev];
-      [next[idx], next[target]] = [next[target], next[idx]];
-      return next;
-    });
-  }, []);
-
-  const duplicateAction = useCallback((id: string) => {
-    setActions(prev => {
-      const idx = prev.findIndex(a => a.id === id);
-      if (idx < 0) return prev;
-      const clone = { ...prev[idx], id: Date.now().toString() };
-      const next = [...prev];
-      next.splice(idx + 1, 0, clone);
-      return next;
-    });
-  }, []);
+  const selected = actionsData.find(a => a.id === selectedNodeId);
 
   const saveDraft = useCallback(() => {
-    const data = { name, actions, variables };
-    localStorage.setItem(`blueprint-draft-${name}`, JSON.stringify(data));
+    localStorage.setItem(`blueprint-draft-${name}`, JSON.stringify({ name, actions: actionsData, variables }));
     toast.success(`Blueprint "${name}" saved as draft`);
-  }, [name, actions, variables]);
+  }, [name, actionsData, variables]);
 
   const saveAndRun = useCallback(() => {
     saveDraft();
     toast.success(`Blueprint "${name}" saved. Navigating to execute...`);
   }, [saveDraft, name]);
 
-  const selected = actions.find(a => a.id === selectedAction);
+  // Drag from library
+  const onDragOver = useCallback((event: DragEvent) => {
+    event.preventDefault();
+    event.dataTransfer.dropEffect = "move";
+  }, []);
+
+  const onDrop = useCallback((event: DragEvent) => {
+    event.preventDefault();
+    const type = event.dataTransfer.getData("application/reactflow") as ActionType;
+    if (!type) return;
+    const position = screenToFlowPosition({ x: event.clientX, y: event.clientY });
+    addAction(type, position);
+  }, [screenToFlowPosition, addAction]);
+
+  const onDragStart = useCallback((event: DragEvent, actionType: ActionType) => {
+    event.dataTransfer.setData("application/reactflow", actionType);
+    event.dataTransfer.effectAllowed = "move";
+  }, []);
 
   return (
-    <div className="max-w-7xl mx-auto space-y-6">
+    <div className="h-[calc(100vh-7rem)] flex flex-col gap-4">
       {/* Header */}
-      <div className="flex items-center justify-between flex-wrap gap-3">
+      <div className="flex items-center justify-between flex-wrap gap-3 shrink-0">
         <div className="flex items-center gap-3">
           <button
             onClick={() => navigate("/blueprints")}
@@ -164,28 +306,32 @@ const BlueprintEditor = () => {
         )}
       </div>
 
-      <div className="grid lg:grid-cols-[220px_1fr_280px] gap-6">
+      {/* Main layout */}
+      <div className="flex-1 grid lg:grid-cols-[220px_1fr_280px] gap-4 min-h-0">
         {/* Left Panel - Action Library */}
         {!isViewMode && (
-          <GlassPanel glow="none" className="p-4 h-fit space-y-4">
-            <span className="font-mono text-[10px] text-muted-foreground uppercase tracking-wider">Action Library</span>
+          <GlassPanel glow="none" className="p-3 overflow-y-auto space-y-3">
+            <span className="font-mono text-[10px] text-muted-foreground uppercase tracking-wider block">Action Library</span>
+            <p className="font-mono text-[9px] text-muted-foreground/60">Drag actions onto the canvas</p>
             {ACTION_LIBRARY.map((cat) => (
               <div key={cat.category}>
                 <span className="font-mono text-[9px] text-muted-foreground uppercase tracking-wider">{cat.category}</span>
                 <div className="mt-1.5 space-y-1">
                   {cat.actions.map((action) => (
-                    <button
+                    <div
                       key={action.type}
+                      draggable
+                      onDragStart={(e) => onDragStart(e, action.type)}
                       onClick={() => addAction(action.type)}
-                      className="w-full flex items-center gap-2 px-2.5 py-2.5 rounded-lg text-left hover:bg-muted/20 transition-colors group"
+                      className="w-full flex items-center gap-2 px-2.5 py-2 rounded-lg text-left hover:bg-muted/20 transition-colors group cursor-grab active:cursor-grabbing"
                     >
                       <ActionBadge type={action.type} />
                       <div className="flex-1 min-w-0">
                         <div className="font-mono text-[11px] text-foreground/80 group-hover:text-foreground truncate">{action.label}</div>
                         <div className="font-mono text-[9px] text-muted-foreground truncate">{action.desc}</div>
                       </div>
-                      <Plus className="w-3 h-3 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
-                    </button>
+                      <Plus className="w-3 h-3 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity shrink-0" />
+                    </div>
                   ))}
                 </div>
               </div>
@@ -193,97 +339,63 @@ const BlueprintEditor = () => {
           </GlassPanel>
         )}
 
-        {/* Center - Flow Canvas */}
-        <GlassPanel glow="none" className={`p-6 ${isViewMode ? "lg:col-span-2" : ""}`}>
-          <div className="flex items-center gap-2 mb-5">
-            <h3 className="font-mono text-sm font-semibold tracking-wider uppercase text-primary">Flow Builder</h3>
-            <div className="flex-1 h-px bg-gradient-to-r from-primary/30 to-transparent" />
-            <span className="font-mono text-[10px] text-muted-foreground">{actions.length} actions</span>
-          </div>
-
-          {/* Start node */}
-          <div className="flex items-center gap-2 mb-3 px-4 py-2.5 rounded-lg bg-emerald-400/10 border border-emerald-400/20">
-            <span className="text-emerald-400 font-mono text-xs font-bold">START</span>
-          </div>
-
-          <div className="ml-6 border-l-2 border-glass-border pl-5 space-y-2.5">
-            {actions.map((action, i) => (
-              <motion.div
-                key={action.id}
-                layout
-                initial={{ opacity: 0, x: -10 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -10 }}
-                className={`flex items-center gap-3 px-4 py-3 rounded-lg border cursor-pointer transition-all group ${
-                  selectedAction === action.id
-                    ? "border-primary/40 bg-primary/10 ring-1 ring-primary/20"
-                    : "border-glass-border hover:border-primary/20 hover:bg-muted/10"
-                }`}
-                onClick={() => setSelectedAction(action.id)}
-              >
-                {!isViewMode && (
-                  <div className="flex flex-col gap-0.5">
-                    <button
-                      onClick={(e) => { e.stopPropagation(); moveAction(action.id, "up"); }}
-                      disabled={i === 0}
-                      className="text-muted-foreground/40 hover:text-foreground disabled:opacity-20 transition-colors"
-                    >
-                      <ChevronUp className="w-3.5 h-3.5" />
-                    </button>
-                    <button
-                      onClick={(e) => { e.stopPropagation(); moveAction(action.id, "down"); }}
-                      disabled={i === actions.length - 1}
-                      className="text-muted-foreground/40 hover:text-foreground disabled:opacity-20 transition-colors"
-                    >
-                      <ChevronDown className="w-3.5 h-3.5" />
-                    </button>
-                  </div>
-                )}
-                <ActionBadge type={action.type} />
-                <span className="font-mono text-xs text-foreground/70 flex-1 truncate">
-                  {action.selector || action.value || "(empty)"}
-                </span>
-                {!isViewMode && (
-                  <div className="flex gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <button onClick={(e) => { e.stopPropagation(); duplicateAction(action.id); }} className="text-muted-foreground hover:text-primary transition-colors" title="Duplicate">
-                      <Copy className="w-3.5 h-3.5" />
-                    </button>
-                    <button onClick={(e) => { e.stopPropagation(); removeAction(action.id); }} className="text-muted-foreground hover:text-destructive transition-colors" title="Delete">
-                      <X className="w-3.5 h-3.5" />
-                    </button>
-                  </div>
-                )}
-              </motion.div>
-            ))}
-          </div>
-
-          {/* End node */}
-          <div className="flex items-center gap-2 mt-3 ml-6 pl-5 border-l-2 border-glass-border">
-            <div className="px-4 py-2.5 rounded-lg bg-destructive/10 border border-destructive/20">
-              <span className="text-destructive font-mono text-xs font-bold">END</span>
-            </div>
-          </div>
-
-          {/* Add action */}
-          {!isViewMode && (
-            <button
-              onClick={() => addAction("click")}
-              className="w-full mt-4 flex items-center justify-center gap-2 px-4 py-3.5 rounded-xl border border-dashed border-glass-border text-muted-foreground hover:text-primary hover:border-primary/30 transition-colors font-mono text-xs"
-            >
-              <Plus className="w-3.5 h-3.5" /> Add Action
-            </button>
-          )}
-        </GlassPanel>
+        {/* Center - React Flow Canvas */}
+        <div
+          ref={reactFlowWrapper}
+          className={`rounded-2xl border border-glass-border overflow-hidden bg-[hsl(var(--glass-bg))] ${isViewMode ? "lg:col-span-2" : ""}`}
+        >
+          <ReactFlow
+            nodes={nodes}
+            edges={edges}
+            onNodesChange={!isViewMode ? onNodesChange : undefined}
+            onEdgesChange={!isViewMode ? onEdgesChange : undefined}
+            onConnect={!isViewMode ? onConnect : undefined}
+            onNodeClick={onNodeClick}
+            onPaneClick={onPaneClick}
+            onDragOver={onDragOver}
+            onDrop={onDrop}
+            nodeTypes={nodeTypes}
+            fitView
+            fitViewOptions={{ padding: 0.3 }}
+            deleteKeyCode={isViewMode ? null : "Delete"}
+            proOptions={{ hideAttribution: true }}
+            className="blueprint-flow"
+          >
+            <Background
+              variant={BackgroundVariant.Dots}
+              gap={20}
+              size={1}
+              color="hsl(215 20% 25%)"
+            />
+            <Controls
+              showInteractive={false}
+              className="!bg-[hsl(var(--glass-bg))] !border-glass-border !rounded-xl !shadow-lg [&>button]:!bg-transparent [&>button]:!border-glass-border [&>button]:!text-muted-foreground [&>button:hover]:!text-foreground"
+            />
+            <MiniMap
+              nodeColor={(n) => {
+                if (n.id === "start") return "hsl(150 80% 40%)";
+                if (n.id === "end") return "hsl(0 80% 55%)";
+                return "hsl(190 100% 50%)";
+              }}
+              maskColor="hsl(225 30% 6% / 0.8)"
+              className="!bg-[hsl(var(--glass-bg))] !border-glass-border !rounded-xl"
+            />
+            <Panel position="top-right" className="flex gap-2">
+              <span className="font-mono text-[10px] text-muted-foreground bg-[hsl(var(--glass-bg))] px-3 py-1.5 rounded-lg border border-glass-border">
+                {actionsData.length} actions
+              </span>
+            </Panel>
+          </ReactFlow>
+        </div>
 
         {/* Right Panel - Properties & Variables */}
-        <div className="space-y-5">
+        <div className="space-y-4 overflow-y-auto">
           {selected ? (
             <GlassPanel glow="none" className="p-5">
               <div className="flex items-center gap-2 mb-4">
                 <Wand2 className="w-4 h-4 text-secondary" />
                 <h3 className="font-mono text-sm font-semibold tracking-wider uppercase text-secondary">Properties</h3>
               </div>
-
               <div className="space-y-4">
                 <div>
                   <label className="font-mono text-[10px] text-muted-foreground uppercase tracking-wider block mb-1.5">Action Type</label>
@@ -293,12 +405,11 @@ const BlueprintEditor = () => {
                     onChange={(e) => updateAction(selected.id, { type: e.target.value as ActionType })}
                     className="w-full bg-muted/20 border border-glass-border rounded-xl px-3 py-2.5 font-mono text-xs text-foreground outline-none cursor-pointer disabled:opacity-60"
                   >
-                    {["navigate", "fill", "click", "select", "wait", "assert", "screenshot", "upload", "scroll", "hover", "drag", "keypress", "checkbox", "radio", "textarea", "condition", "loop", "function", "api", "delay", "extract", "custom"].map(t => (
+                    {["navigate","fill","click","select","wait","assert","screenshot","upload","scroll","hover","drag","keypress","checkbox","radio","textarea","condition","loop","function","api","delay","extract","custom"].map(t => (
                       <option key={t} className="bg-background" value={t}>{t.charAt(0).toUpperCase() + t.slice(1)}</option>
                     ))}
                   </select>
                 </div>
-
                 <div>
                   <label className="font-mono text-[10px] text-muted-foreground uppercase tracking-wider block mb-1.5">Selector</label>
                   <input
@@ -309,7 +420,6 @@ const BlueprintEditor = () => {
                     className="w-full bg-muted/20 border border-glass-border rounded-xl px-3 py-2.5 font-mono text-xs text-foreground placeholder:text-muted-foreground outline-none focus:ring-1 focus:ring-primary/40 disabled:opacity-60"
                   />
                 </div>
-
                 <div>
                   <label className="font-mono text-[10px] text-muted-foreground uppercase tracking-wider block mb-1.5">Value</label>
                   <input
@@ -320,7 +430,6 @@ const BlueprintEditor = () => {
                     className="w-full bg-muted/20 border border-glass-border rounded-xl px-3 py-2.5 font-mono text-xs text-foreground placeholder:text-muted-foreground outline-none focus:ring-1 focus:ring-primary/40 disabled:opacity-60"
                   />
                 </div>
-
                 <div>
                   <label className="font-mono text-[10px] text-muted-foreground uppercase tracking-wider block mb-1.5">Timeout: {selected.timeout}ms</label>
                   <input
@@ -331,7 +440,6 @@ const BlueprintEditor = () => {
                     className="w-full h-1 bg-muted/40 rounded-full appearance-none accent-primary disabled:opacity-60"
                   />
                 </div>
-
                 <label className="flex items-center gap-2 cursor-pointer">
                   <input
                     type="checkbox" checked={selected.optional}
@@ -341,7 +449,6 @@ const BlueprintEditor = () => {
                   />
                   <span className="font-mono text-xs text-muted-foreground">Optional (skip on failure)</span>
                 </label>
-
                 {!isViewMode && (
                   <button
                     onClick={() => removeAction(selected.id)}
@@ -355,7 +462,7 @@ const BlueprintEditor = () => {
           ) : (
             <GlassPanel glow="none" className="p-6 flex flex-col items-center justify-center text-center">
               <Wand2 className="w-6 h-6 text-muted-foreground/30 mb-2" />
-              <p className="font-mono text-xs text-muted-foreground">Select an action to {isViewMode ? "view" : "edit"} properties</p>
+              <p className="font-mono text-xs text-muted-foreground">Click a node to {isViewMode ? "view" : "edit"} properties</p>
             </GlassPanel>
           )}
 
@@ -431,5 +538,11 @@ const BlueprintEditor = () => {
     </div>
   );
 };
+
+const BlueprintEditor = () => (
+  <ReactFlowProvider>
+    <FlowCanvas />
+  </ReactFlowProvider>
+);
 
 export default BlueprintEditor;
