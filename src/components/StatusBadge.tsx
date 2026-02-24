@@ -3,12 +3,12 @@ import { cn } from "@/lib/utils";
 export type StatusType = "success" | "failure" | "running" | "pending" | "warning" | "partial";
 
 const STATUS_MAP: Record<StatusType, { label: string; icon: string; className: string }> = {
-  success: { label: "Success", icon: "💎", className: "text-emerald-400 border-emerald-400/30 bg-emerald-400/10" },
-  failure: { label: "Failed", icon: "❄️", className: "text-destructive border-destructive/30 bg-destructive/10" },
-  running: { label: "Running", icon: "🌊", className: "text-primary border-primary/30 bg-primary/10 animate-pulse" },
-  pending: { label: "Pending", icon: "○", className: "text-muted-foreground border-glass-border bg-muted/10" },
-  warning: { label: "Warning", icon: "⚠️", className: "text-amber-400 border-amber-400/30 bg-amber-400/10" },
-  partial: { label: "Partial", icon: "⚠️", className: "text-amber-400 border-amber-400/30 bg-amber-400/10" },
+  success: { label: "Success", icon: "", className: "text-emerald-400 border-emerald-400/30 bg-emerald-400/10" },
+  failure: { label: "Failed", icon: "", className: "text-destructive border-destructive/30 bg-destructive/10" },
+  running: { label: "Running", icon: "", className: "text-primary border-primary/30 bg-primary/10 animate-pulse" },
+  pending: { label: "Pending", icon: "", className: "text-muted-foreground border-glass-border bg-muted/10" },
+  warning: { label: "Warning", icon: "", className: "text-amber-400 border-amber-400/30 bg-amber-400/10" },
+  partial: { label: "Partial", icon: "", className: "text-amber-400 border-amber-400/30 bg-amber-400/10" },
 };
 
 interface StatusBadgeProps {
@@ -32,7 +32,6 @@ export const StatusBadge = ({ status, className, size = "sm" }: StatusBadgeProps
       sizeClasses[size],
       className
     )}>
-      <span>{config.icon}</span>
       <span>{config.label}</span>
     </span>
   );
