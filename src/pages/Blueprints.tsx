@@ -6,7 +6,7 @@ import { ActionBadge, ActionType } from "@/components/ActionBadge";
 import { toast } from "sonner";
 import {
   Search, Plus, Upload, Grid3X3, List, Play, Copy, Trash2,
-  Edit, MoreHorizontal, Filter
+  Edit, Eye, MoreHorizontal, Filter
 } from "lucide-react";
 
 interface Blueprint {
@@ -313,7 +313,10 @@ const Blueprints = () => {
                 >
                   <Play className="w-3 h-3" /> Run
                 </button>
-                <Link to={`/blueprints/${bp.id}/edit`} className="p-1.5 rounded-lg border border-glass-border text-muted-foreground hover:text-foreground transition-colors">
+                <Link to={`/blueprints/${bp.id}/view`} className="p-1.5 rounded-lg border border-glass-border text-muted-foreground hover:text-foreground transition-colors" title="View">
+                  <Eye className="w-3 h-3" />
+                </Link>
+                <Link to={`/blueprints/${bp.id}/edit`} className="p-1.5 rounded-lg border border-glass-border text-muted-foreground hover:text-foreground transition-colors" title="Edit">
                   <Edit className="w-3 h-3" />
                 </Link>
                 <button onClick={() => duplicateBlueprint(bp)} className="p-1.5 rounded-lg border border-glass-border text-muted-foreground hover:text-foreground transition-colors">
@@ -353,6 +356,7 @@ const Blueprints = () => {
                 <span className="font-mono text-xs text-muted-foreground">{bp.avgDuration}</span>
                 <div className="flex gap-1">
                   <button onClick={() => runBlueprint(bp)} className="p-1 rounded text-primary hover:bg-primary/10"><Play className="w-3 h-3" /></button>
+                  <Link to={`/blueprints/${bp.id}/view`} className="p-1 rounded text-muted-foreground hover:text-foreground"><Eye className="w-3 h-3" /></Link>
                   <Link to={`/blueprints/${bp.id}/edit`} className="p-1 rounded text-muted-foreground hover:text-foreground"><Edit className="w-3 h-3" /></Link>
                   <button onClick={() => deleteBlueprint(bp)} className="p-1 rounded text-muted-foreground hover:text-destructive"><Trash2 className="w-3 h-3" /></button>
                 </div>

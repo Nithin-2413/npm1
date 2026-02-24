@@ -57,6 +57,7 @@ const App = () => {
               <Route path="/blueprints" element={<Blueprints />} />
               <Route path="/blueprints/create" element={<BlueprintEditor />} />
               <Route path="/blueprints/:id/edit" element={<BlueprintEditor />} />
+              <Route path="/blueprints/:id/view" element={<BlueprintEditor />} />
               <Route path="/reports" element={<Reports />} />
               <Route path="/reports/:id" element={<ReportDetail />} />
               <Route path="/network" element={<Network />} />
