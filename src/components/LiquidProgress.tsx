@@ -42,6 +42,9 @@ export const LiquidProgress = ({ value, label, showPercentage = true }: LiquidPr
             initial={{ strokeDashoffset: circumference }}
             animate={{ strokeDashoffset: strokeOffset }}
             transition={{ duration: 1.5, ease: "easeOut" }}
+            style={{
+              filter: `drop-shadow(0 0 2px ${glowColor})`,
+            }}
           />
           {/* Gradient definition */}
           <defs>
