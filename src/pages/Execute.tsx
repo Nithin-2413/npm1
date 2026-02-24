@@ -94,7 +94,13 @@ const Execute = () => {
                   exit={{ scale: 0.9, opacity: 0 }}
                   onClick={() => { setIsRunning(true); setElapsed(0); }}
                   disabled={!command.trim()}
-                  className="flex items-center gap-2 px-6 py-2.5 rounded-xl font-mono text-xs font-semibold bg-primary text-primary-foreground hover:opacity-90 active:scale-[0.97] transition-all disabled:opacity-40 disabled:cursor-not-allowed"
+                  className="flex items-center gap-2 px-6 py-2.5 rounded-xl font-mono text-xs font-semibold text-primary border border-primary/30 hover:border-primary/50 active:scale-[0.97] transition-all disabled:opacity-40 disabled:cursor-not-allowed"
+                  style={{
+                    background: "hsl(var(--glass-bg) / 0.25)",
+                    backdropFilter: "blur(24px) saturate(1.4)",
+                    WebkitBackdropFilter: "blur(24px) saturate(1.4)",
+                    boxShadow: "inset 0 1px 0 0 hsl(0 0% 100% / 0.08), 0 2px 8px -2px hsl(0 0% 0% / 0.15)",
+                  }}
                 >
                   <Play className="w-3.5 h-3.5" /> Run
                 </motion.button>
