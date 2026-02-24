@@ -167,11 +167,7 @@ const Login = () => {
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-3 rounded-xl font-mono text-sm font-semibold transition-all glass-glow-cyan disabled:opacity-50 disabled:cursor-not-allowed"
-              style={{
-                background: "var(--gradient-flow)",
-                color: "hsl(var(--primary-foreground))",
-              }}
+              className="w-full py-3 rounded-xl font-mono text-sm font-semibold transition-all disabled:opacity-50 disabled:cursor-not-allowed bg-foreground text-background hover:opacity-90 active:scale-[0.98]"
             >
               {loading ? (
                 <span className="flex items-center justify-center gap-2">
