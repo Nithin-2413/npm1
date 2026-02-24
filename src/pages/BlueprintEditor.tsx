@@ -136,11 +136,12 @@ const FlowCanvas = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const isViewMode = location.pathname.endsWith("/view");
+  const isCreateMode = location.pathname.endsWith("/create");
   const reactFlowWrapper = useRef<HTMLDivElement>(null);
   const { screenToFlowPosition } = useReactFlow();
 
-  const [name, setName] = useState("New Blueprint");
-  const [actionsData, setActionsData] = useState<EditorAction[]>(defaultActions);
+  const [name, setName] = useState(isCreateMode ? "Untitled Blueprint" : "New Blueprint");
+  const [actionsData, setActionsData] = useState<EditorAction[]>(isCreateMode ? [] : defaultActions);
   const [variables, setVariables] = useState<{ name: string; defaultValue: string; type: string }[]>([
     { name: "USER_EMAIL", defaultValue: "test@example.com", type: "text" },
     { name: "PASSWORD", defaultValue: "S3cureP@ss!", type: "secret" },
