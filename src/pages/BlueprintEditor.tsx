@@ -146,7 +146,7 @@ const BlueprintEditor = () => {
         )}
       </div>
 
-      <div className="grid lg:grid-cols-[200px_1fr_280px] gap-6">
+      <div className="grid lg:grid-cols-[220px_1fr_280px] gap-6">
         {/* Left Panel - Action Library */}
         {!isViewMode && (
           <GlassPanel glow="none" className="p-4 h-fit space-y-4">
@@ -163,8 +163,8 @@ const BlueprintEditor = () => {
                     >
                       <ActionBadge type={action.type} />
                       <div className="flex-1 min-w-0">
-                        <div className="font-mono text-[11px] text-foreground/80 group-hover:text-foreground">{action.label}</div>
-                        <div className="font-mono text-[9px] text-muted-foreground">{action.desc}</div>
+                        <div className="font-mono text-[11px] text-foreground/80 group-hover:text-foreground truncate">{action.label}</div>
+                        <div className="font-mono text-[9px] text-muted-foreground truncate">{action.desc}</div>
                       </div>
                       <Plus className="w-3 h-3 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
                     </button>
