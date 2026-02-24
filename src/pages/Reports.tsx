@@ -91,7 +91,7 @@ const Reports = () => {
       <div className="flex items-center justify-between flex-wrap gap-4">
         <div>
           <h1 className="text-2xl font-black tracking-tight gradient-text flex items-center gap-2" style={{ fontFamily: "'Sen', sans-serif" }}>
-            <span>📋</span> Execution Reports
+            <span>📊</span> Execution Reports
           </h1>
           <p className="font-mono text-xs text-muted-foreground mt-1">{reports.length} total executions</p>
         </div>
