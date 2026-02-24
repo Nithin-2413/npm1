@@ -1,10 +1,11 @@
-import { useState } from "react";
-import { motion } from "framer-motion";
-import { Link } from "react-router-dom";
+import { useState, useRef } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { Link, useNavigate } from "react-router-dom";
 import { GlassPanel } from "@/components/GlassPanel";
 import { StatCard } from "@/components/StatCard";
 import { StatusBadge, StatusType } from "@/components/StatusBadge";
 import { LiquidProgress } from "@/components/LiquidProgress";
+import { toast } from "sonner";
 import {
   Play, FileCode2, Camera, RotateCcw, ChevronDown, ChevronRight,
   ArrowUpRight, Eye
@@ -19,6 +20,13 @@ const RECENT_EXECUTIONS = [
   { id: "exec_006", command: "Run signup_flow_v1 with random data", status: "success" as StatusType, time: "48m ago", duration: "7.2s", actions: "7/7" },
 ];
 
+const BLUEPRINTS_LIST = [
+  { id: "signup_flow_v1", name: "Signup Flow" },
+  { id: "login_flow_v1", name: "Login Flow" },
+  { id: "checkout_flow_v1", name: "Checkout Flow" },
+  { id: "profile_update_v1", name: "Profile Update" },
+];
+
 const ACTIVITY_DATA = [
   { day: "Mon", success: 18, failure: 2 },
   { day: "Tue", success: 24, failure: 3 },
@@ -30,6 +38,7 @@ const ACTIVITY_DATA = [
 ];
 
 const Dashboard = () => {
+  const navigate = useNavigate();
   const [command, setCommand] = useState("");
   const [recording, setRecording] = useState(false);
   const [advancedOpen, setAdvancedOpen] = useState(false);
@@ -38,9 +47,26 @@ const Dashboard = () => {
   const [retryFailed, setRetryFailed] = useState(false);
   const [timeout, setTimeout_] = useState(15);
   const [tableFilter, setTableFilter] = useState<"all" | StatusType>("all");
+  const [blueprintDropdownOpen, setBlueprintDropdownOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
 
   const filteredExecs = tableFilter === "all" ? RECENT_EXECUTIONS : RECENT_EXECUTIONS.filter(e => e.status === tableFilter);
   const maxBar = Math.max(...ACTIVITY_DATA.map(d => d.success + d.failure));
+
+  const handleExecute = () => {
+    if (!command.trim()) {
+      toast.error("Please enter a command to execute");
+      return;
+    }
+    toast.success("Starting execution...");
+    navigate("/execute");
+  };
+
+  const handleUseBlueprint = (blueprintId: string, blueprintName: string) => {
+    setCommand(`Run blueprint: ${blueprintName}`);
+    setBlueprintDropdownOpen(false);
+    toast.info(`Blueprint "${blueprintName}" loaded`);
+  };
 
   return (
     <div className="max-w-7xl mx-auto space-y-6">
@@ -55,22 +81,61 @@ const Dashboard = () => {
         <textarea
           value={command}
           onChange={(e) => setCommand(e.target.value)}
-          placeholder="Enter natural language command...&#10;e.g. Navigate to signup page, fill form with random data, submit"
+          onKeyDown={(e) => { if (e.key === "Enter" && e.metaKey) handleExecute(); }}
+          placeholder="Enter natural language command...&#10;e.g. Navigate to signup page, fill form with random data, submit&#10;&#10;Press ⌘+Enter to execute"
           rows={3}
           className="w-full bg-muted/20 border border-glass-border rounded-xl px-4 py-3 font-mono text-sm text-foreground placeholder:text-muted-foreground outline-none focus:ring-1 focus:ring-primary/40 resize-none"
         />
 
         <div className="flex items-center gap-3 mt-3 flex-wrap">
-          <button className="flex items-center gap-2 px-5 py-2.5 rounded-xl font-mono text-xs font-semibold bg-primary/20 text-primary border border-primary/30 hover:bg-primary/30 transition-colors glass-glow-cyan">
+          <button
+            onClick={handleExecute}
+            className="flex items-center gap-2 px-5 py-2.5 rounded-xl font-mono text-xs font-semibold bg-primary/20 text-primary border border-primary/30 hover:bg-primary/30 transition-colors glass-glow-cyan"
+          >
             <Play className="w-3.5 h-3.5" />
             Execute Now
           </button>
 
-          <button className="flex items-center gap-2 px-4 py-2.5 rounded-xl font-mono text-xs border border-glass-border text-muted-foreground hover:text-foreground hover:border-primary/30 transition-colors">
-            <FileCode2 className="w-3.5 h-3.5" />
-            Use Blueprint
-            <ChevronDown className="w-3 h-3" />
-          </button>
+          <div className="relative" ref={dropdownRef}>
+            <button
+              onClick={() => setBlueprintDropdownOpen(!blueprintDropdownOpen)}
+              className="flex items-center gap-2 px-4 py-2.5 rounded-xl font-mono text-xs border border-glass-border text-muted-foreground hover:text-foreground hover:border-primary/30 transition-colors"
+            >
+              <FileCode2 className="w-3.5 h-3.5" />
+              Use Blueprint
+              <ChevronDown className={`w-3 h-3 transition-transform ${blueprintDropdownOpen ? "rotate-180" : ""}`} />
+            </button>
+            <AnimatePresence>
+              {blueprintDropdownOpen && (
+                <motion.div
+                  initial={{ opacity: 0, y: -5 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -5 }}
+                  className="absolute top-full left-0 mt-1 w-56 glass-panel-strong rounded-xl border border-glass-border p-1 z-50"
+                >
+                  {BLUEPRINTS_LIST.map(bp => (
+                    <button
+                      key={bp.id}
+                      onClick={() => handleUseBlueprint(bp.id, bp.name)}
+                      className="w-full flex items-center gap-2 px-3 py-2 rounded-lg font-mono text-xs text-foreground/80 hover:bg-primary/10 hover:text-primary transition-colors text-left"
+                    >
+                      <FileCode2 className="w-3 h-3 text-secondary" />
+                      {bp.name}
+                    </button>
+                  ))}
+                  <div className="border-t border-glass-border mt-1 pt-1">
+                    <Link
+                      to="/blueprints"
+                      onClick={() => setBlueprintDropdownOpen(false)}
+                      className="w-full flex items-center gap-2 px-3 py-2 rounded-lg font-mono text-[10px] text-muted-foreground hover:text-primary transition-colors"
+                    >
+                      View All Blueprints <ArrowUpRight className="w-3 h-3" />
+                    </Link>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
 
           <label className="flex items-center gap-2 px-3 py-2 rounded-xl font-mono text-xs border border-glass-border text-muted-foreground hover:text-foreground transition-colors cursor-pointer">
             <div className={`w-8 h-4 rounded-full flex items-center transition-colors ${recording ? "bg-destructive/60" : "bg-muted/40"}`}>
@@ -79,7 +144,7 @@ const Dashboard = () => {
             <span className={recording ? "text-destructive" : ""}>
               {recording ? "🔴 Recording" : "🎥 Record"}
             </span>
-            <input type="checkbox" className="sr-only" checked={recording} onChange={() => setRecording(!recording)} />
+            <input type="checkbox" className="sr-only" checked={recording} onChange={() => { setRecording(!recording); toast.info(recording ? "Recording stopped" : "Recording started"); }} />
           </label>
 
           <button
@@ -91,39 +156,42 @@ const Dashboard = () => {
           </button>
         </div>
 
-        {advancedOpen && (
-          <motion.div
-            initial={{ height: 0, opacity: 0 }}
-            animate={{ height: "auto", opacity: 1 }}
-            className="mt-3 pt-3 border-t border-glass-border grid grid-cols-2 md:grid-cols-4 gap-4"
-          >
-            <label className="flex items-center gap-2 font-mono text-[11px] text-muted-foreground cursor-pointer">
-              <input type="checkbox" checked={headless} onChange={() => setHeadless(!headless)} className="accent-primary" />
-              Headless Mode
-            </label>
-            <label className="flex items-center gap-2 font-mono text-[11px] text-muted-foreground cursor-pointer">
-              <input type="checkbox" checked={screenshotOnError} onChange={() => setScreenshotOnError(!screenshotOnError)} className="accent-primary" />
-              <Camera className="w-3 h-3" />
-              Screenshot on Error
-            </label>
-            <label className="flex items-center gap-2 font-mono text-[11px] text-muted-foreground cursor-pointer">
-              <input type="checkbox" checked={retryFailed} onChange={() => setRetryFailed(!retryFailed)} className="accent-primary" />
-              <RotateCcw className="w-3 h-3" />
-              Retry Failed
-            </label>
-            <div className="space-y-1">
-              <span className="font-mono text-[10px] text-muted-foreground">Timeout: {timeout}s</span>
-              <input
-                type="range"
-                min={5}
-                max={60}
-                value={timeout}
-                onChange={(e) => setTimeout_(parseInt(e.target.value))}
-                className="w-full h-1 bg-muted/40 rounded-full appearance-none accent-primary"
-              />
-            </div>
-          </motion.div>
-        )}
+        <AnimatePresence>
+          {advancedOpen && (
+            <motion.div
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: "auto", opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              className="overflow-hidden mt-3 pt-3 border-t border-glass-border grid grid-cols-2 md:grid-cols-4 gap-4"
+            >
+              <label className="flex items-center gap-2 font-mono text-[11px] text-muted-foreground cursor-pointer">
+                <input type="checkbox" checked={headless} onChange={() => setHeadless(!headless)} className="accent-primary" />
+                Headless Mode
+              </label>
+              <label className="flex items-center gap-2 font-mono text-[11px] text-muted-foreground cursor-pointer">
+                <input type="checkbox" checked={screenshotOnError} onChange={() => setScreenshotOnError(!screenshotOnError)} className="accent-primary" />
+                <Camera className="w-3 h-3" />
+                Screenshot on Error
+              </label>
+              <label className="flex items-center gap-2 font-mono text-[11px] text-muted-foreground cursor-pointer">
+                <input type="checkbox" checked={retryFailed} onChange={() => setRetryFailed(!retryFailed)} className="accent-primary" />
+                <RotateCcw className="w-3 h-3" />
+                Retry Failed
+              </label>
+              <div className="space-y-1">
+                <span className="font-mono text-[10px] text-muted-foreground">Timeout: {timeout}s</span>
+                <input
+                  type="range"
+                  min={5}
+                  max={60}
+                  value={timeout}
+                  onChange={(e) => setTimeout_(parseInt(e.target.value))}
+                  className="w-full h-1 bg-muted/40 rounded-full appearance-none accent-primary"
+                />
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </GlassPanel>
 
       {/* Stat Cards */}
@@ -139,7 +207,6 @@ const Dashboard = () => {
         {/* Recent Executions Table */}
         <div className="lg:col-span-2">
           <GlassPanel title="Recent Executions" icon="📋" glow="cyan" delay={0.2}>
-            {/* Filter */}
             <div className="flex items-center gap-2 mb-3">
               {(["all", "success", "failure", "partial"] as const).map((f) => (
                 <button
@@ -156,7 +223,6 @@ const Dashboard = () => {
               ))}
             </div>
 
-            {/* Table header */}
             <div className="grid grid-cols-[auto_1fr_80px_70px_70px_32px] gap-3 px-2 py-1.5 font-mono text-[9px] text-muted-foreground uppercase tracking-wider border-b border-glass-border">
               <span className="w-6">St</span>
               <span>Command</span>
@@ -166,7 +232,6 @@ const Dashboard = () => {
               <span></span>
             </div>
 
-            {/* Rows */}
             <div className="divide-y divide-glass-border/50">
               {filteredExecs.map((exec) => (
                 <motion.div
@@ -174,13 +239,14 @@ const Dashboard = () => {
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   className="grid grid-cols-[auto_1fr_80px_70px_70px_32px] gap-3 px-2 py-2.5 items-center hover:bg-muted/10 transition-colors rounded-lg cursor-pointer group"
+                  onClick={() => navigate(`/reports/${exec.id}`)}
                 >
                   <StatusBadge status={exec.status} size="sm" className="w-6 justify-center border-0 bg-transparent px-0" />
                   <span className="font-mono text-xs text-foreground/80 truncate">{exec.command}</span>
                   <span className="font-mono text-[10px] text-muted-foreground">{exec.time}</span>
                   <span className="font-mono text-[10px] text-muted-foreground">{exec.duration}</span>
                   <span className="font-mono text-[10px] text-primary">{exec.actions}</span>
-                  <Link to={`/reports/${exec.id}`} className="opacity-0 group-hover:opacity-100 transition-opacity">
+                  <Link to={`/reports/${exec.id}`} className="opacity-0 group-hover:opacity-100 transition-opacity" onClick={e => e.stopPropagation()}>
                     <Eye className="w-3.5 h-3.5 text-muted-foreground hover:text-primary" />
                   </Link>
                 </motion.div>

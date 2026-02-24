@@ -1,11 +1,12 @@
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { motion } from "framer-motion";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { GlassPanel } from "@/components/GlassPanel";
 import { ActionBadge, ActionType } from "@/components/ActionBadge";
+import { toast } from "sonner";
 import {
   Search, Plus, Upload, Grid3X3, List, Play, Copy, Trash2,
-  Edit, MoreHorizontal, ArrowUpDown, Filter
+  Edit, MoreHorizontal, Filter
 } from "lucide-react";
 
 interface Blueprint {
@@ -22,7 +23,7 @@ interface Blueprint {
   variables: string[];
 }
 
-const BLUEPRINTS: Blueprint[] = [
+const INITIAL_BLUEPRINTS: Blueprint[] = [
   {
     id: "signup_flow_v1", name: "Signup Flow", description: "Complete user registration with email, password, country selection, and terms acceptance.",
     version: "v1.2", tags: ["Authentication", "Forms"], successRate: 94, timesUsed: 47, avgDuration: "6.5s", lastUsed: "2m ago",
@@ -88,12 +89,14 @@ const BLUEPRINTS: Blueprint[] = [
 const ALL_TAGS = ["Authentication", "Forms", "E-commerce", "Navigation", "Custom"];
 
 const Blueprints = () => {
+  const navigate = useNavigate();
+  const [blueprints, setBlueprints] = useState<Blueprint[]>(INITIAL_BLUEPRINTS);
   const [view, setView] = useState<"grid" | "list">("grid");
   const [search, setSearch] = useState("");
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [sortBy, setSortBy] = useState<"recent" | "name" | "rate" | "usage">("recent");
 
-  const filtered = BLUEPRINTS
+  const filtered = blueprints
     .filter(bp => {
       const matchSearch = !search || bp.name.toLowerCase().includes(search.toLowerCase()) || bp.description.toLowerCase().includes(search.toLowerCase());
       const matchTags = selectedTags.length === 0 || selectedTags.some(t => bp.tags.includes(t));
@@ -110,6 +113,61 @@ const Blueprints = () => {
     setSelectedTags(prev => prev.includes(tag) ? prev.filter(t => t !== tag) : [...prev, tag]);
   };
 
+  const runBlueprint = useCallback((bp: Blueprint) => {
+    toast.success(`Running "${bp.name}"...`);
+    navigate("/execute");
+  }, [navigate]);
+
+  const duplicateBlueprint = useCallback((bp: Blueprint) => {
+    const clone: Blueprint = { ...bp, id: `${bp.id}_copy_${Date.now()}`, name: `${bp.name} (Copy)`, timesUsed: 0 };
+    setBlueprints(prev => [...prev, clone]);
+    toast.success(`Duplicated "${bp.name}"`);
+  }, []);
+
+  const deleteBlueprint = useCallback((bp: Blueprint) => {
+    setBlueprints(prev => prev.filter(b => b.id !== bp.id));
+    toast.success(`Deleted "${bp.name}"`);
+  }, []);
+
+  const importBlueprint = useCallback(() => {
+    const input = document.createElement("input");
+    input.type = "file";
+    input.accept = ".json";
+    input.onchange = (e) => {
+      const file = (e.target as HTMLInputElement).files?.[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = (ev) => {
+        try {
+          const data = JSON.parse(ev.target?.result as string);
+          if (data.name && data.actions) {
+            const newBp: Blueprint = {
+              id: `imported_${Date.now()}`,
+              name: data.name || "Imported Blueprint",
+              description: data.description || "",
+              version: data.version || "v1.0",
+              tags: data.tags || ["Custom"],
+              successRate: 0,
+              timesUsed: 0,
+              avgDuration: "—",
+              lastUsed: "Never",
+              actions: data.actions || [],
+              variables: data.variables || [],
+            };
+            setBlueprints(prev => [...prev, newBp]);
+            toast.success(`Imported "${newBp.name}"`);
+          } else {
+            toast.error("Invalid blueprint file format");
+          }
+        } catch {
+          toast.error("Failed to parse JSON file");
+        }
+      };
+      reader.readAsText(file);
+    };
+    input.click();
+  }, []);
+
   return (
     <div className="max-w-7xl mx-auto space-y-6">
       {/* Header */}
@@ -118,7 +176,7 @@ const Blueprints = () => {
           <h1 className="text-2xl font-black tracking-tight gradient-text flex items-center gap-2">
             <span>📐</span> Blueprints
           </h1>
-          <p className="font-mono text-xs text-muted-foreground mt-1">{BLUEPRINTS.length} crystallized patterns</p>
+          <p className="font-mono text-xs text-muted-foreground mt-1">{blueprints.length} crystallized patterns</p>
         </div>
         <div className="flex items-center gap-2">
           <Link
@@ -127,7 +185,10 @@ const Blueprints = () => {
           >
             <Plus className="w-3.5 h-3.5" /> New Blueprint
           </Link>
-          <button className="flex items-center gap-2 px-3 py-2 rounded-xl font-mono text-xs border border-glass-border text-muted-foreground hover:text-foreground transition-colors">
+          <button
+            onClick={importBlueprint}
+            className="flex items-center gap-2 px-3 py-2 rounded-xl font-mono text-xs border border-glass-border text-muted-foreground hover:text-foreground transition-colors"
+          >
             <Upload className="w-3.5 h-3.5" /> Import
           </button>
         </div>
@@ -214,9 +275,6 @@ const Blueprints = () => {
                   <h3 className="font-mono text-sm font-semibold text-foreground">{bp.name}</h3>
                   <span className="font-mono text-[9px] text-secondary">{bp.version}</span>
                 </div>
-                <button className="opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-foreground transition-all">
-                  <MoreHorizontal className="w-4 h-4" />
-                </button>
               </div>
 
               <p className="font-mono text-[11px] text-muted-foreground line-clamp-2">{bp.description}</p>
@@ -229,7 +287,6 @@ const Blueprints = () => {
                 ))}
               </div>
 
-              {/* Stats */}
               <div className="grid grid-cols-3 gap-2 pt-2 border-t border-glass-border">
                 <div className="text-center">
                   <div className={`font-mono text-sm font-bold ${bp.successRate >= 90 ? "text-emerald-400" : bp.successRate >= 70 ? "text-amber-400" : "text-destructive"}`}>
@@ -249,18 +306,20 @@ const Blueprints = () => {
 
               <div className="font-mono text-[9px] text-muted-foreground">Last used: {bp.lastUsed}</div>
 
-              {/* Actions */}
               <div className="flex items-center gap-2 pt-2">
-                <button className="flex items-center gap-1 px-3 py-1.5 rounded-lg font-mono text-[10px] bg-primary/10 text-primary border border-primary/30 hover:bg-primary/20 transition-colors">
+                <button
+                  onClick={() => runBlueprint(bp)}
+                  className="flex items-center gap-1 px-3 py-1.5 rounded-lg font-mono text-[10px] bg-primary/10 text-primary border border-primary/30 hover:bg-primary/20 transition-colors"
+                >
                   <Play className="w-3 h-3" /> Run
                 </button>
-                <button className="p-1.5 rounded-lg border border-glass-border text-muted-foreground hover:text-foreground transition-colors">
+                <Link to={`/blueprints/${bp.id}/edit`} className="p-1.5 rounded-lg border border-glass-border text-muted-foreground hover:text-foreground transition-colors">
                   <Edit className="w-3 h-3" />
-                </button>
-                <button className="p-1.5 rounded-lg border border-glass-border text-muted-foreground hover:text-foreground transition-colors">
+                </Link>
+                <button onClick={() => duplicateBlueprint(bp)} className="p-1.5 rounded-lg border border-glass-border text-muted-foreground hover:text-foreground transition-colors">
                   <Copy className="w-3 h-3" />
                 </button>
-                <button className="p-1.5 rounded-lg border border-glass-border text-muted-foreground hover:text-destructive transition-colors">
+                <button onClick={() => deleteBlueprint(bp)} className="p-1.5 rounded-lg border border-glass-border text-muted-foreground hover:text-destructive transition-colors">
                   <Trash2 className="w-3 h-3" />
                 </button>
               </div>
@@ -268,7 +327,6 @@ const Blueprints = () => {
           ))}
         </div>
       ) : (
-        /* List View */
         <GlassPanel glow="none">
           <div className="grid grid-cols-[1fr_150px_80px_80px_80px_100px] gap-3 px-3 py-2 font-mono text-[9px] text-muted-foreground uppercase tracking-wider border-b border-glass-border">
             <span>Name</span>
@@ -294,9 +352,9 @@ const Blueprints = () => {
                 <span className="font-mono text-xs text-primary">{bp.timesUsed}</span>
                 <span className="font-mono text-xs text-muted-foreground">{bp.avgDuration}</span>
                 <div className="flex gap-1">
-                  <button className="p-1 rounded text-primary hover:bg-primary/10"><Play className="w-3 h-3" /></button>
-                  <button className="p-1 rounded text-muted-foreground hover:text-foreground"><Edit className="w-3 h-3" /></button>
-                  <button className="p-1 rounded text-muted-foreground hover:text-destructive"><Trash2 className="w-3 h-3" /></button>
+                  <button onClick={() => runBlueprint(bp)} className="p-1 rounded text-primary hover:bg-primary/10"><Play className="w-3 h-3" /></button>
+                  <Link to={`/blueprints/${bp.id}/edit`} className="p-1 rounded text-muted-foreground hover:text-foreground"><Edit className="w-3 h-3" /></Link>
+                  <button onClick={() => deleteBlueprint(bp)} className="p-1 rounded text-muted-foreground hover:text-destructive"><Trash2 className="w-3 h-3" /></button>
                 </div>
               </div>
             ))}
