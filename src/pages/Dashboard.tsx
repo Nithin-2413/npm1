@@ -112,13 +112,16 @@ const Dashboard = () => {
             </button>
             <AnimatePresence>
               {blueprintDropdownOpen && (
-                <motion.div
-                  initial={{ opacity: 0, y: -5 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -5 }}
-                  className="absolute top-full left-0 mt-1 w-56 rounded-xl border border-glass-border p-1 z-50 shadow-xl"
-                   style={{ background: "hsl(var(--glass-bg))", backdropFilter: "blur(40px)" }}
-                >
+                <>
+                  <div className="fixed inset-0 z-40" onClick={() => setBlueprintDropdownOpen(false)} />
+                  <motion.div
+                    initial={{ opacity: 0, y: 4, scale: 0.95 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, y: 4, scale: 0.95 }}
+                    transition={{ duration: 0.15 }}
+                    className="absolute top-full left-0 mt-2 w-56 rounded-xl border border-glass-border p-1 z-50 shadow-2xl"
+                    style={{ background: "hsl(var(--popover))", backdropFilter: "blur(40px)" }}
+                  >
                   {BLUEPRINTS_LIST.map(bp => (
                     <button
                       key={bp.id}
@@ -138,7 +141,8 @@ const Dashboard = () => {
                       View All Blueprints <ArrowUpRight className="w-3 h-3" />
                     </Link>
                   </div>
-                </motion.div>
+                  </motion.div>
+                </>
               )}
             </AnimatePresence>
           </div>
@@ -204,8 +208,8 @@ const Dashboard = () => {
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <StatCard icon="🌊" label="Executions" value="1,247" subtext="+12% ↑ this week" color="cyan" />
         <StatCard icon="💎" label="Success Rate" value="94.2%" subtext="+2% this week" color="green" />
-        <StatCard icon="⚡" label="Avg Duration" value="4.8s" subtext="-0.3s vs last week" color="pink" />
-        <StatCard icon="📐" label="Active Blueprints" value="12" subtext="3 used today" color="purple" />
+        <StatCard icon="⚡" label="Avg Duration" value="4.8s" subtext="-0.3s vs last week" color="purple" />
+        <StatCard icon="📐" label="Active Blueprints" value="12" subtext="3 used today" color="pink" />
       </div>
 
       {/* Two column: Table + Activity */}

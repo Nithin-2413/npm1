@@ -6,14 +6,19 @@ interface StatCardProps {
   label: string;
   value: string;
   subtext?: string;
-  color: "cyan" | "purple" | "pink" | "green";
+  color: "cyan" | "purple" | "pink" | "green" | "blue" | "orange" | "violet" | "blueberry" | "pistachio";
 }
 
-const colorMap = {
+const colorMap: Record<string, string> = {
   cyan: "from-glow-cyan/20 to-transparent border-glow-cyan/30 text-primary",
-  purple: "from-glow-purple/20 to-transparent border-glow-purple/30 text-secondary",
-  pink: "from-glow-pink/20 to-transparent border-glow-pink/30 text-accent",
-  green: "from-emerald-400/20 to-transparent border-emerald-400/30 text-emerald-400",
+  purple: "from-theme-purple/20 to-transparent border-theme-purple/30 text-theme-purple",
+  pink: "from-theme-pink/20 to-transparent border-theme-pink/30 text-theme-pink",
+  green: "from-theme-green/20 to-transparent border-theme-green/30 text-theme-green",
+  blue: "from-theme-blue/20 to-transparent border-theme-blue/30 text-theme-blue",
+  orange: "from-theme-orange/20 to-transparent border-theme-orange/30 text-theme-orange",
+  violet: "from-theme-violet/20 to-transparent border-theme-violet/30 text-theme-violet",
+  blueberry: "from-theme-blueberry/20 to-transparent border-theme-blueberry/30 text-theme-blueberry",
+  pistachio: "from-theme-pistachio/20 to-transparent border-theme-pistachio/30 text-theme-pistachio",
 };
 
 export const StatCard = ({ icon, label, value, subtext, color }: StatCardProps) => {
