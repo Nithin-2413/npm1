@@ -52,8 +52,10 @@ export const GlobalSearchModal = () => {
       }
       if (e.key === "Escape") setOpen(false);
     };
+    const customHandler = () => setOpen(true);
     window.addEventListener("keydown", handler);
-    return () => window.removeEventListener("keydown", handler);
+    window.addEventListener("open-search", customHandler);
+    return () => { window.removeEventListener("keydown", handler); window.removeEventListener("open-search", customHandler); };
   }, []);
 
   useEffect(() => {
