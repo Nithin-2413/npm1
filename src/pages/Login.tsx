@@ -156,14 +156,13 @@ const Login = () => {
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors overflow-hidden"
                 >
                   <motion.div
                     key={showPassword ? "open" : "closed"}
-                    initial={{ scaleY: 0 }}
-                    animate={{ scaleY: 1 }}
-                    transition={{ duration: 0.25, ease: "easeOut" }}
-                    style={{ originY: 0.5 }}
+                    initial={{ clipPath: "inset(50% 0 50% 0)" }}
+                    animate={{ clipPath: "inset(0% 0 0% 0)" }}
+                    transition={{ duration: 0.3, ease: "easeOut" }}
                   >
                     {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                   </motion.div>
