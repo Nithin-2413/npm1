@@ -103,10 +103,11 @@ const AppLayout = () => {
             transition={{ duration: 0.25, ease: [0.25, 0.1, 0.25, 1] }}
             className="fixed left-0 top-0 bottom-0 z-40 flex flex-col border-r overflow-hidden"
             style={{
-              borderColor: "hsl(var(--glass-border) / 0.4)",
-              background: "hsl(var(--glass-bg) / 0.7)",
-              backdropFilter: "blur(50px) saturate(1.8)",
-              WebkitBackdropFilter: "blur(50px) saturate(1.8)",
+              borderColor: "hsl(var(--glass-border) / 0.2)",
+              background: "hsl(var(--glass-bg) / 0.25)",
+              backdropFilter: "blur(60px) saturate(1.6)",
+              WebkitBackdropFilter: "blur(60px) saturate(1.6)",
+              boxShadow: "inset 1px 0 0 0 hsl(var(--glass-border) / 0.15), inset -1px 0 0 0 hsl(var(--glass-border) / 0.08), 4px 0 24px -4px hsl(var(--glass-bg) / 0.1)",
             }}
           >
             {/* Logo */}
