@@ -234,7 +234,7 @@ const Dashboard = () => {
 
       {/* Stat Cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <StatCard icon="🌊" label="Executions" value="1,247" subtext="+12% ↑ this week" color="cyan" />
+        <StatCard icon="" label="Executions" value="1,247" subtext="+12% ↑ this week" color="cyan" />
         <StatCard icon="💎" label="Success Rate" value="94.2%" subtext="+2% this week" color="green" />
         <StatCard icon="⚡" label="Avg Duration" value="4.8s" subtext="-0.3s vs last week" color="purple" />
         <StatCard icon="📐" label="Active Blueprints" value="12" subtext="3 used today" color="pink" />
