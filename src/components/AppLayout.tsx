@@ -13,14 +13,24 @@ import {
 } from "lucide-react";
 
 const NAV_ITEMS = [
-  { label: "Dashboard", icon: LayoutDashboard, path: "/", shortcut: "G D" },
-  { label: "Execute", icon: Play, path: "/execute", shortcut: "G E" },
-  { label: "Blueprints", icon: FileCode2, path: "/blueprints", shortcut: "G B" },
-  { label: "Reports", icon: ClipboardList, path: "/reports", shortcut: "G R" },
-  { label: "Network", icon: Globe, path: "/network" },
-  { label: "Settings", icon: Settings, path: "/settings", shortcut: "G S" },
-  { label: "Profile", icon: User, path: "/profile" },
+  { label: "Dashboard", icon: LayoutDashboard, path: "/", shortcut: "G D", color: "theme-blue" },
+  { label: "Execute", icon: Play, path: "/execute", shortcut: "G E", color: "theme-green" },
+  { label: "Blueprints", icon: FileCode2, path: "/blueprints", shortcut: "G B", color: "theme-violet" },
+  { label: "Reports", icon: ClipboardList, path: "/reports", shortcut: "G R", color: "theme-orange" },
+  { label: "Network", icon: Globe, path: "/network", color: "theme-pink" },
+  { label: "Settings", icon: Settings, path: "/settings", shortcut: "G S", color: "theme-pistachio" },
+  { label: "Profile", icon: User, path: "/profile", color: "theme-blueberry" },
 ];
+
+const NAV_COLOR_CLASSES: Record<string, { bg: string; text: string; border: string; glow: string }> = {
+  "theme-blue":      { bg: "bg-theme-blue/10",      text: "text-theme-blue",      border: "border-theme-blue/20",      glow: "" },
+  "theme-green":     { bg: "bg-theme-green/10",     text: "text-theme-green",     border: "border-theme-green/20",     glow: "" },
+  "theme-violet":    { bg: "bg-theme-violet/10",    text: "text-theme-violet",    border: "border-theme-violet/20",    glow: "" },
+  "theme-orange":    { bg: "bg-theme-orange/10",    text: "text-theme-orange",    border: "border-theme-orange/20",    glow: "" },
+  "theme-pink":      { bg: "bg-theme-pink/10",      text: "text-theme-pink",      border: "border-theme-pink/20",      glow: "" },
+  "theme-pistachio": { bg: "bg-theme-pistachio/10", text: "text-theme-pistachio", border: "border-theme-pistachio/20", glow: "" },
+  "theme-blueberry": { bg: "bg-theme-blueberry/10", text: "text-theme-blueberry", border: "border-theme-blueberry/20", glow: "" },
+};
 
 const AppLayout = () => {
   const location = useLocation();
@@ -110,7 +120,7 @@ const AppLayout = () => {
                     to={item.path}
                     className={`flex items-center gap-3 px-3 py-2.5 rounded-xl font-mono text-xs transition-all group ${
                       isActive
-                        ? "bg-primary/10 text-primary border border-primary/20 glass-glow-cyan"
+                        ? `${NAV_COLOR_CLASSES[item.color].bg} ${NAV_COLOR_CLASSES[item.color].text} ${NAV_COLOR_CLASSES[item.color].border} border`
                         : "text-muted-foreground hover:text-foreground hover:bg-muted/20 border border-transparent"
                     }`}
                   >
