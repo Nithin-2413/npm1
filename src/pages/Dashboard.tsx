@@ -233,12 +233,12 @@ const Dashboard = () => {
               ))}
             </div>
 
-            <div className="grid grid-cols-[auto_1fr_80px_70px_70px_32px] gap-3 px-2 py-1.5 font-mono text-[9px] text-muted-foreground uppercase tracking-wider border-b border-glass-border">
-              <span className="w-6">St</span>
-              <span>Command</span>
+            <div className="grid grid-cols-[auto_1fr_60px_56px_50px_28px] gap-2 px-2 py-1.5 font-mono text-[9px] text-muted-foreground uppercase tracking-wider border-b border-glass-border">
+              <span className="w-5">St</span>
+              <span className="min-w-0">Command</span>
               <span>Time</span>
-              <span>Duration</span>
-              <span>Actions</span>
+              <span>Dur.</span>
+              <span>Act.</span>
               <span></span>
             </div>
 
@@ -248,11 +248,11 @@ const Dashboard = () => {
                   key={exec.id}
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
-                  className="grid grid-cols-[auto_1fr_80px_70px_70px_32px] gap-3 px-2 py-2.5 items-center hover:bg-muted/10 transition-colors rounded-lg cursor-pointer group"
+                  className="grid grid-cols-[auto_1fr_60px_56px_50px_28px] gap-2 px-2 py-2.5 items-center hover:bg-muted/10 transition-colors rounded-lg cursor-pointer group"
                   onClick={() => navigate(`/reports/${exec.id}`)}
                 >
-                  <StatusBadge status={exec.status} size="sm" className="w-6 justify-center border-0 bg-transparent px-0" />
-                  <span className="font-mono text-xs text-foreground/80 truncate">{exec.command}</span>
+                  <StatusBadge status={exec.status} size="sm" className="w-5 justify-center border-0 bg-transparent px-0" />
+                  <span className="font-mono text-xs text-foreground/80 truncate min-w-0">{exec.command}</span>
                   <span className="font-mono text-[10px] text-muted-foreground">{exec.time}</span>
                   <span className="font-mono text-[10px] text-muted-foreground">{exec.duration}</span>
                   <span className="font-mono text-[10px] text-primary">{exec.actions}</span>
