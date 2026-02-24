@@ -9,19 +9,19 @@ interface AnimatedAvatarProps {
   onClick?: () => void;
 }
 
-const AVATAR_CONFIG: Record<AvatarAnimal, { emoji: string; bg: string; label: string }> = {
-  lion:     { emoji: "🦁", bg: "from-amber-400/30 to-orange-500/30",   label: "Simba" },
-  puppy:    { emoji: "🐶", bg: "from-yellow-300/30 to-amber-400/30",   label: "Buddy" },
-  peacock:  { emoji: "🦚", bg: "from-teal-400/30 to-emerald-500/30",   label: "Plume" },
-  dove:     { emoji: "🕊️", bg: "from-sky-300/30 to-indigo-400/30",     label: "Grace" },
-  squirrel: { emoji: "🐿️", bg: "from-orange-300/30 to-red-400/30",     label: "Nutkin" },
-  panda:    { emoji: "🐼", bg: "from-slate-300/30 to-zinc-500/30",     label: "Bamboo" },
+const AVATAR_CONFIG: Record<AvatarAnimal, { emoji: string; label: string }> = {
+  lion:     { emoji: "🦁", label: "Simba" },
+  puppy:    { emoji: "🐶", label: "Buddy" },
+  peacock:  { emoji: "🦚", label: "Plume" },
+  dove:     { emoji: "🕊️", label: "Grace" },
+  squirrel: { emoji: "🐿️", label: "Nutkin" },
+  panda:    { emoji: "🐼", label: "Bamboo" },
 };
 
 const SIZE_CLASSES = {
-  sm: "w-7 h-7 text-sm",
-  md: "w-14 h-14 text-2xl",
-  lg: "w-20 h-20 text-4xl",
+  sm: "text-xl",
+  md: "text-4xl",
+  lg: "text-6xl",
 };
 
 export const AnimatedAvatar = ({ animal, size = "md", selected, onClick }: AnimatedAvatarProps) => {
@@ -31,42 +31,53 @@ export const AnimatedAvatar = ({ animal, size = "md", selected, onClick }: Anima
     <motion.button
       type="button"
       onClick={onClick}
-      whileHover={{ scale: 1.1 }}
-      whileTap={{ scale: 0.95 }}
-      className={`relative rounded-2xl bg-gradient-to-br ${config.bg} flex items-center justify-center cursor-pointer transition-all duration-200 ${SIZE_CLASSES[size]} ${
-        selected
-          ? "ring-2 ring-primary ring-offset-2 ring-offset-background shadow-lg"
-          : "border border-glass-border hover:border-primary/30"
-      }`}
-      style={{
-        backdropFilter: "blur(12px)",
+      whileHover={{
+        scale: 1.15,
+        rotate: [0, -5, 5, -3, 0],
+        transition: { duration: 0.5, ease: "easeOut" },
       }}
+      whileTap={{ scale: 0.9 }}
+      className={`relative flex items-center justify-center cursor-pointer p-2 rounded-xl transition-colors duration-300 ${SIZE_CLASSES[size]} ${
+        selected
+          ? "bg-primary/10"
+          : "bg-transparent hover:bg-muted/10"
+      }`}
     >
-      {/* Breathing animation */}
+      {/* Main emoji — breathing + subtle float */}
       <motion.span
         animate={{
-          y: [0, -2, 0],
-          scale: [1, 1.05, 1],
+          y: [0, -3, 0],
+          scale: [1, 1.06, 1],
+          rotate: [0, 1, 0, -1, 0],
         }}
         transition={{
-          duration: 2.5,
+          duration: 3,
           repeat: Infinity,
           ease: "easeInOut",
           delay: Math.random() * 1.5,
         }}
-        className="select-none"
+        className="select-none drop-shadow-lg"
+        style={{
+          filter: selected ? "drop-shadow(0 0 8px hsl(var(--primary) / 0.4))" : "drop-shadow(0 2px 4px hsl(0 0% 0% / 0.15))",
+          transition: "filter 0.4s ease",
+        }}
       >
         {config.emoji}
       </motion.span>
 
-      {/* Subtle glow ring on selected */}
+      {/* Selected indicator — soft underline glow */}
       {selected && (
         <motion.div
-          className="absolute inset-0 rounded-2xl"
-          animate={{ opacity: [0.3, 0.6, 0.3] }}
-          transition={{ duration: 2, repeat: Infinity }}
-          style={{
-            boxShadow: "0 0 20px 4px hsl(var(--primary) / 0.2)",
+          className="absolute -bottom-1 left-1/2 h-[2px] rounded-full bg-primary"
+          initial={{ width: 0, x: "-50%" }}
+          animate={{
+            width: "60%",
+            x: "-50%",
+            opacity: [0.6, 1, 0.6],
+          }}
+          transition={{
+            width: { duration: 0.3, ease: "easeOut" },
+            opacity: { duration: 2, repeat: Infinity },
           }}
         />
       )}
