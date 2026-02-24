@@ -111,39 +111,50 @@ const BlueprintEditor = () => {
 
   return (
     <AnimatePresence>
-      {/* Full-screen frosted glass overlay */}
+      {/* Overlay */}
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
-        transition={{ duration: 0.3 }}
-        className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto"
-        style={{ backdropFilter: "blur(40px) saturate(1.6)", WebkitBackdropFilter: "blur(40px) saturate(1.6)" }}
+        transition={{ duration: 0.25 }}
+        className="fixed inset-0 z-50 flex items-center justify-center p-4"
       >
-        {/* Backdrop click to close */}
+        {/* Dimmed backdrop - no blur on background */}
         <div 
-          className="absolute inset-0 bg-background/60"
+          className="absolute inset-0 bg-black/40"
           onClick={() => navigate("/blueprints")}
         />
 
-        {/* Overlay content */}
+        {/* Glass card - compact, centered, constrained */}
         <motion.div
-          initial={{ opacity: 0, y: 40, scale: 0.97 }}
-          animate={{ opacity: 1, y: 0, scale: 1 }}
-          exit={{ opacity: 0, y: 40, scale: 0.97 }}
-          transition={{ duration: 0.4, ease: [0.25, 0.1, 0.25, 1] }}
-          className="relative w-full max-w-6xl mx-4 my-8 rounded-3xl border border-glass-border/50 overflow-hidden"
+          initial={{ opacity: 0, scale: 0.92, y: 24 }}
+          animate={{ opacity: 1, scale: 1, y: 0 }}
+          exit={{ opacity: 0, scale: 0.95, y: 16 }}
+          transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
+          className="relative z-10 w-[90vw] max-w-[800px] max-h-[80vh] flex flex-col overflow-hidden"
           style={{
-            background: "hsl(var(--glass-bg) / 0.55)",
-            backdropFilter: "blur(60px) saturate(1.8)",
-            WebkitBackdropFilter: "blur(60px) saturate(1.8)",
-            boxShadow: "0 25px 80px -15px hsl(var(--primary) / 0.15), 0 0 1px 0 hsl(var(--foreground) / 0.1), inset 0 1px 0 0 hsl(var(--foreground) / 0.06)",
+            borderRadius: "20px",
+            background: "hsl(var(--background) / 0.55)",
+            backdropFilter: "blur(48px) saturate(1.6)",
+            WebkitBackdropFilter: "blur(48px) saturate(1.6)",
+            border: "1px solid hsl(var(--foreground) / 0.08)",
+            boxShadow:
+              "0 0 0 1px hsl(var(--foreground) / 0.04) inset, " +
+              "0 24px 80px -12px hsl(var(--primary) / 0.12), " +
+              "0 8px 24px -4px rgba(0,0,0,0.3)",
           }}
         >
           {/* Top highlight edge */}
-          <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-foreground/10 to-transparent" />
+          <div
+            className="absolute inset-x-0 top-0 h-px pointer-events-none"
+            style={{
+              borderRadius: "20px 20px 0 0",
+              background: "linear-gradient(90deg, transparent, hsl(var(--foreground) / 0.12) 30%, hsl(var(--foreground) / 0.12) 70%, transparent)",
+            }}
+          />
 
-          <div className="p-6 lg:p-8 space-y-6">
+          {/* Scrollable content */}
+          <div className="flex-1 overflow-y-auto p-6 space-y-6">
             {/* Top Bar */}
             <div className="flex items-center justify-between flex-wrap gap-3">
               <div className="flex items-center gap-3">
@@ -171,7 +182,7 @@ const BlueprintEditor = () => {
               </div>
             </div>
 
-            <div className="grid lg:grid-cols-[200px_1fr_280px] gap-6">
+            <div className="grid lg:grid-cols-[180px_1fr_240px] gap-4">
               {/* Left Panel - Action Library */}
               <div className="rounded-2xl border border-glass-border/40 p-3 h-fit space-y-3" style={{ background: "hsl(var(--glass-bg) / 0.3)" }}>
                 <span className="font-mono text-[10px] text-muted-foreground uppercase tracking-wider">Action Library</span>
@@ -199,7 +210,7 @@ const BlueprintEditor = () => {
               </div>
 
               {/* Center - Flow Canvas */}
-              <div className="rounded-2xl border border-glass-border/40 p-5 min-h-[500px]" style={{ background: "hsl(var(--glass-bg) / 0.25)" }}>
+              <div className="rounded-2xl border border-glass-border/40 p-4 min-h-[300px]" style={{ background: "hsl(var(--glass-bg) / 0.25)" }}>
                 <div className="flex items-center gap-2 mb-4">
                   <h3 className="font-mono text-sm font-semibold tracking-wider uppercase text-primary">Flow Builder</h3>
                   <div className="flex-1 h-px bg-gradient-to-r from-primary/30 to-transparent" />
