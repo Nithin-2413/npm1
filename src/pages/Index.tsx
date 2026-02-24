@@ -1,4 +1,5 @@
 import { motion } from "framer-motion";
+import { Link } from "react-router-dom";
 import { GlassPanel } from "@/components/GlassPanel";
 import { LiquidProgress } from "@/components/LiquidProgress";
 import { TerminalOutput } from "@/components/TerminalOutput";
@@ -6,6 +7,7 @@ import { NetworkMonitor } from "@/components/NetworkMonitor";
 import { BlueprintViewer } from "@/components/BlueprintViewer";
 import { StatCard } from "@/components/StatCard";
 import { AIDiagnosis } from "@/components/AIDiagnosis";
+import { CommandBar } from "@/components/CommandBar";
 
 const Index = () => {
   return (
@@ -34,11 +36,21 @@ const Index = () => {
           <p className="font-mono text-sm text-muted-foreground tracking-widest uppercase">
             Neural Precision Monitor — Glassmorphic QA Automation
           </p>
-          <div className="flex items-center justify-center gap-2 mt-4">
+          <div className="flex items-center justify-center gap-3 mt-4">
             <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
             <span className="font-mono text-xs text-emerald-400">System Online</span>
+            <span className="text-muted-foreground">•</span>
+            <Link
+              to="/history"
+              className="font-mono text-xs text-muted-foreground hover:text-primary transition-colors"
+            >
+              📜 History
+            </Link>
           </div>
         </motion.header>
+
+        {/* Command Bar */}
+        <CommandBar />
 
         {/* Stat cards */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
