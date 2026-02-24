@@ -126,7 +126,7 @@ const Reports = () => {
           />
         </div>
         <div className="flex items-center gap-1">
-          {(["all", "success", "failure", "partial"] as const).map(f => (
+          {(["all", "failure", "partial"] as const).map(f => (
             <button
               key={f}
               onClick={() => { setStatusFilter(f); setPage(1); }}
