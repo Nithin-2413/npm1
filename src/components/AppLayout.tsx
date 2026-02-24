@@ -105,8 +105,8 @@ const AppLayout = () => {
             style={{
               borderColor: "hsl(var(--glass-border) / 0.3)",
               background: "linear-gradient(180deg, hsl(var(--glass-bg) / 0.15) 0%, hsl(var(--glass-bg) / 0.08) 100%)",
-              backdropFilter: "blur(80px) saturate(1.8) brightness(1.1)",
-              WebkitBackdropFilter: "blur(80px) saturate(1.8) brightness(1.1)",
+              backdropFilter: "blur(80px) saturate(1.4) brightness(0.97)",
+              WebkitBackdropFilter: "blur(80px) saturate(1.4) brightness(0.97)",
               boxShadow: "inset 1px 0 0 0 hsl(0 0% 100% / 0.08), inset 0 1px 0 0 hsl(0 0% 100% / 0.06), 4px 0 30px -4px hsl(0 0% 0% / 0.15)",
             }}
           >
