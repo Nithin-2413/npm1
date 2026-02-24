@@ -114,8 +114,8 @@ const AppLayout = () => {
             <div className="p-5 flex items-center justify-center gap-3 border-b" style={{ borderColor: "hsl(var(--glass-border) / 0.3)" }}>
               <span className="text-2xl animate-float">🌊</span>
               <div className="text-center">
-                <h1 className="text-xl font-black tracking-tight bg-clip-text text-transparent" style={{ fontFamily: "'Sen', sans-serif", backgroundImage: "linear-gradient(135deg, #7a5c12, #b8942e, #e2c56d, #f5e2a0, #e2c56d, #b8942e, #7a5c12)", backgroundSize: "300% auto", animation: "gold-shine 4s linear infinite" }}>LUMEN</h1>
-                <p className="text-[8px] text-muted-foreground tracking-widest uppercase" style={{ fontFamily: "'Sen', sans-serif" }}>Lumen Technologies</p>
+                <h1 className="text-xl font-black tracking-tight bg-clip-text text-transparent" style={{ fontFamily: "'Sen', sans-serif", backgroundImage: "linear-gradient(135deg, #7a5c12, #b8942e, #e2c56d, #f5e2a0, #e2c56d, #b8942e, #7a5c12)", backgroundSize: "300% auto", animation: "gold-shine 4s linear infinite" }}>NPM</h1>
+                <p className="text-[8px] text-muted-foreground tracking-widest uppercase" style={{ fontFamily: "'Sen', sans-serif" }}>Neural Precision Monitor</p>
               </div>
               <button
                 onClick={() => setSidebarOpen(false)}
@@ -175,7 +175,11 @@ const AppLayout = () => {
                   </button>
                 </div>
               )}
-              <p className="font-mono text-[9px] text-muted-foreground">v2.4.1 • Liquid Engine</p>
+              <div className="text-center mt-2">
+                <h2 className="text-sm font-black tracking-tight bg-clip-text text-transparent" style={{ fontFamily: "'Sen', sans-serif", backgroundImage: "linear-gradient(135deg, #7a5c12, #b8942e, #e2c56d, #f5e2a0, #e2c56d, #b8942e, #7a5c12)", backgroundSize: "300% auto", animation: "gold-shine 4s linear infinite" }}>LUMEN</h2>
+                <p className="text-[7px] text-muted-foreground tracking-widest uppercase" style={{ fontFamily: "'Sen', sans-serif" }}>Lumen Technologies</p>
+              </div>
+              <p className="font-mono text-[9px] text-muted-foreground mt-1">v2.4.1</p>
             </div>
           </motion.aside>
         )}
