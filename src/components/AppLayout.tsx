@@ -261,18 +261,21 @@ const AppLayout = () => {
             {/* Theme Toggle */}
             <button
               onClick={toggleTheme}
-              className="relative p-2 rounded-xl text-muted-foreground hover:text-foreground hover:bg-muted/20 transition-colors overflow-hidden"
+              className="relative w-8 h-8 rounded-xl text-muted-foreground hover:text-foreground hover:bg-muted/20 transition-colors flex items-center justify-center"
               title={isDark ? "Switch to light mode" : "Switch to dark mode"}
             >
-              <motion.div
-                key={isDark ? "moon" : "sun"}
-                initial={{ y: -20, rotate: -90, opacity: 0 }}
-                animate={{ y: 0, rotate: 0, opacity: 1 }}
-                exit={{ y: 20, rotate: 90, opacity: 0 }}
-                transition={{ duration: 0.3, ease: "easeOut" }}
-              >
-                {isDark ? <Moon className="w-4 h-4" /> : <Sun className="w-4 h-4" />}
-              </motion.div>
+              <AnimatePresence mode="wait" initial={false}>
+                <motion.div
+                  key={isDark ? "moon" : "sun"}
+                  initial={{ scale: 0, rotate: -180, opacity: 0 }}
+                  animate={{ scale: 1, rotate: 0, opacity: 1 }}
+                  exit={{ scale: 0, rotate: 180, opacity: 0 }}
+                  transition={{ duration: 0.4, ease: [0.4, 0, 0.2, 1] }}
+                  className="absolute"
+                >
+                  {isDark ? <Moon className="w-4 h-4" /> : <Sun className="w-4 h-4" />}
+                </motion.div>
+              </AnimatePresence>
             </button>
 
             {/* Profile Dropdown */}
