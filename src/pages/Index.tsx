@@ -34,7 +34,7 @@ const Index = () => {
             </h1>
           </div>
           <p className="font-mono text-sm text-muted-foreground tracking-widest uppercase">
-            Neural Precision Monitor — Glassmorphic QA Automation
+            NextSure Prime Matrix — Glassmorphic QA Automation
           </p>
           <div className="flex items-center justify-center gap-3 mt-4">
             <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
