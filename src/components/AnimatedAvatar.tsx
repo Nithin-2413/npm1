@@ -1,4 +1,10 @@
 import { motion } from "framer-motion";
+import avatarLion from "@/assets/avatar-lion.jpg";
+import avatarPuppy from "@/assets/avatar-puppy.jpg";
+import avatarPeacock from "@/assets/avatar-peacock.jpg";
+import avatarFox from "@/assets/avatar-fox.jpg";
+import avatarSquirrel from "@/assets/avatar-squirrel.jpg";
+import avatarPanda from "@/assets/avatar-panda.jpg";
 
 export type AvatarAnimal = "lion" | "puppy" | "peacock" | "dove" | "squirrel" | "panda";
 
@@ -9,19 +15,19 @@ interface AnimatedAvatarProps {
   onClick?: () => void;
 }
 
-const AVATAR_CONFIG: Record<AvatarAnimal, { emoji: string; label: string }> = {
-  lion:     { emoji: "🦁", label: "Simba" },
-  puppy:    { emoji: "🐶", label: "Buddy" },
-  peacock:  { emoji: "🦚", label: "Plume" },
-  dove:     { emoji: "🐰", label: "Bunny" },
-  squirrel: { emoji: "🐿️", label: "Nutkin" },
-  panda:    { emoji: "🐼", label: "Bamboo" },
+const AVATAR_CONFIG: Record<AvatarAnimal, { image: string; label: string }> = {
+  lion:     { image: avatarLion, label: "Simba" },
+  puppy:    { image: avatarPuppy, label: "Buddy" },
+  peacock:  { image: avatarPeacock, label: "Plume" },
+  dove:     { image: avatarFox, label: "Foxy" },
+  squirrel: { image: avatarSquirrel, label: "Nutkin" },
+  panda:    { image: avatarPanda, label: "Bamboo" },
 };
 
 const SIZE_CLASSES = {
-  sm: "text-xl",
-  md: "text-4xl",
-  lg: "text-6xl",
+  sm: "w-7 h-7",
+  md: "w-14 h-14",
+  lg: "w-20 h-20",
 };
 
 export const AnimatedAvatar = ({ animal, size = "md", selected, onClick }: AnimatedAvatarProps) => {
@@ -32,23 +38,23 @@ export const AnimatedAvatar = ({ animal, size = "md", selected, onClick }: Anima
       type="button"
       onClick={onClick}
       whileHover={{
-        scale: 1.15,
-        rotate: [0, -5, 5, -3, 0],
+        scale: 1.12,
+        rotate: [0, -3, 3, -2, 0],
         transition: { duration: 0.5, ease: "easeOut" },
       }}
       whileTap={{ scale: 0.9 }}
-      className={`relative flex items-center justify-center cursor-pointer p-2 rounded-xl transition-colors duration-300 ${SIZE_CLASSES[size]} ${
+      className={`relative flex items-center justify-center cursor-pointer rounded-xl overflow-hidden transition-all duration-300 ${SIZE_CLASSES[size]} ${
         selected
-          ? "bg-primary/10"
-          : "bg-transparent hover:bg-muted/10"
+          ? "ring-2 ring-primary ring-offset-2 ring-offset-background shadow-lg"
+          : "hover:shadow-md"
       }`}
     >
-      {/* Main emoji — breathing + subtle float */}
-      <motion.span
+      {/* Avatar image with breathing animation */}
+      <motion.img
+        src={config.image}
+        alt={config.label}
         animate={{
-          y: [0, -3, 0],
-          scale: [1, 1.06, 1],
-          rotate: [0, 1, 0, -1, 0],
+          scale: [1, 1.04, 1],
         }}
         transition={{
           duration: 3,
@@ -56,28 +62,22 @@ export const AnimatedAvatar = ({ animal, size = "md", selected, onClick }: Anima
           ease: "easeInOut",
           delay: Math.random() * 1.5,
         }}
-        className="select-none drop-shadow-lg"
+        className="w-full h-full object-cover"
+        draggable={false}
         style={{
-          filter: selected ? "drop-shadow(0 0 8px hsl(var(--primary) / 0.4))" : "drop-shadow(0 2px 4px hsl(0 0% 0% / 0.15))",
+          filter: selected ? "drop-shadow(0 0 6px hsl(var(--primary) / 0.3))" : "none",
           transition: "filter 0.4s ease",
         }}
-      >
-        {config.emoji}
-      </motion.span>
+      />
 
-      {/* Selected indicator — soft underline glow */}
+      {/* Selected glow overlay */}
       {selected && (
         <motion.div
-          className="absolute -bottom-1 left-1/2 h-[2px] rounded-full bg-primary"
-          initial={{ width: 0, x: "-50%" }}
-          animate={{
-            width: "60%",
-            x: "-50%",
-            opacity: [0.6, 1, 0.6],
-          }}
-          transition={{
-            width: { duration: 0.3, ease: "easeOut" },
-            opacity: { duration: 2, repeat: Infinity },
+          className="absolute inset-0 rounded-xl"
+          animate={{ opacity: [0.1, 0.25, 0.1] }}
+          transition={{ duration: 2, repeat: Infinity }}
+          style={{
+            background: "radial-gradient(circle, hsl(var(--primary) / 0.2) 0%, transparent 70%)",
           }}
         />
       )}
@@ -88,4 +88,4 @@ export const AnimatedAvatar = ({ animal, size = "md", selected, onClick }: Anima
 export const AVATAR_ANIMALS: AvatarAnimal[] = ["lion", "puppy", "peacock", "dove", "squirrel", "panda"];
 
 export const getAvatarLabel = (animal: AvatarAnimal) => AVATAR_CONFIG[animal].label;
-export const getAvatarEmoji = (animal: AvatarAnimal) => AVATAR_CONFIG[animal].emoji;
+export const getAvatarEmoji = (animal: AvatarAnimal) => AVATAR_CONFIG[animal].image;
