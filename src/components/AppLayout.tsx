@@ -8,7 +8,7 @@ import { KeyboardShortcutsModal } from "@/components/KeyboardShortcutsModal";
 import { SystemPulse } from "@/components/SystemPulse";
 import {
   LayoutDashboard, Play, FileCode2, ClipboardList,
-  Globe, Settings, User, Menu, Search,
+  Settings, Menu, Search,
   ChevronLeft, Keyboard
 } from "lucide-react";
 
@@ -17,9 +17,7 @@ const NAV_ITEMS = [
   { label: "Execute", icon: Play, path: "/execute", shortcut: "G E", color: "theme-green" },
   { label: "Blueprints", icon: FileCode2, path: "/blueprints", shortcut: "G B", color: "theme-violet" },
   { label: "Reports", icon: ClipboardList, path: "/reports", shortcut: "G R", color: "theme-orange" },
-  { label: "Network", icon: Globe, path: "/network", color: "theme-pink" },
   { label: "Settings", icon: Settings, path: "/settings", shortcut: "G S", color: "theme-pistachio" },
-  { label: "Profile", icon: User, path: "/profile", color: "theme-blueberry" },
 ];
 
 const NAV_COLOR_CLASSES: Record<string, { bg: string; text: string; border: string; glow: string }> = {

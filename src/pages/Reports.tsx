@@ -6,7 +6,7 @@ import { StatusBadge, StatusType } from "@/components/StatusBadge";
 import { toast } from "sonner";
 import {
   Search, Download, Eye, Trash2,
-  ChevronLeft, ChevronRight
+  ChevronLeft, ChevronRight, Globe
 } from "lucide-react";
 
 interface Report {
@@ -106,6 +106,12 @@ const Reports = () => {
             <option className="bg-background" value="90">Last 90 Days</option>
             <option className="bg-background" value="all">All Time</option>
           </select>
+          <Link
+            to="/network"
+            className="flex items-center gap-2 px-3 py-2 rounded-xl font-mono text-xs border border-glass-border text-muted-foreground hover:text-foreground transition-colors"
+          >
+            <Globe className="w-3.5 h-3.5" /> Network
+          </Link>
           <button
             onClick={() => exportReports()}
             className="flex items-center gap-2 px-3 py-2 rounded-xl font-mono text-xs border border-glass-border text-muted-foreground hover:text-foreground transition-colors"
