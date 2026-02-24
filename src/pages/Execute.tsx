@@ -212,113 +212,145 @@ const Execute = () => {
               </button>
             </div>
           </div>
-
-          {/* Full Diagnosis Card */}
-          <AnimatePresence>
-            {showDiagnosis && (
-              <motion.div
-                initial={{ opacity: 0, height: 0 }}
-                animate={{ opacity: 1, height: "auto" }}
-                exit={{ opacity: 0, height: 0 }}
-                className="overflow-hidden"
-              >
-                <div className="mt-3 glass-panel-strong p-4 space-y-3 border border-primary/20 rounded-xl">
-                  <div className="flex items-center gap-2">
-                    <Brain className="w-4 h-4 text-primary" />
-                    <span className="font-mono text-xs font-bold text-foreground">Full AI Diagnosis</span>
-                  </div>
-
-                  <div className="space-y-3 font-mono text-[11px]">
-                    <div className="p-3 rounded-lg bg-destructive/5 border border-destructive/15">
-                      <div className="flex items-center gap-1.5 mb-1">
-                        <AlertTriangle className="w-3 h-3 text-destructive" />
-                        <span className="font-semibold text-destructive">Error Trace</span>
-                      </div>
-                      <p className="text-muted-foreground">POST /api/auth/register → 422 Unprocessable Entity</p>
-                      <p className="text-muted-foreground mt-1">Response body: <code className="text-destructive/80">{"{ \"error\": \"terms_accepted is required\" }"}</code></p>
-                    </div>
-
-                    <div className="p-3 rounded-lg bg-primary/5 border border-primary/15">
-                      <div className="flex items-center gap-1.5 mb-1">
-                        <Zap className="w-3 h-3 text-primary" />
-                        <span className="font-semibold text-primary">Root Cause Analysis</span>
-                      </div>
-                      <p className="text-muted-foreground">The registration endpoint requires a boolean <code className="text-primary/80">terms_accepted</code> field. The automation filled email and password but skipped the terms checkbox, resulting in a validation failure.</p>
-                    </div>
-
-                    <div className="p-3 rounded-lg bg-secondary/5 border border-secondary/15">
-                      <div className="flex items-center gap-1.5 mb-1">
-                        <ArrowRight className="w-3 h-3 text-secondary" />
-                        <span className="font-semibold text-secondary">Execution Timeline</span>
-                      </div>
-                      <div className="text-muted-foreground space-y-0.5">
-                        <p>00:01.2s — Navigate to /signup ✓</p>
-                        <p>00:02.3s — Fill email field ✓</p>
-                        <p>00:02.5s — Fill password field ✓</p>
-                        <p>00:03.3s — Select country ✓</p>
-                        <p className="text-destructive">00:04.1s — Submit without terms ✗</p>
-                        <p>00:05.5s — Retry with terms checkbox...</p>
-                      </div>
-                    </div>
-                  </div>
-
-                  <p className="text-[10px] text-muted-foreground/60 italic">AI-powered analysis will provide real-time insights when connected.</p>
-                </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
-
-          {/* Fix Suggestion Card */}
-          <AnimatePresence>
-            {showFix && (
-              <motion.div
-                initial={{ opacity: 0, height: 0 }}
-                animate={{ opacity: 1, height: "auto" }}
-                exit={{ opacity: 0, height: 0 }}
-                className="overflow-hidden"
-              >
-                <div className="mt-3 glass-panel-strong p-4 space-y-3 border border-emerald-400/20 rounded-xl">
-                  <div className="flex items-center gap-2">
-                    <Wrench className="w-4 h-4 text-emerald-400" />
-                    <span className="font-mono text-xs font-bold text-foreground">AI Suggested Fix</span>
-                  </div>
-
-                  <div className="space-y-3 font-mono text-[11px]">
-                    <div className="p-3 rounded-lg bg-emerald-400/5 border border-emerald-400/15">
-                      <span className="font-semibold text-emerald-400">Proposed Action</span>
-                      <p className="text-muted-foreground mt-1">Insert a <code className="text-emerald-400/80">click</code> action on <code className="text-emerald-400/80">#terms-checkbox</code> before the submit step.</p>
-                    </div>
-
-                    <div className="p-3 rounded-lg bg-muted/10 border border-glass-border">
-                      <span className="font-semibold text-foreground/80">Modified Blueprint</span>
-                      <div className="mt-2 text-muted-foreground space-y-0.5">
-                        <p className="text-foreground/40">4. select → dropdown#country</p>
-                        <p className="text-emerald-400 font-semibold">5. click → input#terms-checkbox ← NEW</p>
-                        <p className="text-foreground/40">6. click → button#submit</p>
-                      </div>
-                    </div>
-
-                    <div className="p-3 rounded-lg bg-primary/5 border border-primary/15">
-                      <span className="font-semibold text-primary">Confidence</span>
-                      <div className="flex items-center gap-2 mt-1">
-                        <div className="flex-1 h-1.5 rounded-full bg-muted/20 overflow-hidden">
-                          <div className="h-full w-[92%] rounded-full bg-emerald-400" />
-                        </div>
-                        <span className="text-emerald-400 font-bold">92%</span>
-                      </div>
-                    </div>
-                  </div>
-
-                  <button className="w-full mt-2 font-mono text-[10px] px-3 py-2 rounded-lg bg-emerald-400/10 border border-emerald-400/30 text-emerald-400 hover:bg-emerald-400/20 transition-colors">
-                    Apply Fix & Re-run
-                  </button>
-                  <p className="text-[10px] text-muted-foreground/60 italic">AI-powered fix suggestions will be available when connected.</p>
-                </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
         </GlassPanel>
       </div>
+
+      {/* Full Diagnosis Overlay */}
+      <AnimatePresence>
+        {showDiagnosis && (
+          <>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setShowDiagnosis(false)}
+              className="fixed inset-0 z-50 bg-background/60 backdrop-blur-sm"
+            />
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              className="fixed z-50 top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[90vw] max-w-lg"
+            >
+              <div className="glass-panel p-5 space-y-4 border border-primary/20 rounded-2xl shadow-2xl"
+                style={{ background: "hsl(var(--glass-bg) / 0.85)", backdropFilter: "blur(40px) saturate(1.8)" }}
+              >
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Brain className="w-4 h-4 text-primary" />
+                    <span className="font-mono text-sm font-bold text-foreground">Full AI Diagnosis</span>
+                  </div>
+                  <button onClick={() => setShowDiagnosis(false)} className="text-muted-foreground hover:text-foreground transition-colors">
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
+
+                <div className="space-y-3 font-mono text-[11px]">
+                  <div className="p-3 rounded-lg bg-destructive/5 border border-destructive/15">
+                    <div className="flex items-center gap-1.5 mb-1">
+                      <AlertTriangle className="w-3 h-3 text-destructive" />
+                      <span className="font-semibold text-destructive">Error Trace</span>
+                    </div>
+                    <p className="text-muted-foreground">POST /api/auth/register → 422 Unprocessable Entity</p>
+                    <p className="text-muted-foreground mt-1">Response body: <code className="text-destructive/80">{"{ \"error\": \"terms_accepted is required\" }"}</code></p>
+                  </div>
+
+                  <div className="p-3 rounded-lg bg-primary/5 border border-primary/15">
+                    <div className="flex items-center gap-1.5 mb-1">
+                      <Zap className="w-3 h-3 text-primary" />
+                      <span className="font-semibold text-primary">Root Cause Analysis</span>
+                    </div>
+                    <p className="text-muted-foreground">The registration endpoint requires a boolean <code className="text-primary/80">terms_accepted</code> field. The automation filled email and password but skipped the terms checkbox, resulting in a validation failure.</p>
+                  </div>
+
+                  <div className="p-3 rounded-lg bg-secondary/5 border border-secondary/15">
+                    <div className="flex items-center gap-1.5 mb-1">
+                      <ArrowRight className="w-3 h-3 text-secondary" />
+                      <span className="font-semibold text-secondary">Execution Timeline</span>
+                    </div>
+                    <div className="text-muted-foreground space-y-0.5">
+                      <p>00:01.2s — Navigate to /signup ✓</p>
+                      <p>00:02.3s — Fill email field ✓</p>
+                      <p>00:02.5s — Fill password field ✓</p>
+                      <p>00:03.3s — Select country ✓</p>
+                      <p className="text-destructive">00:04.1s — Submit without terms ✗</p>
+                      <p>00:05.5s — Retry with terms checkbox...</p>
+                    </div>
+                  </div>
+                </div>
+
+                <p className="text-[10px] text-muted-foreground/60 italic">AI-powered analysis will provide real-time insights when connected.</p>
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+
+      {/* Fix Suggestion Overlay */}
+      <AnimatePresence>
+        {showFix && (
+          <>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setShowFix(false)}
+              className="fixed inset-0 z-50 bg-background/60 backdrop-blur-sm"
+            />
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              className="fixed z-50 top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[90vw] max-w-lg"
+            >
+              <div className="glass-panel p-5 space-y-4 border border-emerald-400/20 rounded-2xl shadow-2xl"
+                style={{ background: "hsl(var(--glass-bg) / 0.85)", backdropFilter: "blur(40px) saturate(1.8)" }}
+              >
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Wrench className="w-4 h-4 text-emerald-400" />
+                    <span className="font-mono text-sm font-bold text-foreground">AI Suggested Fix</span>
+                  </div>
+                  <button onClick={() => setShowFix(false)} className="text-muted-foreground hover:text-foreground transition-colors">
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
+
+                <div className="space-y-3 font-mono text-[11px]">
+                  <div className="p-3 rounded-lg bg-emerald-400/5 border border-emerald-400/15">
+                    <span className="font-semibold text-emerald-400">Proposed Action</span>
+                    <p className="text-muted-foreground mt-1">Insert a <code className="text-emerald-400/80">click</code> action on <code className="text-emerald-400/80">#terms-checkbox</code> before the submit step.</p>
+                  </div>
+
+                  <div className="p-3 rounded-lg bg-muted/10 border border-glass-border">
+                    <span className="font-semibold text-foreground/80">Modified Blueprint</span>
+                    <div className="mt-2 text-muted-foreground space-y-0.5">
+                      <p className="text-foreground/40">4. select → dropdown#country</p>
+                      <p className="text-emerald-400 font-semibold">5. click → input#terms-checkbox ← NEW</p>
+                      <p className="text-foreground/40">6. click → button#submit</p>
+                    </div>
+                  </div>
+
+                  <div className="p-3 rounded-lg bg-primary/5 border border-primary/15">
+                    <span className="font-semibold text-primary">Confidence</span>
+                    <div className="flex items-center gap-2 mt-1">
+                      <div className="flex-1 h-1.5 rounded-full bg-muted/20 overflow-hidden">
+                        <div className="h-full w-[92%] rounded-full bg-emerald-400" />
+                      </div>
+                      <span className="text-emerald-400 font-bold">92%</span>
+                    </div>
+                  </div>
+                </div>
+
+                <button className="w-full font-mono text-[10px] px-3 py-2 rounded-lg bg-emerald-400/10 border border-emerald-400/30 text-emerald-400 hover:bg-emerald-400/20 transition-colors">
+                  Apply Fix & Re-run
+                </button>
+                <p className="text-[10px] text-muted-foreground/60 italic">AI-powered fix suggestions will be available when connected.</p>
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
     </div>
   );
 };
