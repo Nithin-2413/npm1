@@ -268,8 +268,9 @@ const Blueprints = () => {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: i * 0.05 }}
-              whileHover={{ y: -6, transition: { duration: 0.25, ease: "easeOut" } }}
-              className="glass-panel p-5 space-y-3 transition-shadow duration-300 ease-out group cursor-pointer hover:shadow-[0_8px_30px_-8px_hsl(var(--primary)/0.15),0_4px_16px_-4px_hsl(0_0%_0%/0.1)]"
+              whileHover={{ y: -6, boxShadow: "0 8px 30px -8px hsl(var(--primary) / 0.15), 0 4px 16px -4px hsl(0 0% 0% / 0.1)", transition: { duration: 0.45, ease: [0.25, 0.1, 0.25, 1] } }}
+              className="glass-panel p-5 space-y-3 group cursor-pointer"
+              style={{ transition: "transform 0.45s cubic-bezier(0.25,0.1,0.25,1), box-shadow 0.45s cubic-bezier(0.25,0.1,0.25,1)" }}
             >
               <div className="flex items-start justify-between">
                 <div>
