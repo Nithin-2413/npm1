@@ -54,7 +54,7 @@ const Login = () => {
         {/* Logo */}
         <div className="text-center mb-8">
           <span className="text-4xl animate-float inline-block">🌊</span>
-          <h1 className="text-2xl font-black tracking-tight gradient-text mt-3">NPM</h1>
+          <h1 className="text-2xl font-black tracking-tight gradient-text mt-3" style={{ fontFamily: "'Sen', sans-serif" }}>NPM</h1>
           <p className="font-mono text-[10px] text-muted-foreground tracking-widest uppercase mt-1">
             Neural Precision Monitor
           </p>
