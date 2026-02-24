@@ -1,0 +1,310 @@
+import { useState } from "react";
+import { motion } from "framer-motion";
+import { Link } from "react-router-dom";
+import { GlassPanel } from "@/components/GlassPanel";
+import { ActionBadge, ActionType } from "@/components/ActionBadge";
+import {
+  Search, Plus, Upload, Grid3X3, List, Play, Copy, Trash2,
+  Edit, MoreHorizontal, ArrowUpDown, Filter
+} from "lucide-react";
+
+interface Blueprint {
+  id: string;
+  name: string;
+  description: string;
+  version: string;
+  tags: string[];
+  successRate: number;
+  timesUsed: number;
+  avgDuration: string;
+  lastUsed: string;
+  actions: { type: ActionType; target: string }[];
+  variables: string[];
+}
+
+const BLUEPRINTS: Blueprint[] = [
+  {
+    id: "signup_flow_v1", name: "Signup Flow", description: "Complete user registration with email, password, country selection, and terms acceptance.",
+    version: "v1.2", tags: ["Authentication", "Forms"], successRate: 94, timesUsed: 47, avgDuration: "6.5s", lastUsed: "2m ago",
+    actions: [
+      { type: "navigate", target: "/signup" }, { type: "fill", target: "input#email" },
+      { type: "fill", target: "input#password" }, { type: "select", target: "dropdown#country" },
+      { type: "click", target: "#terms-checkbox" }, { type: "click", target: "button#submit" },
+      { type: "wait", target: "**/dashboard**" }
+    ],
+    variables: ["USER_EMAIL", "PASSWORD", "COUNTRY"]
+  },
+  {
+    id: "login_flow_v1", name: "Login Flow", description: "Standard login with email and password, verify dashboard redirect.",
+    version: "v1.0", tags: ["Authentication"], successRate: 98, timesUsed: 82, avgDuration: "2.1s", lastUsed: "8m ago",
+    actions: [
+      { type: "navigate", target: "/login" }, { type: "fill", target: "input#email" },
+      { type: "fill", target: "input#password" }, { type: "click", target: "button#login" },
+      { type: "wait", target: "**/dashboard**" }
+    ],
+    variables: ["USER_EMAIL", "PASSWORD"]
+  },
+  {
+    id: "checkout_flow_v1", name: "Checkout Flow", description: "E-commerce checkout with cart review, payment form, and order confirmation.",
+    version: "v2.0", tags: ["E-commerce", "Forms"], successRate: 78, timesUsed: 23, avgDuration: "8.3s", lastUsed: "1h ago",
+    actions: [
+      { type: "navigate", target: "/cart" }, { type: "click", target: "button#checkout" },
+      { type: "fill", target: "input#card-number" }, { type: "click", target: "button#pay" },
+      { type: "wait", target: "**/confirmation**" }
+    ],
+    variables: ["CARD_NUMBER", "CARD_EXPIRY", "CARD_CVC"]
+  },
+  {
+    id: "profile_update_v1", name: "Profile Update", description: "Update user profile including name, bio, and avatar upload.",
+    version: "v1.1", tags: ["Forms", "Navigation"], successRate: 85, timesUsed: 15, avgDuration: "5.1s", lastUsed: "3h ago",
+    actions: [
+      { type: "navigate", target: "/settings/profile" }, { type: "fill", target: "input#name" },
+      { type: "fill", target: "textarea#bio" }, { type: "click", target: "button#save" },
+      { type: "assert", target: ".success-toast" }
+    ],
+    variables: ["USER_NAME", "USER_BIO"]
+  },
+  {
+    id: "search_test_v1", name: "Search & Filter", description: "Test search functionality with various queries and filter combinations.",
+    version: "v1.0", tags: ["Navigation", "Custom"], successRate: 91, timesUsed: 31, avgDuration: "4.2s", lastUsed: "6h ago",
+    actions: [
+      { type: "navigate", target: "/products" }, { type: "fill", target: "input#search" },
+      { type: "click", target: ".filter-category" }, { type: "assert", target: ".product-card" }
+    ],
+    variables: ["SEARCH_QUERY"]
+  },
+  {
+    id: "onboarding_flow_v1", name: "Onboarding Flow", description: "Multi-step onboarding wizard with preferences, team setup, and tutorial completion.",
+    version: "v1.3", tags: ["Forms", "Navigation"], successRate: 88, timesUsed: 12, avgDuration: "12.4s", lastUsed: "1d ago",
+    actions: [
+      { type: "navigate", target: "/onboarding" }, { type: "click", target: ".preference-card" },
+      { type: "fill", target: "input#team-name" }, { type: "click", target: "button#next" },
+      { type: "click", target: "button#complete" }, { type: "wait", target: "**/dashboard**" }
+    ],
+    variables: ["TEAM_NAME", "PREFERENCES"]
+  },
+];
+
+const ALL_TAGS = ["Authentication", "Forms", "E-commerce", "Navigation", "Custom"];
+
+const Blueprints = () => {
+  const [view, setView] = useState<"grid" | "list">("grid");
+  const [search, setSearch] = useState("");
+  const [selectedTags, setSelectedTags] = useState<string[]>([]);
+  const [sortBy, setSortBy] = useState<"recent" | "name" | "rate" | "usage">("recent");
+
+  const filtered = BLUEPRINTS
+    .filter(bp => {
+      const matchSearch = !search || bp.name.toLowerCase().includes(search.toLowerCase()) || bp.description.toLowerCase().includes(search.toLowerCase());
+      const matchTags = selectedTags.length === 0 || selectedTags.some(t => bp.tags.includes(t));
+      return matchSearch && matchTags;
+    })
+    .sort((a, b) => {
+      if (sortBy === "name") return a.name.localeCompare(b.name);
+      if (sortBy === "rate") return b.successRate - a.successRate;
+      if (sortBy === "usage") return b.timesUsed - a.timesUsed;
+      return 0;
+    });
+
+  const toggleTag = (tag: string) => {
+    setSelectedTags(prev => prev.includes(tag) ? prev.filter(t => t !== tag) : [...prev, tag]);
+  };
+
+  return (
+    <div className="max-w-7xl mx-auto space-y-6">
+      {/* Header */}
+      <div className="flex items-center justify-between flex-wrap gap-4">
+        <div>
+          <h1 className="text-2xl font-black tracking-tight gradient-text flex items-center gap-2">
+            <span>📐</span> Blueprints
+          </h1>
+          <p className="font-mono text-xs text-muted-foreground mt-1">{BLUEPRINTS.length} crystallized patterns</p>
+        </div>
+        <div className="flex items-center gap-2">
+          <Link
+            to="/blueprints/create"
+            className="flex items-center gap-2 px-4 py-2 rounded-xl font-mono text-xs font-semibold bg-primary/20 text-primary border border-primary/30 hover:bg-primary/30 transition-colors"
+          >
+            <Plus className="w-3.5 h-3.5" /> New Blueprint
+          </Link>
+          <button className="flex items-center gap-2 px-3 py-2 rounded-xl font-mono text-xs border border-glass-border text-muted-foreground hover:text-foreground transition-colors">
+            <Upload className="w-3.5 h-3.5" /> Import
+          </button>
+        </div>
+      </div>
+
+      {/* Toolbar */}
+      <div className="flex items-center gap-3 flex-wrap">
+        <div className="flex-1 min-w-[200px] max-w-md glass-panel-strong flex items-center gap-2 px-3 py-2 rounded-xl">
+          <Search className="w-3.5 h-3.5 text-muted-foreground" />
+          <input
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Search blueprints..."
+            className="flex-1 bg-transparent font-mono text-xs text-foreground placeholder:text-muted-foreground outline-none"
+          />
+        </div>
+
+        <div className="flex items-center gap-1 border border-glass-border rounded-xl overflow-hidden">
+          <button
+            onClick={() => setView("grid")}
+            className={`p-2 transition-colors ${view === "grid" ? "bg-primary/10 text-primary" : "text-muted-foreground hover:text-foreground"}`}
+          >
+            <Grid3X3 className="w-3.5 h-3.5" />
+          </button>
+          <button
+            onClick={() => setView("list")}
+            className={`p-2 transition-colors ${view === "list" ? "bg-primary/10 text-primary" : "text-muted-foreground hover:text-foreground"}`}
+          >
+            <List className="w-3.5 h-3.5" />
+          </button>
+        </div>
+
+        <select
+          value={sortBy}
+          onChange={(e) => setSortBy(e.target.value as any)}
+          className="glass-panel-strong px-3 py-2 rounded-xl font-mono text-xs text-foreground bg-transparent border-none outline-none cursor-pointer"
+        >
+          <option value="recent" className="bg-background">Recent</option>
+          <option value="name" className="bg-background">Name</option>
+          <option value="rate" className="bg-background">Success Rate</option>
+          <option value="usage" className="bg-background">Most Used</option>
+        </select>
+      </div>
+
+      {/* Tags filter */}
+      <div className="flex items-center gap-2 flex-wrap">
+        <Filter className="w-3.5 h-3.5 text-muted-foreground" />
+        {ALL_TAGS.map(tag => (
+          <button
+            key={tag}
+            onClick={() => toggleTag(tag)}
+            className={`font-mono text-[10px] px-2.5 py-1 rounded-lg border transition-all ${
+              selectedTags.includes(tag)
+                ? "border-primary/40 bg-primary/10 text-primary"
+                : "border-glass-border text-muted-foreground hover:text-foreground hover:border-primary/20"
+            }`}
+          >
+            {tag}
+          </button>
+        ))}
+        {selectedTags.length > 0 && (
+          <button
+            onClick={() => setSelectedTags([])}
+            className="font-mono text-[10px] text-muted-foreground hover:text-destructive transition-colors"
+          >
+            Clear
+          </button>
+        )}
+      </div>
+
+      {/* Grid View */}
+      {view === "grid" ? (
+        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {filtered.map((bp, i) => (
+            <motion.div
+              key={bp.id}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: i * 0.05 }}
+              className="glass-panel p-5 space-y-3 hover:bg-muted/5 transition-colors group"
+            >
+              <div className="flex items-start justify-between">
+                <div>
+                  <h3 className="font-mono text-sm font-semibold text-foreground">{bp.name}</h3>
+                  <span className="font-mono text-[9px] text-secondary">{bp.version}</span>
+                </div>
+                <button className="opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-foreground transition-all">
+                  <MoreHorizontal className="w-4 h-4" />
+                </button>
+              </div>
+
+              <p className="font-mono text-[11px] text-muted-foreground line-clamp-2">{bp.description}</p>
+
+              <div className="flex flex-wrap gap-1">
+                {bp.tags.map(tag => (
+                  <span key={tag} className="font-mono text-[9px] px-2 py-0.5 rounded border border-glass-border text-muted-foreground">
+                    {tag}
+                  </span>
+                ))}
+              </div>
+
+              {/* Stats */}
+              <div className="grid grid-cols-3 gap-2 pt-2 border-t border-glass-border">
+                <div className="text-center">
+                  <div className={`font-mono text-sm font-bold ${bp.successRate >= 90 ? "text-emerald-400" : bp.successRate >= 70 ? "text-amber-400" : "text-destructive"}`}>
+                    {bp.successRate}%
+                  </div>
+                  <div className="font-mono text-[8px] text-muted-foreground uppercase">Rate</div>
+                </div>
+                <div className="text-center">
+                  <div className="font-mono text-sm font-bold text-primary">{bp.timesUsed}</div>
+                  <div className="font-mono text-[8px] text-muted-foreground uppercase">Used</div>
+                </div>
+                <div className="text-center">
+                  <div className="font-mono text-sm font-bold text-muted-foreground">{bp.avgDuration}</div>
+                  <div className="font-mono text-[8px] text-muted-foreground uppercase">Avg</div>
+                </div>
+              </div>
+
+              <div className="font-mono text-[9px] text-muted-foreground">Last used: {bp.lastUsed}</div>
+
+              {/* Actions */}
+              <div className="flex items-center gap-2 pt-2">
+                <button className="flex items-center gap-1 px-3 py-1.5 rounded-lg font-mono text-[10px] bg-primary/10 text-primary border border-primary/30 hover:bg-primary/20 transition-colors">
+                  <Play className="w-3 h-3" /> Run
+                </button>
+                <button className="p-1.5 rounded-lg border border-glass-border text-muted-foreground hover:text-foreground transition-colors">
+                  <Edit className="w-3 h-3" />
+                </button>
+                <button className="p-1.5 rounded-lg border border-glass-border text-muted-foreground hover:text-foreground transition-colors">
+                  <Copy className="w-3 h-3" />
+                </button>
+                <button className="p-1.5 rounded-lg border border-glass-border text-muted-foreground hover:text-destructive transition-colors">
+                  <Trash2 className="w-3 h-3" />
+                </button>
+              </div>
+            </motion.div>
+          ))}
+        </div>
+      ) : (
+        /* List View */
+        <GlassPanel glow="none">
+          <div className="grid grid-cols-[1fr_150px_80px_80px_80px_100px] gap-3 px-3 py-2 font-mono text-[9px] text-muted-foreground uppercase tracking-wider border-b border-glass-border">
+            <span>Name</span>
+            <span>Tags</span>
+            <span>Rate</span>
+            <span>Used</span>
+            <span>Avg</span>
+            <span>Actions</span>
+          </div>
+          <div className="divide-y divide-glass-border/50">
+            {filtered.map((bp) => (
+              <div key={bp.id} className="grid grid-cols-[1fr_150px_80px_80px_80px_100px] gap-3 px-3 py-3 items-center hover:bg-muted/10 transition-colors">
+                <div>
+                  <span className="font-mono text-xs text-foreground">{bp.name}</span>
+                  <span className="font-mono text-[9px] text-secondary ml-2">{bp.version}</span>
+                </div>
+                <div className="flex gap-1 flex-wrap">
+                  {bp.tags.slice(0, 2).map(tag => (
+                    <span key={tag} className="font-mono text-[8px] px-1.5 py-0.5 rounded border border-glass-border text-muted-foreground">{tag}</span>
+                  ))}
+                </div>
+                <span className={`font-mono text-xs font-bold ${bp.successRate >= 90 ? "text-emerald-400" : "text-amber-400"}`}>{bp.successRate}%</span>
+                <span className="font-mono text-xs text-primary">{bp.timesUsed}</span>
+                <span className="font-mono text-xs text-muted-foreground">{bp.avgDuration}</span>
+                <div className="flex gap-1">
+                  <button className="p-1 rounded text-primary hover:bg-primary/10"><Play className="w-3 h-3" /></button>
+                  <button className="p-1 rounded text-muted-foreground hover:text-foreground"><Edit className="w-3 h-3" /></button>
+                  <button className="p-1 rounded text-muted-foreground hover:text-destructive"><Trash2 className="w-3 h-3" /></button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </GlassPanel>
+      )}
+    </div>
+  );
+};
+
+export default Blueprints;
