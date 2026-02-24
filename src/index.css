@@ -46,6 +46,17 @@
     --gradient-flow: linear-gradient(135deg, hsl(190 100% 50%), hsl(270 90% 58%), hsl(310 95% 50%));
     --gradient-flow-subtle: linear-gradient(135deg, hsl(190 100% 50% / 0.15), hsl(270 90% 58% / 0.15), hsl(310 95% 50% / 0.15));
 
+    /* Multi-color element tokens (dark) */
+    --color-blue: 210 80% 60%;
+    --color-orange: 25 90% 55%;
+    --color-pink: 340 75% 60%;
+    --color-violet: 270 70% 62%;
+    --color-purple: 285 65% 58%;
+    --color-green: 155 60% 50%;
+    --color-grey: 215 15% 55%;
+    --color-pistachio: 100 50% 55%;
+    --color-blueberry: 235 65% 60%;
+
     --sidebar-background: 225 25% 8%;
     --sidebar-foreground: 200 100% 95%;
     --sidebar-primary: 190 100% 50%;
@@ -56,54 +67,65 @@
     --sidebar-ring: 190 100% 50%;
   }
 
-  /* Soft Lavender Mist Light Theme */
+  /* Warm Butterscotch Glass Light Theme */
   .light {
-    --background: 240 25% 97%;
-    --foreground: 230 25% 15%;
+    --background: 40 40% 96%;
+    --foreground: 30 20% 15%;
 
-    --card: 235 20% 94%;
-    --card-foreground: 230 25% 15%;
+    --card: 38 35% 93%;
+    --card-foreground: 30 20% 15%;
 
-    --popover: 235 20% 94%;
-    --popover-foreground: 230 25% 15%;
+    --popover: 38 35% 93%;
+    --popover-foreground: 30 20% 15%;
 
-    --primary: 235 65% 58%;
-    --primary-foreground: 0 0% 100%;
+    --primary: 30 70% 45%;
+    --primary-foreground: 40 50% 98%;
 
-    --secondary: 175 45% 45%;
+    --secondary: 260 50% 55%;
     --secondary-foreground: 0 0% 100%;
 
-    --muted: 230 18% 90%;
-    --muted-foreground: 230 12% 48%;
+    --muted: 37 25% 88%;
+    --muted-foreground: 30 12% 42%;
 
-    --accent: 330 55% 55%;
+    --accent: 335 55% 52%;
     --accent-foreground: 0 0% 100%;
 
-    --destructive: 0 65% 52%;
+    --destructive: 0 65% 50%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 230 18% 85%;
-    --input: 230 18% 85%;
-    --ring: 235 65% 58%;
+    --border: 35 22% 82%;
+    --input: 35 22% 82%;
+    --ring: 30 70% 45%;
 
-    /* Light glass tokens — soft frosted feel */
-    --glass-bg: 237 22% 95%;
-    --glass-border: 230 18% 84%;
-    --glass-glow-cyan: 205 70% 55%;
-    --glass-glow-purple: 260 55% 60%;
-    --glass-glow-pink: 330 55% 55%;
+    /* Light glass tokens — warm creamy with color variety */
+    --glass-bg: 38 32% 94%;
+    --glass-border: 35 22% 80%;
+    --glass-glow-cyan: 195 60% 48%;
+    --glass-glow-purple: 265 50% 58%;
+    --glass-glow-pink: 335 55% 52%;
 
-    --gradient-flow: linear-gradient(135deg, hsl(205 70% 55%), hsl(260 55% 60%), hsl(330 55% 55%));
-    --gradient-flow-subtle: linear-gradient(135deg, hsl(205 70% 55% / 0.1), hsl(260 55% 60% / 0.1), hsl(330 55% 55% / 0.1));
+    /* Multi-color element tokens */
+    --color-blue: 210 65% 52%;
+    --color-orange: 25 80% 52%;
+    --color-pink: 340 60% 55%;
+    --color-violet: 270 55% 55%;
+    --color-purple: 285 50% 52%;
+    --color-green: 155 50% 42%;
+    --color-grey: 220 10% 58%;
+    --color-pistachio: 100 40% 48%;
+    --color-blueberry: 235 55% 52%;
 
-    --sidebar-background: 238 22% 93%;
-    --sidebar-foreground: 230 25% 15%;
-    --sidebar-primary: 235 65% 58%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 230 18% 90%;
-    --sidebar-accent-foreground: 230 25% 15%;
-    --sidebar-border: 230 18% 85%;
-    --sidebar-ring: 235 65% 58%;
+    --gradient-flow: linear-gradient(135deg, hsl(25 80% 52%), hsl(265 50% 58%), hsl(335 55% 52%));
+    --gradient-flow-subtle: linear-gradient(135deg, hsl(25 80% 52% / 0.12), hsl(265 50% 58% / 0.12), hsl(335 55% 52% / 0.12));
+
+    --sidebar-background: 39 34% 92%;
+    --sidebar-foreground: 30 20% 15%;
+    --sidebar-primary: 30 70% 45%;
+    --sidebar-primary-foreground: 40 50% 98%;
+    --sidebar-accent: 37 25% 88%;
+    --sidebar-accent-foreground: 30 20% 15%;
+    --sidebar-border: 35 22% 82%;
+    --sidebar-ring: 30 70% 45%;
   }
 }
 
