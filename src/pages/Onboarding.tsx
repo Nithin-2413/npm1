@@ -196,7 +196,7 @@ const Onboarding = () => {
 
         <div className="text-center mt-6">
           <p className="font-mono text-[9px] text-muted-foreground mb-2">You can change these later in Settings</p>
-          <h2 className="text-sm font-black tracking-tight bg-clip-text text-transparent" style={{ fontFamily: "'Sen', sans-serif", backgroundImage: "linear-gradient(135deg, #7a5c12, #b8942e, #e2c56d, #f5e2a0, #e2c56d, #b8942e, #7a5c12)", backgroundSize: "300% auto", animation: "gold-shine 4s linear infinite" }}>LUMEN</h2>
+          <h2 className="text-sm font-black tracking-tight bg-clip-text text-transparent" style={{ fontFamily: "'Sen', sans-serif", backgroundImage: "linear-gradient(135deg, #7a5c12, #b8942e, #e2c56d, #f5e2a0, #e2c56d, #b8942e, #7a5c12)", backgroundSize: "300% auto", animation: "gold-shine 10s linear infinite" }}>LUMEN</h2>
           <p className="text-[7px] text-muted-foreground tracking-widest uppercase" style={{ fontFamily: "'Sen', sans-serif" }}>Lumen Technologies</p>
           <p className="font-mono text-[8px] text-muted-foreground/50 mt-1">v2.4.1</p>
         </div>
