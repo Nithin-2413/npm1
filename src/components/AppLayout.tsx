@@ -77,26 +77,31 @@ const AppLayout = () => {
       <GlobalSearchModal />
       <KeyboardShortcutsModal />
 
-      {/* Background orbs */}
+      {/* Soft ambient background — subtle, not distracting */}
       <div className="fixed inset-0 pointer-events-none overflow-hidden z-0">
-        <div className="absolute top-[-20%] left-[-10%] w-[500px] h-[500px] rounded-full bg-glow-cyan/5 blur-[120px] animate-pulse-glow" />
-        <div className="absolute top-[30%] right-[-10%] w-[600px] h-[600px] rounded-full bg-glow-purple/5 blur-[120px] animate-pulse-glow" style={{ animationDelay: "1s" }} />
-        <div className="absolute bottom-[-10%] left-[30%] w-[400px] h-[400px] rounded-full bg-glow-pink/5 blur-[120px] animate-pulse-glow" style={{ animationDelay: "2s" }} />
+        <div className="absolute top-[-20%] left-[-10%] w-[600px] h-[600px] rounded-full bg-glow-cyan/3 blur-[150px] animate-pulse-glow" />
+        <div className="absolute top-[40%] right-[-10%] w-[500px] h-[500px] rounded-full bg-glow-purple/3 blur-[150px] animate-pulse-glow" style={{ animationDelay: "2s" }} />
+        <div className="absolute bottom-[-15%] left-[25%] w-[450px] h-[450px] rounded-full bg-glow-pink/3 blur-[150px] animate-pulse-glow" style={{ animationDelay: "4s" }} />
       </div>
 
-      {/* Sidebar */}
+      {/* Sidebar — macOS Finder style */}
       <AnimatePresence mode="wait">
         {sidebarOpen && (
           <motion.aside
             initial={{ width: 0, opacity: 0 }}
             animate={{ width: 240, opacity: 1 }}
             exit={{ width: 0, opacity: 0 }}
-            transition={{ duration: 0.2 }}
-            className="fixed left-0 top-0 bottom-0 z-40 flex flex-col border-r border-glass-border overflow-hidden"
-            style={{ background: "hsl(var(--glass-bg) / 0.85)", backdropFilter: "blur(40px)" }}
+            transition={{ duration: 0.25, ease: [0.25, 0.1, 0.25, 1] }}
+            className="fixed left-0 top-0 bottom-0 z-40 flex flex-col border-r overflow-hidden"
+            style={{
+              borderColor: "hsl(var(--glass-border) / 0.4)",
+              background: "hsl(var(--glass-bg) / 0.7)",
+              backdropFilter: "blur(50px) saturate(1.8)",
+              WebkitBackdropFilter: "blur(50px) saturate(1.8)",
+            }}
           >
             {/* Logo */}
-            <div className="p-5 flex items-center gap-3 border-b border-glass-border">
+            <div className="p-5 flex items-center gap-3 border-b" style={{ borderColor: "hsl(var(--glass-border) / 0.3)" }}>
               <span className="text-2xl animate-float">🌊</span>
               <div>
                 <h1 className="text-lg font-black tracking-tight gradient-text">NPM</h1>
@@ -118,15 +123,19 @@ const AppLayout = () => {
                   <Link
                     key={item.path}
                     to={item.path}
-                    className={`flex items-center gap-3 px-3 py-2.5 rounded-xl font-mono text-xs transition-all group ${
+                    className={`flex items-center gap-3 px-3 py-2 rounded-[10px] text-[12px] tracking-tight transition-all duration-200 group ${
                       isActive
-                        ? `${NAV_COLOR_CLASSES[item.color].bg} ${NAV_COLOR_CLASSES[item.color].text} ${NAV_COLOR_CLASSES[item.color].border} border backdrop-blur-md shadow-sm`
-                        : "text-muted-foreground hover:text-foreground hover:bg-muted/20 border border-transparent"
+                        ? `${NAV_COLOR_CLASSES[item.color].text} ${NAV_COLOR_CLASSES[item.color].border} border font-medium`
+                        : "text-muted-foreground hover:text-foreground hover:bg-muted/15 border border-transparent"
                     }`}
-                    style={isActive ? { background: `hsl(var(--glass-bg) / 0.45)` } : undefined}
+                    style={isActive ? {
+                      background: `hsl(var(--glass-bg) / 0.6)`,
+                      backdropFilter: "blur(12px)",
+                      boxShadow: "0 1px 3px -1px hsl(var(--background) / 0.3), inset 0 0.5px 0 0 hsl(var(--foreground) / 0.04)"
+                    } : undefined}
                   >
-                    <item.icon className="w-4 h-4 shrink-0" />
-                    <span className="flex-1">{item.label}</span>
+                    <item.icon className="w-4 h-4 shrink-0" strokeWidth={isActive ? 2 : 1.5} />
+                    <span className="flex-1 font-sans">{item.label}</span>
                     {item.shortcut && (
                       <span className="font-mono text-[8px] text-muted-foreground/40 group-hover:text-muted-foreground transition-colors">
                         {item.shortcut}
@@ -138,12 +147,12 @@ const AppLayout = () => {
             </nav>
 
             {/* System Pulse */}
-            <div className="px-4 py-3 border-t border-glass-border">
+            <div className="px-4 py-3 border-t" style={{ borderColor: "hsl(var(--glass-border) / 0.3)" }}>
               <SystemPulse />
             </div>
 
             {/* User & Logout */}
-            <div className="p-4 border-t border-glass-border space-y-3">
+            <div className="p-4 border-t space-y-3" style={{ borderColor: "hsl(var(--glass-border) / 0.3)" }}>
               {user && (
                 <div className="flex items-center gap-2">
                   <div className="w-6 h-6 rounded-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center text-[8px] font-bold text-primary-foreground shrink-0">
@@ -165,10 +174,15 @@ const AppLayout = () => {
       </AnimatePresence>
 
       {/* Main content */}
-      <div className={`flex-1 flex flex-col transition-all duration-200 relative z-10 ${sidebarOpen ? "ml-[240px]" : "ml-0"}`}>
-        {/* Top header */}
-        <header className="sticky top-0 z-30 border-b border-glass-border px-4 py-3 flex items-center gap-3"
-          style={{ background: "hsl(var(--glass-bg) / 0.7)", backdropFilter: "blur(20px)" }}
+      <div className={`flex-1 flex flex-col transition-all duration-300 ease-[cubic-bezier(0.25,0.1,0.25,1)] relative z-10 ${sidebarOpen ? "ml-[240px]" : "ml-0"}`}>
+        {/* Top header — macOS toolbar style */}
+        <header className="sticky top-0 z-30 border-b px-5 py-2.5 flex items-center gap-3"
+          style={{
+            borderColor: "hsl(var(--glass-border) / 0.35)",
+            background: "hsl(var(--glass-bg) / 0.6)",
+            backdropFilter: "blur(40px) saturate(1.8)",
+            WebkitBackdropFilter: "blur(40px) saturate(1.8)",
+          }}
         >
           {!sidebarOpen && (
             <button
