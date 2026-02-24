@@ -202,24 +202,24 @@ const AppLayout = () => {
           )}
 
           {/* Search — now opens modal */}
-          <div className="flex-1 max-w-[180px] mx-auto">
+          <div className="flex-1 flex justify-center">
             <button
               onClick={() => {
                 window.dispatchEvent(new CustomEvent("open-search"));
               }}
-              className="w-full flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-left group transition-all duration-300"
+              className="w-full max-w-xs flex items-center gap-2 px-3 py-1.5 rounded-xl text-left group transition-all duration-300"
               style={{
-                background: "hsl(var(--glass-bg) / 0.15)",
-                backdropFilter: "blur(20px)",
-                border: "1px solid hsl(var(--glass-border) / 0.2)",
-                boxShadow: "inset 0 1px 0 0 hsl(0 0% 100% / 0.05)",
+                background: "hsl(var(--glass-bg) / 0.3)",
+                backdropFilter: "blur(24px)",
+                border: "1px solid hsl(var(--glass-border) / 0.35)",
+                boxShadow: "inset 0 1px 0 0 hsl(0 0% 100% / 0.08), 0 2px 8px -2px hsl(0 0% 0% / 0.15)",
               }}
             >
-              <Search className="w-3 h-3 text-muted-foreground/60" />
-              <span className="flex-1 text-[10px] text-muted-foreground/50 group-hover:text-muted-foreground transition-colors" style={{ fontFamily: "'Sen', sans-serif" }}>
+              <Search className="w-3.5 h-3.5 text-muted-foreground/70" />
+              <span className="flex-1 text-[11px] text-muted-foreground/60 group-hover:text-muted-foreground transition-colors" style={{ fontFamily: "'Sen', sans-serif" }}>
                 Search...
               </span>
-              <kbd className="text-[8px] px-1 py-px rounded text-muted-foreground/40" style={{ fontFamily: "'Sen', sans-serif", border: "1px solid hsl(var(--glass-border) / 0.15)" }}>⌘K</kbd>
+              <kbd className="text-[9px] px-1.5 py-0.5 rounded-md text-muted-foreground/50" style={{ fontFamily: "'Sen', sans-serif", border: "1px solid hsl(var(--glass-border) / 0.25)", background: "hsl(var(--glass-bg) / 0.2)" }}>⌘K</kbd>
             </button>
           </div>
 
