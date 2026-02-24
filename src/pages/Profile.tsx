@@ -91,7 +91,7 @@ const Profile = () => {
   return (
     <div className="max-w-3xl mx-auto space-y-6">
       <div>
-        <h1 className="text-2xl font-black tracking-tight gradient-text flex items-center gap-2">
+        <h1 className="text-2xl font-black tracking-tight gradient-text flex items-center gap-2" style={{ fontFamily: "'Sen', sans-serif" }}>
           <span>👤</span> Profile
         </h1>
         <p className="font-mono text-xs text-muted-foreground mt-1">Account management</p>
