@@ -113,7 +113,7 @@ const AppLayout = () => {
             <div className="p-5 flex items-center justify-center gap-3 border-b" style={{ borderColor: "hsl(var(--glass-border) / 0.3)" }}>
               <span className="text-2xl animate-float">🌊</span>
               <div className="text-center">
-                <h1 className="text-xl font-black tracking-tight bg-clip-text text-transparent" style={{ fontFamily: "'Sen', sans-serif", backgroundImage: "linear-gradient(135deg, #8a6d1b, #c9a84c, #e8d5a0, #c4c4c4, #e8d5a0, #c9a84c, #8a6d1b)", backgroundSize: "300% auto", animation: "gold-shine 4s linear infinite" }}>NPM</h1>
+                <h1 className="text-xl font-black tracking-tight bg-clip-text text-transparent" style={{ fontFamily: "'Sen', sans-serif", backgroundImage: "linear-gradient(135deg, #7a5c12, #b8942e, #e2c56d, #f5e2a0, #e2c56d, #b8942e, #7a5c12)", backgroundSize: "300% auto", animation: "gold-shine 4s linear infinite" }}>NPM</h1>
                 <p className="text-[8px] text-muted-foreground tracking-widest uppercase" style={{ fontFamily: "'Sen', sans-serif" }}>Neural Precision Monitor</p>
               </div>
               <button
