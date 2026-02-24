@@ -4,7 +4,7 @@ import {
   ReactFlow,
   Background,
   Controls,
-  MiniMap,
+  
   addEdge,
   useNodesState,
   useEdgesState,
@@ -370,15 +370,6 @@ const FlowCanvas = () => {
             <Controls
               showInteractive={false}
               className="!bg-[hsl(var(--glass-bg))] !border-glass-border !rounded-xl !shadow-lg [&>button]:!bg-transparent [&>button]:!border-glass-border [&>button]:!text-muted-foreground [&>button:hover]:!text-foreground"
-            />
-            <MiniMap
-              nodeColor={(n) => {
-                if (n.id === "start") return "hsl(150 80% 40%)";
-                if (n.id === "end") return "hsl(0 80% 55%)";
-                return "hsl(190 100% 50%)";
-              }}
-              maskColor="hsl(225 30% 6% / 0.8)"
-              className="!bg-[hsl(var(--glass-bg))] !border-glass-border !rounded-xl"
             />
             <Panel position="top-right" className="flex gap-2">
               <span className="font-mono text-[10px] text-muted-foreground bg-[hsl(var(--glass-bg))] px-3 py-1.5 rounded-lg border border-glass-border">
