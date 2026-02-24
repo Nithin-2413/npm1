@@ -1,4 +1,5 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
+import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { Link, useNavigate } from "react-router-dom";
 import { GlassPanel } from "@/components/GlassPanel";
@@ -37,6 +38,72 @@ const ACTIVITY_DATA = [
   { day: "Sun", success: 13, failure: 1 },
 ];
 
+// Portal-based dropdown to avoid overflow clipping
+const BlueprintDropdown = ({ open, onToggle, onClose, onSelect }: {
+  open: boolean;
+  onToggle: () => void;
+  onClose: () => void;
+  onSelect: (id: string, name: string) => void;
+}) => {
+  const btnRef = useRef<HTMLButtonElement>(null);
+  const [pos, setPos] = useState({ top: 0, left: 0 });
+
+  useEffect(() => {
+    if (open && btnRef.current) {
+      const rect = btnRef.current.getBoundingClientRect();
+      setPos({ top: rect.bottom + 8, left: rect.left });
+    }
+  }, [open]);
+
+  return (
+    <>
+      <button
+        ref={btnRef}
+        onClick={onToggle}
+        className="flex items-center gap-2 px-4 py-2.5 rounded-xl font-mono text-xs border border-glass-border text-muted-foreground hover:text-foreground hover:border-primary/30 transition-colors"
+      >
+        <FileCode2 className="w-3.5 h-3.5" />
+        Use Blueprint
+        <ChevronDown className={`w-3 h-3 transition-transform ${open ? "rotate-180" : ""}`} />
+      </button>
+      {open && createPortal(
+        <>
+          <div className="fixed inset-0 z-[90]" onClick={onClose} />
+          <motion.div
+            initial={{ opacity: 0, y: 4, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 4, scale: 0.95 }}
+            transition={{ duration: 0.15 }}
+            className="fixed w-56 rounded-xl border border-glass-border p-1 z-[100] shadow-2xl"
+            style={{ top: pos.top, left: pos.left, background: "hsl(var(--popover))", backdropFilter: "blur(40px)" }}
+          >
+            {BLUEPRINTS_LIST.map(bp => (
+              <button
+                key={bp.id}
+                onClick={() => onSelect(bp.id, bp.name)}
+                className="w-full flex items-center gap-2 px-3 py-2 rounded-lg font-mono text-xs text-foreground/80 hover:bg-primary/10 hover:text-primary transition-colors text-left"
+              >
+                <FileCode2 className="w-3 h-3 text-secondary" />
+                {bp.name}
+              </button>
+            ))}
+            <div className="border-t border-glass-border mt-1 pt-1">
+              <Link
+                to="/blueprints"
+                onClick={onClose}
+                className="w-full flex items-center gap-2 px-3 py-2 rounded-lg font-mono text-[10px] text-muted-foreground hover:text-primary transition-colors"
+              >
+                View All Blueprints <ArrowUpRight className="w-3 h-3" />
+              </Link>
+            </div>
+          </motion.div>
+        </>,
+        document.body
+      )}
+    </>
+  );
+};
+
 const Dashboard = () => {
   const navigate = useNavigate();
   const [command, setCommand] = useState("");
@@ -71,7 +138,7 @@ const Dashboard = () => {
   return (
     <div className="max-w-7xl mx-auto space-y-6">
       {/* Hero Execute Card */}
-      <GlassPanel glow="cyan" delay={0.1} className="relative overflow-visible">
+      <GlassPanel glow="cyan" delay={0.1} className="relative">
         <div className="flex items-center gap-2 mb-4">
           <span className="text-lg">⚡</span>
           <h2 className="font-mono text-sm font-semibold tracking-wider uppercase text-primary">Quick Execute</h2>
@@ -101,51 +168,12 @@ const Dashboard = () => {
             Execute Now
           </button>
 
-          <div className="relative" ref={dropdownRef}>
-            <button
-              onClick={() => setBlueprintDropdownOpen(!blueprintDropdownOpen)}
-              className="flex items-center gap-2 px-4 py-2.5 rounded-xl font-mono text-xs border border-glass-border text-muted-foreground hover:text-foreground hover:border-primary/30 transition-colors"
-            >
-              <FileCode2 className="w-3.5 h-3.5" />
-              Use Blueprint
-              <ChevronDown className={`w-3 h-3 transition-transform ${blueprintDropdownOpen ? "rotate-180" : ""}`} />
-            </button>
-            <AnimatePresence>
-              {blueprintDropdownOpen && (
-                <>
-                  <div className="fixed inset-0 z-40" onClick={() => setBlueprintDropdownOpen(false)} />
-                  <motion.div
-                    initial={{ opacity: 0, y: 4, scale: 0.95 }}
-                    animate={{ opacity: 1, y: 0, scale: 1 }}
-                    exit={{ opacity: 0, y: 4, scale: 0.95 }}
-                    transition={{ duration: 0.15 }}
-                    className="absolute top-full left-0 mt-2 w-56 rounded-xl border border-glass-border p-1 z-50 shadow-2xl"
-                    style={{ background: "hsl(var(--popover))", backdropFilter: "blur(40px)" }}
-                  >
-                  {BLUEPRINTS_LIST.map(bp => (
-                    <button
-                      key={bp.id}
-                      onClick={() => handleUseBlueprint(bp.id, bp.name)}
-                      className="w-full flex items-center gap-2 px-3 py-2 rounded-lg font-mono text-xs text-foreground/80 hover:bg-primary/10 hover:text-primary transition-colors text-left"
-                    >
-                      <FileCode2 className="w-3 h-3 text-secondary" />
-                      {bp.name}
-                    </button>
-                  ))}
-                  <div className="border-t border-glass-border mt-1 pt-1">
-                    <Link
-                      to="/blueprints"
-                      onClick={() => setBlueprintDropdownOpen(false)}
-                      className="w-full flex items-center gap-2 px-3 py-2 rounded-lg font-mono text-[10px] text-muted-foreground hover:text-primary transition-colors"
-                    >
-                      View All Blueprints <ArrowUpRight className="w-3 h-3" />
-                    </Link>
-                  </div>
-                  </motion.div>
-                </>
-              )}
-            </AnimatePresence>
-          </div>
+          <BlueprintDropdown
+            open={blueprintDropdownOpen}
+            onToggle={() => setBlueprintDropdownOpen(!blueprintDropdownOpen)}
+            onClose={() => setBlueprintDropdownOpen(false)}
+            onSelect={handleUseBlueprint}
+          />
 
           <label className="flex items-center gap-2 px-3 py-2 rounded-xl font-mono text-xs border border-glass-border text-muted-foreground hover:text-foreground transition-colors cursor-pointer">
             <div className={`w-8 h-4 rounded-full flex items-center transition-colors ${recording ? "bg-destructive/60" : "bg-muted/40"}`}>
