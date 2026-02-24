@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -20,7 +21,27 @@ import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
 
-const App = () => (
+// Apply theme from localStorage on startup
+function useThemeInit() {
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem("npm-settings");
+      const theme = saved ? JSON.parse(saved).theme : "dark";
+      const root = document.documentElement;
+      if (theme === "light") {
+        root.classList.add("light");
+      } else if (theme === "auto") {
+        if (!window.matchMedia("(prefers-color-scheme: dark)").matches) {
+          root.classList.add("light");
+        }
+      }
+    } catch {}
+  }, []);
+}
+
+const App = () => {
+  useThemeInit();
+  return (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
       <Toaster />
@@ -48,6 +69,7 @@ const App = () => (
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>
-);
+  );
+};
 
 export default App;
