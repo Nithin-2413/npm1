@@ -47,7 +47,7 @@ const CONSOLE_LOGS = [
 ];
 
 const Execute = () => {
-  const [command, setCommand] = useState("Navigate to signup page, fill form with random data, select country, accept terms, submit");
+  const [command, setCommand] = useState("");
   const [isRunning, setIsRunning] = useState(false);
   const [expandedAction, setExpandedAction] = useState<number | null>(null);
   const [elapsed, setElapsed] = useState(0);
@@ -81,7 +81,7 @@ const Execute = () => {
               rows={2}
               disabled={isRunning}
               className="w-full font-mono text-sm text-foreground/60 bg-muted/10 rounded-lg px-3 py-2 border border-glass-border/40 outline-none focus:ring-1 focus:ring-primary/40 resize-none placeholder:text-muted-foreground/20 disabled:opacity-60 disabled:cursor-not-allowed"
-              placeholder="Enter your test command..."
+              placeholder="Navigate to signup page, fill form with random data, select country, accept terms, submit"
             />
           </div>
           <div className="flex items-center justify-center gap-3">
