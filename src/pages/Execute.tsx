@@ -224,13 +224,14 @@ const Execute = () => {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={() => setShowDiagnosis(false)}
-              className="fixed inset-0 z-50 bg-background/60 backdrop-blur-sm"
-            />
+              className="fixed inset-0 z-50 bg-background/60 backdrop-blur-sm flex items-center justify-center"
+            >
             <motion.div
               initial={{ opacity: 0, scale: 0.95, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
-              className="fixed z-50 top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[90vw] max-w-lg"
+              onClick={(e) => e.stopPropagation()}
+              className="w-[90vw] max-w-lg"
             >
               <div className="glass-panel p-5 space-y-4 border border-primary/20 rounded-2xl shadow-2xl"
                 style={{ background: "hsl(var(--glass-bg) / 0.85)", backdropFilter: "blur(40px) saturate(1.8)" }}
@@ -282,6 +283,7 @@ const Execute = () => {
                 <p className="text-[10px] text-muted-foreground/60 italic">AI-powered analysis will provide real-time insights when connected.</p>
               </div>
             </motion.div>
+            </motion.div>
           </>
         )}
       </AnimatePresence>
@@ -295,13 +297,14 @@ const Execute = () => {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={() => setShowFix(false)}
-              className="fixed inset-0 z-50 bg-background/60 backdrop-blur-sm"
-            />
+              className="fixed inset-0 z-50 bg-background/60 backdrop-blur-sm flex items-center justify-center"
+            >
             <motion.div
               initial={{ opacity: 0, scale: 0.95, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
-              className="fixed z-50 top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[90vw] max-w-lg"
+              onClick={(e) => e.stopPropagation()}
+              className="w-[90vw] max-w-lg"
             >
               <div className="glass-panel p-5 space-y-4 border border-emerald-400/20 rounded-2xl shadow-2xl"
                 style={{ background: "hsl(var(--glass-bg) / 0.85)", backdropFilter: "blur(40px) saturate(1.8)" }}
@@ -347,6 +350,7 @@ const Execute = () => {
                 </button>
                 <p className="text-[10px] text-muted-foreground/60 italic">AI-powered fix suggestions will be available when connected.</p>
               </div>
+            </motion.div>
             </motion.div>
           </>
         )}
