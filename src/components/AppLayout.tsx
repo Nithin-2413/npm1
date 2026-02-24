@@ -133,7 +133,7 @@ const AppLayout = () => {
                     } : undefined}
                   >
                     <item.icon className="w-4 h-4 shrink-0" strokeWidth={isActive ? 2 : 1.5} />
-                    <span className="flex-1 font-sans">{item.label}</span>
+                    <span className="flex-1" style={{ fontFamily: "'Sen', sans-serif" }}>{item.label}</span>
                     {item.shortcut && (
                       <span className="font-mono text-[8px] text-muted-foreground/40 group-hover:text-muted-foreground transition-colors">
                         {item.shortcut}
