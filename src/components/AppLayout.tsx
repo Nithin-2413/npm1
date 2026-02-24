@@ -231,9 +231,11 @@ const AppLayout = () => {
             <NotificationPanel />
 
             {/* Profile */}
-            <Link to="/profile" className="flex items-center gap-2 pl-2 ml-1 border-l border-glass-border hover:opacity-80 transition-opacity">
+            <Link to="/profile" className="flex items-center gap-1 pl-2 ml-1 border-l border-glass-border hover:opacity-80 transition-opacity">
               <AnimatedAvatar animal={avatar} size="sm" />
-              <span className="font-mono text-xs text-muted-foreground hidden sm:inline">{user?.name || "user"}</span>
+              <span className="text-xs text-muted-foreground hidden sm:inline" style={{ fontFamily: "'Sen', sans-serif" }}>
+                {((user?.name || "user").length > 7 ? (user?.name || "user").slice(0, 7) + "…" : (user?.name || "user"))}
+              </span>
             </Link>
           </div>
         </header>
