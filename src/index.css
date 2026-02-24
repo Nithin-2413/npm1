@@ -78,7 +78,7 @@
     --popover: 38 35% 93%;
     --popover-foreground: 30 20% 15%;
 
-    --primary: 30 70% 45%;
+    --primary: 38 75% 48%;
     --primary-foreground: 40 50% 98%;
 
     --secondary: 260 50% 55%;
@@ -95,7 +95,7 @@
 
     --border: 35 22% 82%;
     --input: 35 22% 82%;
-    --ring: 30 70% 45%;
+    --ring: 38 75% 48%;
 
     /* Light glass tokens — warm creamy with color variety */
     --glass-bg: 38 32% 94%;
