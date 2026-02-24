@@ -8,7 +8,7 @@ import { KeyboardShortcutsModal } from "@/components/KeyboardShortcutsModal";
 import { SystemPulse } from "@/components/SystemPulse";
 import { AnimatedAvatar, AvatarAnimal, getAvatarEmoji } from "@/components/AnimatedAvatar";
 import {
-  LayoutDashboard, Play, FileCode2, ClipboardList,
+  LayoutDashboard, Play, FileCode2, FileText,
   Settings, Menu, Search,
   ChevronLeft, Keyboard
 } from "lucide-react";
@@ -17,7 +17,7 @@ const NAV_ITEMS = [
   { label: "Dashboard", icon: LayoutDashboard, path: "/", shortcut: "G D", color: "theme-blue" },
   { label: "Execute", icon: Play, path: "/execute", shortcut: "G E", color: "theme-green" },
   { label: "Blueprints", icon: FileCode2, path: "/blueprints", shortcut: "G B", color: "theme-violet" },
-  { label: "Reports", icon: ClipboardList, path: "/reports", shortcut: "G R", color: "theme-orange" },
+  { label: "Reports", icon: FileText, path: "/reports", shortcut: "G R", color: "theme-orange" },
   { label: "Settings", icon: Settings, path: "/settings", shortcut: "G S", color: "theme-pistachio" },
 ];
 

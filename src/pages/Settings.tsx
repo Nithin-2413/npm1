@@ -92,20 +92,8 @@ const Settings = () => {
   const [settings, setSettings] = useState<SettingsState>(loadSettings);
   const [dirty, setDirty] = useState(false);
 
-  // Apply saved theme on mount
-  useEffect(() => {
-    const theme = settings.theme;
-    const root = document.documentElement;
-    if (theme === "light") {
-      root.classList.add("light");
-    } else if (theme === "dark") {
-      root.classList.remove("light");
-    } else {
-      const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
-      if (!prefersDark) root.classList.add("light");
-      else root.classList.remove("light");
-    }
-  }, []);
+  // Theme is already applied on app startup via useThemeInit in App.tsx
+  // Only re-apply when user explicitly changes theme via the set() function
 
   const set = useCallback(<K extends keyof SettingsState>(key: K, val: SettingsState[K]) => {
     setSettings(prev => ({ ...prev, [key]: val }));
