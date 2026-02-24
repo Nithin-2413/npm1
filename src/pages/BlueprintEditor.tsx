@@ -22,16 +22,32 @@ const ACTION_LIBRARY: { category: string; actions: { type: ActionType; label: st
   { category: "Navigation", actions: [
     { type: "navigate", label: "Navigate", desc: "Go to URL" },
     { type: "wait", label: "Wait for URL", desc: "Wait for URL pattern" },
+    { type: "scroll", label: "Scroll", desc: "Scroll to element" },
   ]},
   { category: "Input", actions: [
     { type: "fill", label: "Fill Input", desc: "Type into field" },
     { type: "select", label: "Select Option", desc: "Choose dropdown" },
+    { type: "checkbox", label: "Checkbox", desc: "Toggle checkbox" },
+    { type: "radio", label: "Radio Button", desc: "Select radio option" },
+    { type: "textarea", label: "Textarea", desc: "Fill multiline text" },
+    { type: "upload", label: "File Upload", desc: "Upload a file" },
   ]},
   { category: "Interaction", actions: [
     { type: "click", label: "Click", desc: "Click element" },
+    { type: "hover", label: "Hover", desc: "Hover over element" },
+    { type: "drag", label: "Drag & Drop", desc: "Drag to target" },
+    { type: "keypress", label: "Keypress", desc: "Press keyboard key" },
     { type: "screenshot", label: "Screenshot", desc: "Capture screenshot" },
   ]},
-  { category: "Assertions", actions: [
+  { category: "Logic", actions: [
+    { type: "condition", label: "Condition", desc: "If/else branching" },
+    { type: "loop", label: "Loop", desc: "Repeat actions" },
+    { type: "delay", label: "Delay", desc: "Wait fixed time" },
+  ]},
+  { category: "Advanced", actions: [
+    { type: "function", label: "Function", desc: "Run custom JS" },
+    { type: "api", label: "API Call", desc: "HTTP request" },
+    { type: "extract", label: "Extract Data", desc: "Scrape element text" },
     { type: "assert", label: "Assert", desc: "Verify element" },
   ]},
 ];
@@ -49,9 +65,11 @@ const BlueprintEditor = () => {
     { id: "3", type: "fill", selector: "input#password", value: "{{PASSWORD}}", timeout: 5000, optional: false },
     { id: "4", type: "click", selector: "button#submit", value: "", timeout: 5000, optional: false },
   ]);
-  const [variables, setVariables] = useState([
+  const [variables, setVariables] = useState<{ name: string; defaultValue: string; type: string }[]>([
     { name: "USER_EMAIL", defaultValue: "test@example.com", type: "text" },
-    { name: "PASSWORD", defaultValue: "S3cureP@ss!", type: "text" },
+    { name: "PASSWORD", defaultValue: "S3cureP@ss!", type: "secret" },
+    { name: "MAX_RETRIES", defaultValue: "3", type: "number" },
+    { name: "HEADLESS", defaultValue: "true", type: "boolean" },
   ]);
 
   const addAction = useCallback((type: ActionType) => {
@@ -275,7 +293,7 @@ const BlueprintEditor = () => {
                     onChange={(e) => updateAction(selected.id, { type: e.target.value as ActionType })}
                     className="w-full bg-muted/20 border border-glass-border rounded-xl px-3 py-2.5 font-mono text-xs text-foreground outline-none cursor-pointer disabled:opacity-60"
                   >
-                    {["navigate", "fill", "click", "select", "wait", "assert", "screenshot"].map(t => (
+                    {["navigate", "fill", "click", "select", "wait", "assert", "screenshot", "upload", "scroll", "hover", "drag", "keypress", "checkbox", "radio", "textarea", "condition", "loop", "function", "api", "delay", "extract", "custom"].map(t => (
                       <option key={t} className="bg-background" value={t}>{t.charAt(0).toUpperCase() + t.slice(1)}</option>
                     ))}
                   </select>
@@ -349,35 +367,53 @@ const BlueprintEditor = () => {
             </div>
             <div className="space-y-2.5 overflow-hidden">
               {variables.map((v, i) => (
-                <div key={i} className="flex items-center gap-2 font-mono text-[11px] min-w-0">
-                  <input
-                    value={v.name}
-                    disabled={isViewMode}
-                    onChange={(e) => {
-                      const updated = [...variables];
-                      updated[i].name = e.target.value.toUpperCase().replace(/[^A-Z0-9_]/g, "");
-                      setVariables(updated);
-                    }}
-                    className="w-24 shrink-0 bg-muted/20 border border-glass-border rounded-lg px-2 py-1.5 text-secondary outline-none focus:ring-1 focus:ring-primary/40 disabled:opacity-60"
-                  />
-                  <input
-                    value={v.defaultValue}
-                    disabled={isViewMode}
-                    onChange={(e) => {
-                      const updated = [...variables];
-                      updated[i].defaultValue = e.target.value;
-                      setVariables(updated);
-                    }}
-                    className="flex-1 min-w-0 bg-muted/20 border border-glass-border rounded-lg px-2 py-1.5 text-foreground/70 outline-none focus:ring-1 focus:ring-primary/40 disabled:opacity-60"
-                  />
-                  {!isViewMode && (
-                    <button
-                      onClick={() => setVariables(variables.filter((_, j) => j !== i))}
-                      className="text-muted-foreground hover:text-destructive transition-colors"
+                <div key={i} className="space-y-1.5">
+                  <div className="flex items-center gap-1.5 font-mono text-[11px] min-w-0">
+                    <input
+                      value={v.name}
+                      disabled={isViewMode}
+                      onChange={(e) => {
+                        const updated = [...variables];
+                        updated[i].name = e.target.value.toUpperCase().replace(/[^A-Z0-9_]/g, "");
+                        setVariables(updated);
+                      }}
+                      className="w-20 shrink-0 bg-muted/20 border border-glass-border rounded-lg px-2 py-1.5 text-secondary outline-none focus:ring-1 focus:ring-primary/40 disabled:opacity-60"
+                    />
+                    <select
+                      value={v.type}
+                      disabled={isViewMode}
+                      onChange={(e) => {
+                        const updated = [...variables];
+                        updated[i].type = e.target.value;
+                        setVariables(updated);
+                      }}
+                      className="w-[72px] shrink-0 bg-muted/20 border border-glass-border rounded-lg px-1.5 py-1.5 text-[10px] text-foreground/70 outline-none cursor-pointer disabled:opacity-60"
                     >
-                      <Trash2 className="w-3 h-3" />
-                    </button>
-                  )}
+                      {["text", "number", "boolean", "secret", "list", "json", "file", "date", "url"].map(t => (
+                        <option key={t} className="bg-background" value={t}>{t}</option>
+                      ))}
+                    </select>
+                    <input
+                      value={v.defaultValue}
+                      disabled={isViewMode}
+                      type={v.type === "secret" ? "password" : v.type === "number" ? "number" : "text"}
+                      placeholder={v.type === "boolean" ? "true / false" : v.type === "list" ? "a, b, c" : v.type === "json" ? '{"key": "val"}' : "Default"}
+                      onChange={(e) => {
+                        const updated = [...variables];
+                        updated[i].defaultValue = e.target.value;
+                        setVariables(updated);
+                      }}
+                      className="flex-1 min-w-0 bg-muted/20 border border-glass-border rounded-lg px-2 py-1.5 text-foreground/70 outline-none focus:ring-1 focus:ring-primary/40 disabled:opacity-60"
+                    />
+                    {!isViewMode && (
+                      <button
+                        onClick={() => setVariables(variables.filter((_, j) => j !== i))}
+                        className="text-muted-foreground hover:text-destructive transition-colors shrink-0"
+                      >
+                        <Trash2 className="w-3 h-3" />
+                      </button>
+                    )}
+                  </div>
                 </div>
               ))}
               {!isViewMode && (
