@@ -172,8 +172,7 @@ const AppLayout = () => {
           <div className="flex-1 max-w-md">
             <button
               onClick={() => {
-                // Dispatch ⌘K programmatically
-                window.dispatchEvent(new KeyboardEvent("keydown", { key: "k", metaKey: true }));
+                window.dispatchEvent(new CustomEvent("open-search"));
               }}
               className="w-full glass-panel-strong flex items-center gap-2 px-3 py-1.5 rounded-xl text-left group hover:ring-1 hover:ring-primary/20 transition-all"
             >

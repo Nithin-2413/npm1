@@ -116,8 +116,8 @@ const Dashboard = () => {
                   initial={{ opacity: 0, y: -5 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -5 }}
-                  className="absolute bottom-full left-0 mb-1 w-56 rounded-xl border border-glass-border p-1 z-50 shadow-xl"
-                  style={{ background: "hsl(var(--glass-bg))" }}
+                  className="absolute top-full left-0 mt-1 w-56 rounded-xl border border-glass-border p-1 z-50 shadow-xl"
+                   style={{ background: "hsl(var(--glass-bg))", backdropFilter: "blur(40px)" }}
                 >
                   {BLUEPRINTS_LIST.map(bp => (
                     <button
