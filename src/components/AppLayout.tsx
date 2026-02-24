@@ -114,7 +114,7 @@ const AppLayout = () => {
             </div>
 
             {/* Nav */}
-            <nav className="flex-1 p-3 space-y-1 overflow-y-auto">
+            <nav className="flex-1 p-3 space-y-1">
               {NAV_ITEMS.map((item) => {
                 const isActive = location.pathname === item.path;
                 return (

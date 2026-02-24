@@ -5,7 +5,7 @@ import { StatusBadge, StatusType } from "@/components/StatusBadge";
 import { ActionBadge, ActionType } from "@/components/ActionBadge";
 import { LiquidProgress } from "@/components/LiquidProgress";
 import { LiveBrowserPreview } from "@/components/LiveBrowserPreview";
-import { Pause, X, Camera, ChevronDown } from "lucide-react";
+import { Pause, X, Camera, ChevronDown, Brain, Wrench, AlertTriangle, Zap, ArrowRight } from "lucide-react";
 
 interface ExecutionAction {
   type: ActionType;
@@ -49,6 +49,8 @@ const Execute = () => {
   const [expandedAction, setExpandedAction] = useState<number | null>(null);
   const [elapsed, setElapsed] = useState(4.2);
   const [consoleFilter, setConsoleFilter] = useState<string>("all");
+  const [showDiagnosis, setShowDiagnosis] = useState(false);
+  const [showFix, setShowFix] = useState(false);
 
   const doneCount = MOCK_ACTIONS.filter(a => a.status === "success").length;
   const runningIndex = MOCK_ACTIONS.findIndex(a => a.status === "running");
@@ -192,14 +194,129 @@ const Execute = () => {
               <p><span className="text-emerald-400">💡 Fix:</span> Add checkbox interaction before submission.</p>
             </div>
             <div className="flex gap-2 mt-3">
-              <button className="font-mono text-[10px] px-3 py-1.5 rounded-lg border border-primary/30 text-primary hover:bg-primary/10 transition-colors">
-                View Full Diagnosis
+              <button
+                onClick={() => { setShowDiagnosis(!showDiagnosis); setShowFix(false); }}
+                className={`font-mono text-[10px] px-3 py-1.5 rounded-lg border transition-colors ${
+                  showDiagnosis ? "border-primary bg-primary/15 text-primary" : "border-primary/30 text-primary hover:bg-primary/10"
+                }`}
+              >
+                <span className="flex items-center gap-1"><Brain className="w-3 h-3" /> View Full Diagnosis</span>
               </button>
-              <button className="font-mono text-[10px] px-3 py-1.5 rounded-lg border border-emerald-400/30 text-emerald-400 hover:bg-emerald-400/10 transition-colors">
-                Retry with Fix
+              <button
+                onClick={() => { setShowFix(!showFix); setShowDiagnosis(false); }}
+                className={`font-mono text-[10px] px-3 py-1.5 rounded-lg border transition-colors ${
+                  showFix ? "border-emerald-400 bg-emerald-400/15 text-emerald-400" : "border-emerald-400/30 text-emerald-400 hover:bg-emerald-400/10"
+                }`}
+              >
+                <span className="flex items-center gap-1"><Wrench className="w-3 h-3" /> Retry with Fix</span>
               </button>
             </div>
           </div>
+
+          {/* Full Diagnosis Card */}
+          <AnimatePresence>
+            {showDiagnosis && (
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: "auto" }}
+                exit={{ opacity: 0, height: 0 }}
+                className="overflow-hidden"
+              >
+                <div className="mt-3 glass-panel-strong p-4 space-y-3 border border-primary/20 rounded-xl">
+                  <div className="flex items-center gap-2">
+                    <Brain className="w-4 h-4 text-primary" />
+                    <span className="font-mono text-xs font-bold text-foreground">Full AI Diagnosis</span>
+                  </div>
+
+                  <div className="space-y-3 font-mono text-[11px]">
+                    <div className="p-3 rounded-lg bg-destructive/5 border border-destructive/15">
+                      <div className="flex items-center gap-1.5 mb-1">
+                        <AlertTriangle className="w-3 h-3 text-destructive" />
+                        <span className="font-semibold text-destructive">Error Trace</span>
+                      </div>
+                      <p className="text-muted-foreground">POST /api/auth/register → 422 Unprocessable Entity</p>
+                      <p className="text-muted-foreground mt-1">Response body: <code className="text-destructive/80">{"{ \"error\": \"terms_accepted is required\" }"}</code></p>
+                    </div>
+
+                    <div className="p-3 rounded-lg bg-primary/5 border border-primary/15">
+                      <div className="flex items-center gap-1.5 mb-1">
+                        <Zap className="w-3 h-3 text-primary" />
+                        <span className="font-semibold text-primary">Root Cause Analysis</span>
+                      </div>
+                      <p className="text-muted-foreground">The registration endpoint requires a boolean <code className="text-primary/80">terms_accepted</code> field. The automation filled email and password but skipped the terms checkbox, resulting in a validation failure.</p>
+                    </div>
+
+                    <div className="p-3 rounded-lg bg-secondary/5 border border-secondary/15">
+                      <div className="flex items-center gap-1.5 mb-1">
+                        <ArrowRight className="w-3 h-3 text-secondary" />
+                        <span className="font-semibold text-secondary">Execution Timeline</span>
+                      </div>
+                      <div className="text-muted-foreground space-y-0.5">
+                        <p>00:01.2s — Navigate to /signup ✓</p>
+                        <p>00:02.3s — Fill email field ✓</p>
+                        <p>00:02.5s — Fill password field ✓</p>
+                        <p>00:03.3s — Select country ✓</p>
+                        <p className="text-destructive">00:04.1s — Submit without terms ✗</p>
+                        <p>00:05.5s — Retry with terms checkbox...</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <p className="text-[10px] text-muted-foreground/60 italic">AI-powered analysis will provide real-time insights when connected.</p>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          {/* Fix Suggestion Card */}
+          <AnimatePresence>
+            {showFix && (
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: "auto" }}
+                exit={{ opacity: 0, height: 0 }}
+                className="overflow-hidden"
+              >
+                <div className="mt-3 glass-panel-strong p-4 space-y-3 border border-emerald-400/20 rounded-xl">
+                  <div className="flex items-center gap-2">
+                    <Wrench className="w-4 h-4 text-emerald-400" />
+                    <span className="font-mono text-xs font-bold text-foreground">AI Suggested Fix</span>
+                  </div>
+
+                  <div className="space-y-3 font-mono text-[11px]">
+                    <div className="p-3 rounded-lg bg-emerald-400/5 border border-emerald-400/15">
+                      <span className="font-semibold text-emerald-400">Proposed Action</span>
+                      <p className="text-muted-foreground mt-1">Insert a <code className="text-emerald-400/80">click</code> action on <code className="text-emerald-400/80">#terms-checkbox</code> before the submit step.</p>
+                    </div>
+
+                    <div className="p-3 rounded-lg bg-muted/10 border border-glass-border">
+                      <span className="font-semibold text-foreground/80">Modified Blueprint</span>
+                      <div className="mt-2 text-muted-foreground space-y-0.5">
+                        <p className="text-foreground/40">4. select → dropdown#country</p>
+                        <p className="text-emerald-400 font-semibold">5. click → input#terms-checkbox ← NEW</p>
+                        <p className="text-foreground/40">6. click → button#submit</p>
+                      </div>
+                    </div>
+
+                    <div className="p-3 rounded-lg bg-primary/5 border border-primary/15">
+                      <span className="font-semibold text-primary">Confidence</span>
+                      <div className="flex items-center gap-2 mt-1">
+                        <div className="flex-1 h-1.5 rounded-full bg-muted/20 overflow-hidden">
+                          <div className="h-full w-[92%] rounded-full bg-emerald-400" />
+                        </div>
+                        <span className="text-emerald-400 font-bold">92%</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <button className="w-full mt-2 font-mono text-[10px] px-3 py-2 rounded-lg bg-emerald-400/10 border border-emerald-400/30 text-emerald-400 hover:bg-emerald-400/20 transition-colors">
+                    Apply Fix & Re-run
+                  </button>
+                  <p className="text-[10px] text-muted-foreground/60 italic">AI-powered fix suggestions will be available when connected.</p>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </GlassPanel>
       </div>
     </div>
