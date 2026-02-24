@@ -80,11 +80,16 @@ const Dashboard = () => {
 
         <textarea
           value={command}
-          onChange={(e) => setCommand(e.target.value)}
+          onChange={(e) => {
+            setCommand(e.target.value);
+            e.target.style.height = "auto";
+            e.target.style.height = e.target.scrollHeight + "px";
+          }}
           onKeyDown={(e) => { if (e.key === "Enter" && e.metaKey) handleExecute(); }}
           placeholder="Enter natural language command...&#10;e.g. Navigate to signup page, fill form with random data, submit&#10;&#10;Press ⌘+Enter to execute"
-          rows={3}
-          className="w-full bg-muted/20 border border-glass-border rounded-xl px-4 py-3 font-mono text-sm text-foreground placeholder:text-muted-foreground outline-none focus:ring-1 focus:ring-primary/40 resize-none"
+          rows={2}
+          className="w-full bg-muted/20 border border-glass-border rounded-xl px-4 py-3 font-mono text-sm text-foreground placeholder:text-muted-foreground outline-none focus:ring-1 focus:ring-primary/40 resize-none overflow-hidden"
+          style={{ minHeight: "60px" }}
         />
 
         <div className="flex items-center gap-3 mt-3 flex-wrap">
@@ -111,7 +116,8 @@ const Dashboard = () => {
                   initial={{ opacity: 0, y: -5 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -5 }}
-                  className="absolute top-full left-0 mt-1 w-56 glass-panel-strong rounded-xl border border-glass-border p-1 z-50"
+                  className="absolute bottom-full left-0 mb-1 w-56 rounded-xl border border-glass-border p-1 z-50 shadow-xl"
+                  style={{ background: "hsl(var(--glass-bg))" }}
                 >
                   {BLUEPRINTS_LIST.map(bp => (
                     <button
