@@ -2,12 +2,11 @@ import { useState, useCallback } from "react";
 import { motion } from "framer-motion";
 import { Link, useNavigate } from "react-router-dom";
 import { GlassPanel } from "@/components/GlassPanel";
-import { GlassModal } from "@/components/GlassModal";
 import { ActionBadge, ActionType } from "@/components/ActionBadge";
 import { toast } from "sonner";
 import {
   Search, Plus, Upload, Grid3X3, List, Play, Copy, Trash2,
-  Edit, Eye, MoreHorizontal, Filter
+  Edit, MoreHorizontal, Filter
 } from "lucide-react";
 
 interface Blueprint {
@@ -96,7 +95,6 @@ const Blueprints = () => {
   const [search, setSearch] = useState("");
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [sortBy, setSortBy] = useState<"recent" | "name" | "rate" | "usage">("recent");
-  const [viewingBp, setViewingBp] = useState<Blueprint | null>(null);
 
   const filtered = blueprints
     .filter(bp => {
@@ -315,9 +313,6 @@ const Blueprints = () => {
                 >
                   <Play className="w-3 h-3" /> Run
                 </button>
-                <button onClick={() => setViewingBp(bp)} className="p-1.5 rounded-lg border border-glass-border text-muted-foreground hover:text-primary hover:border-primary/30 transition-colors">
-                  <Eye className="w-3 h-3" />
-                </button>
                 <Link to={`/blueprints/${bp.id}/edit`} className="p-1.5 rounded-lg border border-glass-border text-muted-foreground hover:text-foreground transition-colors">
                   <Edit className="w-3 h-3" />
                 </Link>
@@ -366,86 +361,6 @@ const Blueprints = () => {
           </div>
         </GlassPanel>
       )}
-      {/* Glass Modal for viewing */}
-      <GlassModal
-        open={!!viewingBp}
-        onClose={() => setViewingBp(null)}
-        title={viewingBp?.name}
-        subtitle={viewingBp ? `${viewingBp.version} • ${viewingBp.timesUsed} runs • ${viewingBp.avgDuration} avg` : ""}
-        maxWidth="max-w-2xl"
-      >
-        {viewingBp && (
-          <div className="space-y-5">
-            <p className="font-mono text-xs text-muted-foreground">{viewingBp.description}</p>
-
-            <div className="flex flex-wrap gap-1.5">
-              {viewingBp.tags.map(tag => (
-                <span key={tag} className="font-mono text-[10px] px-2.5 py-1 rounded-lg border border-primary/20 text-primary/80">
-                  {tag}
-                </span>
-              ))}
-            </div>
-
-            <div className="grid grid-cols-3 gap-3">
-              <div className="text-center glass-panel-strong p-3 rounded-xl">
-                <div className={`font-mono text-lg font-bold ${viewingBp.successRate >= 90 ? "text-emerald-400" : viewingBp.successRate >= 70 ? "text-amber-400" : "text-destructive"}`}>
-                  {viewingBp.successRate}%
-                </div>
-                <div className="font-mono text-[9px] text-muted-foreground uppercase">Success Rate</div>
-              </div>
-              <div className="text-center glass-panel-strong p-3 rounded-xl">
-                <div className="font-mono text-lg font-bold text-primary">{viewingBp.timesUsed}</div>
-                <div className="font-mono text-[9px] text-muted-foreground uppercase">Times Used</div>
-              </div>
-              <div className="text-center glass-panel-strong p-3 rounded-xl">
-                <div className="font-mono text-lg font-bold text-muted-foreground">{viewingBp.avgDuration}</div>
-                <div className="font-mono text-[9px] text-muted-foreground uppercase">Avg Duration</div>
-              </div>
-            </div>
-
-            <div>
-              <h4 className="font-mono text-[10px] uppercase text-muted-foreground tracking-wider mb-2">Actions</h4>
-              <div className="space-y-1">
-                {viewingBp.actions.map((action, i) => (
-                  <div key={i} className="flex items-center gap-2 px-3 py-2 rounded-lg glass-panel-strong">
-                    <span className="font-mono text-[10px] text-muted-foreground w-4">{i + 1}</span>
-                    <ActionBadge type={action.type} />
-                    <span className="font-mono text-xs text-foreground/70 truncate flex-1">{action.target}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {viewingBp.variables.length > 0 && (
-              <div>
-                <h4 className="font-mono text-[10px] uppercase text-muted-foreground tracking-wider mb-2">Variables</h4>
-                <div className="flex flex-wrap gap-2">
-                  {viewingBp.variables.map(v => (
-                    <span key={v} className="font-mono text-[11px] px-2.5 py-1 rounded-lg border border-secondary/20 text-secondary">
-                      {`{{${v}}}`}
-                    </span>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            <div className="flex items-center gap-2 pt-2 border-t border-[hsl(var(--foreground)/0.06)]">
-              <button
-                onClick={() => { runBlueprint(viewingBp); setViewingBp(null); }}
-                className="flex items-center gap-1.5 px-4 py-2 rounded-xl font-mono text-xs font-semibold bg-primary/20 text-primary border border-primary/30 hover:bg-primary/30 transition-colors"
-              >
-                <Play className="w-3 h-3" /> Run Blueprint
-              </button>
-              <Link
-                to={`/blueprints/${viewingBp.id}/edit`}
-                className="flex items-center gap-1.5 px-4 py-2 rounded-xl font-mono text-xs border border-glass-border text-muted-foreground hover:text-foreground transition-colors"
-              >
-                <Edit className="w-3 h-3" /> Edit
-              </Link>
-            </div>
-          </div>
-        )}
-      </GlassModal>
     </div>
   );
 };
