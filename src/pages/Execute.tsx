@@ -406,7 +406,10 @@ const LiveTerminal = ({ logs }: { logs: typeof CONSOLE_LOGS }) => {
     let i = 0;
     const interval = setInterval(() => {
       if (i < logs.length) {
-        setVisibleLines(prev => [...prev, logs[i]]);
+        const log = logs[i];
+        if (log) {
+          setVisibleLines(prev => [...prev, log]);
+        }
         i++;
       } else {
         i = 0;
