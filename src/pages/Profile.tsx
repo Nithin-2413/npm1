@@ -57,7 +57,7 @@ const Profile = () => {
           <div className="flex-1 space-y-3">
             <div>
               <label className="font-mono text-[10px] text-muted-foreground uppercase tracking-wider block mb-1">Name</label>
-              <input value={name} onChange={(e) => setName(e.target.value)} className="w-full bg-muted/20 border border-glass-border rounded-xl px-3 py-2 font-mono text-sm text-foreground outline-none focus:ring-1 focus:ring-primary/40" />
+              <input value={name} onChange={(e) => setName(e.target.value)} className="w-full bg-muted/20 border border-glass-border rounded-xl px-3 py-2 font-mono text-base text-foreground outline-none focus:ring-1 focus:ring-primary/40" />
             </div>
             <div>
               <label className="font-mono text-[10px] text-muted-foreground uppercase tracking-wider block mb-1">Email</label>
