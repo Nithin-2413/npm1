@@ -71,7 +71,7 @@ const Dashboard = () => {
   return (
     <div className="max-w-7xl mx-auto space-y-6">
       {/* Hero Execute Card */}
-      <GlassPanel glow="cyan" delay={0.1} className="relative overflow-hidden">
+      <GlassPanel glow="cyan" delay={0.1} className="relative overflow-visible">
         <div className="flex items-center gap-2 mb-4">
           <span className="text-lg">⚡</span>
           <h2 className="font-mono text-sm font-semibold tracking-wider uppercase text-primary">Quick Execute</h2>
