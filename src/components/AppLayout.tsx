@@ -176,10 +176,10 @@ const AppLayout = () => {
         {/* Top header — macOS toolbar style */}
         <header className="sticky top-0 z-30 border-b px-5 py-2.5 flex items-center gap-3"
           style={{
-            borderColor: "hsl(var(--glass-border) / 0.35)",
-            background: "hsl(var(--glass-bg) / 0.6)",
-            backdropFilter: "blur(40px) saturate(1.8)",
-            WebkitBackdropFilter: "blur(40px) saturate(1.8)",
+            borderColor: "hsl(var(--glass-border) / 0.2)",
+            background: "hsl(var(--glass-bg) / 0.3)",
+            backdropFilter: "blur(50px) saturate(2)",
+            WebkitBackdropFilter: "blur(50px) saturate(2)",
           }}
         >
           {!sidebarOpen && (
