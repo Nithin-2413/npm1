@@ -174,9 +174,6 @@ const Settings = () => {
                   >{t}</button>
                 ))}
               </div>
-              <div className="mt-4">
-                <Slider value={settings.glassIntensity} onChange={v => set("glassIntensity", v)} min={0} max={100} label="Glassmorphism Intensity" unit="%" />
-              </div>
             </div>
             <div className="border-t border-glass-border pt-4 space-y-3">
               <h3 className="font-mono text-sm font-semibold text-foreground mb-2">Notifications</h3>
