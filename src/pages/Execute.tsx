@@ -85,7 +85,7 @@ const Execute = () => {
       </GlassPanel>
 
       {/* Status Banner */}
-      <div className="glass-panel glass-glow-cyan p-5 flex items-center justify-between flex-wrap gap-4">
+      <div className="glass-panel glass-glow-cyan p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div className="flex items-center gap-4">
           <StatusBadge status="running" size="lg" />
           <div>
@@ -99,7 +99,7 @@ const Execute = () => {
             <div className="font-mono text-[9px] text-muted-foreground uppercase">Elapsed</div>
           </div>
           <div className="text-center">
-            <div className="font-mono text-lg font-bold text-muted-foreground">~{(elapsed / progress * 100).toFixed(1)}s</div>
+            <div className="font-mono text-lg font-bold text-muted-foreground whitespace-nowrap">~{(elapsed / progress * 100).toFixed(1)}s</div>
             <div className="font-mono text-[9px] text-muted-foreground uppercase">ETA</div>
           </div>
         </div>
@@ -130,16 +130,16 @@ const Execute = () => {
               <div key={i}>
                 <div
                   onClick={() => setExpandedAction(expandedAction === i ? null : i)}
-                  className={`flex items-center gap-2 px-2 py-2 rounded-lg cursor-pointer transition-colors text-xs font-mono ${
+                  className={`flex items-center gap-2 px-2 py-2 rounded-lg cursor-pointer transition-colors text-xs font-mono overflow-hidden ${
                     action.status === "running" ? "bg-primary/10 border border-primary/20" :
                     action.status === "success" ? "hover:bg-muted/10" :
                     "opacity-50 hover:opacity-70"
                   } ${expandedAction === i ? "ring-1 ring-primary/20" : ""}`}
                 >
-                  <StatusBadge status={action.status} className="border-0 bg-transparent px-0 gap-0" />
+                  <StatusBadge status={action.status} className="border-0 bg-transparent px-0 gap-0 shrink-0" />
                   <ActionBadge type={action.type} />
-                  <span className="truncate text-foreground/70 flex-1">{action.target}</span>
-                  <span className="text-muted-foreground text-[10px] shrink-0">{action.duration}</span>
+                  <span className="truncate text-foreground/70 flex-1 min-w-0">{action.target}</span>
+                  <span className="text-muted-foreground text-[10px] shrink-0 ml-1">{action.duration}</span>
                 </div>
                 <AnimatePresence>
                   {expandedAction === i && action.details && (
@@ -169,11 +169,11 @@ const Execute = () => {
           </div>
           <div className="space-y-1 max-h-[400px] overflow-y-auto">
             {NETWORK_LOG.map((req, i) => (
-              <div key={i} className="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-muted/10 transition-colors font-mono text-[11px]">
-                <span className={`font-semibold w-10 ${req.method === "POST" ? "text-secondary" : "text-primary"}`}>{req.method}</span>
-                <span className="truncate flex-1 text-foreground/70">{req.url}</span>
-                <span className={req.status >= 400 ? "text-destructive" : "text-emerald-400"}>{req.status}</span>
-                <span className="text-muted-foreground w-12 text-right">{req.duration}</span>
+              <div key={i} className="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-muted/10 transition-colors font-mono text-[11px] overflow-hidden">
+                <span className={`font-semibold w-10 shrink-0 ${req.method === "POST" ? "text-secondary" : "text-primary"}`}>{req.method}</span>
+                <span className="truncate flex-1 min-w-0 text-foreground/70">{req.url}</span>
+                <span className={`shrink-0 ${req.status >= 400 ? "text-destructive" : "text-emerald-400"}`}>{req.status}</span>
+                <span className="text-muted-foreground w-12 text-right shrink-0">{req.duration}</span>
               </div>
             ))}
           </div>
