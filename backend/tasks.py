@@ -141,14 +141,51 @@ async def _execute_test_run_async(run_id: str, flow_id: Optional[str],
             except Exception as e:
                 logger.error(f"Step {step_number} failed: {e}")
                 
-                # Take screenshot on failure
-                screenshot = await playwright_engine.get_screenshot()
+                # Attempt self-healing before marking as failed
+                from core.llm.self_healer import self_healer
                 
-                # Update step log
-                step_log.status = "failure"
-                step_log.error_message = str(e)
-                step_log.screenshot_b64 = screenshot
-                db.commit()
+                heal_attempt = 0
+                healed = False
+                heal_method = None
+                
+                while heal_attempt < self_healer.MAX_ATTEMPTS and not healed:
+                    heal_attempt += 1
+                    screenshot = await playwright_engine.get_screenshot()
+                    
+                    healed, heal_method, heal_result = await self_healer.attempt_heal(
+                        playwright_page=playwright_engine.page,
+                        step=step,
+                        error=e,
+                        attempt_number=heal_attempt,
+                        screenshot_b64=screenshot
+                    )
+                    
+                    if healed:
+                        logger.info(f"Self-healing succeeded on attempt {heal_attempt} using: {heal_method}")
+                        
+                        # Update step log with healing info
+                        step_log.status = "success"
+                        step_log.duration_ms = result.get('duration_ms', 0)
+                        step_log.screenshot_b64 = screenshot
+                        step_log.details = {
+                            'self_healed': True,
+                            'heal_method': heal_method,
+                            'heal_attempts': heal_attempt,
+                            'heal_result': heal_result
+                        }
+                        db.commit()
+                        break
+                
+                if not healed:
+                    # Self-healing failed, mark step as failed
+                    screenshot = await playwright_engine.get_screenshot()
+                    
+                    # Update step log
+                    step_log.status = "failure"
+                    step_log.error_message = str(e)
+                    step_log.screenshot_b64 = screenshot
+                    step_log.retry_count = heal_attempt
+                    db.commit()
                 
                 # Generate RCA report
                 network_logs = playwright_engine.get_network_logs()
