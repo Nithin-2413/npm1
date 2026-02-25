@@ -1,17 +1,16 @@
-from fastapi import APIRouter, Depends, HTTPException, BackgroundTasks
-from sqlalchemy.orm import Session
+from fastapi import APIRouter, HTTPException, BackgroundTasks
 from pydantic import BaseModel
 from typing import List, Dict, Any
-from datetime import datetime
+from datetime import datetime, timezone
 import uuid
-import asyncio
-
-from models import get_db, TestRun
-from core.flow_registry import flow_registry
-from tasks import execute_test_run
 import os
+import logging
+
+from models import create_test_run, get_test_run, test_runs_collection, serialize_doc
+from core.flow_registry import flow_registry
 
 router = APIRouter(prefix="/runs", tags=["Batch Execution"])
+logger = logging.getLogger(__name__)
 
 class BatchRunRequest(BaseModel):
     flow_id: str
@@ -24,14 +23,12 @@ class BatchExecutionRequest(BaseModel):
 @router.post("/batch")
 async def execute_batch(
     request: BatchExecutionRequest,
-    background_tasks: BackgroundTasks,
-    db: Session = Depends(get_db)
+    background_tasks: BackgroundTasks
 ):
     """
     Execute multiple test runs in parallel
     
     Max parallel runs controlled by MAX_PARALLEL_RUNS env var
-    Shared browser with isolated contexts for each run
     """
     
     max_parallel = int(os.getenv("MAX_PARALLEL_RUNS", "3"))
@@ -46,7 +43,7 @@ async def execute_batch(
     batch_id = f"batch_{uuid.uuid4().hex[:12]}"
     run_ids = []
     
-    # Create all test runs first
+    # Create all test runs
     for run_request in request.runs:
         # Validate flow
         flow = flow_registry.get_flow(run_request.flow_id)
@@ -58,30 +55,25 @@ async def execute_batch(
         
         run_id = f"run_{uuid.uuid4().hex[:12]}"
         
-        test_run = TestRun(
-            run_id=run_id,
-            flow_id=run_request.flow_id,
-            flow_name=flow['name'],
-            status="pending",
-            variables_used=run_request.variables,
-            test_env_id=run_request.test_env_id,
-            started_at=datetime.utcnow()
-        )
+        create_test_run({
+            "run_id": run_id,
+            "flow_id": run_request.flow_id,
+            "flow_name": flow['name'],
+            "status": "pending",
+            "variables_used": run_request.variables,
+            "test_env_id": run_request.test_env_id
+        })
         
-        db.add(test_run)
         run_ids.append(run_id)
     
-    db.commit()
-    
-    # Start all runs in parallel (Celery will handle actual parallelization)
+    # Start all runs in background
     for i, run_id in enumerate(run_ids):
         run_request = request.runs[i]
-        execute_test_run.delay(
-            run_id=run_id,
-            flow_id=run_request.flow_id,
-            variables=run_request.variables,
-            natural_language_input=None,
-            test_env_id=run_request.test_env_id
+        background_tasks.add_task(
+            execute_flow_background,
+            run_id,
+            run_request.flow_id,
+            run_request.variables
         )
     
     return {
@@ -93,15 +85,14 @@ async def execute_batch(
         "message": f"Batch execution started with {len(run_ids)} runs"
     }
 
+async def execute_flow_background(run_id: str, flow_id: str, variables: dict):
+    """Execute flow in background"""
+    from routers.runs import execute_flow_async
+    await execute_flow_async(run_id, flow_id, variables)
+
 @router.get("/batch/{batch_id}/status")
-async def get_batch_status(batch_id: str, db: Session = Depends(get_db)):
-    """
-    Get aggregated status for a batch of runs
-    
-    Note: batch_id is informational. We track by run_ids passed in response.
-    """
-    # In a full implementation, you'd store batch metadata
-    # For now, return instructions
+async def get_batch_status(batch_id: str):
+    """Get aggregated status for a batch of runs"""
     return {
         "batch_id": batch_id,
         "message": "Use individual run IDs to check status",

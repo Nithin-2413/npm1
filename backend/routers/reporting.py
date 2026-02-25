@@ -1,15 +1,17 @@
-from fastapi import APIRouter, Depends, HTTPException, Response
+from fastapi import APIRouter, HTTPException
 from fastapi.responses import JSONResponse
-from sqlalchemy.orm import Session
-from sqlalchemy import func, desc
-from typing import Optional, List, Dict, Any
-from datetime import datetime, timedelta
-import json
+from typing import Optional
+from datetime import datetime, timedelta, timezone
+import logging
 
-from models import get_db, TestRun, StepLog, RCAReport
+from models import (
+    test_runs_collection, step_logs_collection, rca_reports_collection,
+    serialize_doc
+)
 from core.flow_registry import flow_registry
 
 router = APIRouter(prefix="/reports", tags=["Reporting"])
+logger = logging.getLogger(__name__)
 
 @router.get("/runs")
 async def get_run_history(
@@ -18,8 +20,7 @@ async def get_run_history(
     flow_id: Optional[str] = None,
     status: Optional[str] = None,
     from_date: Optional[str] = None,
-    to_date: Optional[str] = None,
-    db: Session = Depends(get_db)
+    to_date: Optional[str] = None
 ):
     """
     Get paginated run history with filters
@@ -31,34 +32,42 @@ async def get_run_history(
     - to_date: ISO date string
     """
     
-    query = db.query(TestRun)
+    query = {}
     
     # Apply filters
     if flow_id:
-        query = query.filter(TestRun.flow_id == flow_id)
+        query["flow_id"] = flow_id
     
     if status:
-        query = query.filter(TestRun.status == status)
+        query["status"] = status
     
     if from_date:
         try:
-            from_dt = datetime.fromisoformat(from_date)
-            query = query.filter(TestRun.started_at >= from_dt)
+            from_dt = datetime.fromisoformat(from_date.replace('Z', '+00:00'))
+            query["started_at"] = {"$gte": from_dt}
         except ValueError:
             raise HTTPException(status_code=400, detail="Invalid from_date format. Use ISO format: YYYY-MM-DD")
     
     if to_date:
         try:
-            to_dt = datetime.fromisoformat(to_date)
-            query = query.filter(TestRun.started_at <= to_dt)
+            to_dt = datetime.fromisoformat(to_date.replace('Z', '+00:00'))
+            if "started_at" in query:
+                query["started_at"]["$lte"] = to_dt
+            else:
+                query["started_at"] = {"$lte": to_dt}
         except ValueError:
             raise HTTPException(status_code=400, detail="Invalid to_date format. Use ISO format: YYYY-MM-DD")
     
     # Get total count
-    total = query.count()
+    total = test_runs_collection.count_documents(query)
     
     # Apply pagination
-    runs = query.order_by(desc(TestRun.started_at)).offset(offset).limit(limit).all()
+    runs = list(
+        test_runs_collection.find(query)
+        .sort("started_at", -1)
+        .skip(offset)
+        .limit(limit)
+    )
     
     return {
         "total": total,
@@ -66,28 +75,25 @@ async def get_run_history(
         "offset": offset,
         "runs": [
             {
-                "run_id": run.run_id,
-                "flow_id": run.flow_id,
-                "flow_name": run.flow_name,
-                "status": run.status,
-                "started_at": run.started_at.isoformat() if run.started_at else None,
-                "finished_at": run.finished_at.isoformat() if run.finished_at else None,
+                "run_id": run.get("run_id"),
+                "flow_id": run.get("flow_id"),
+                "flow_name": run.get("flow_name"),
+                "status": run.get("status"),
+                "started_at": run.get("started_at").isoformat() if run.get("started_at") else None,
+                "finished_at": run.get("finished_at").isoformat() if run.get("finished_at") else None,
                 "duration_seconds": (
-                    (run.finished_at - run.started_at).total_seconds()
-                    if run.finished_at and run.started_at else None
+                    (run.get("finished_at") - run.get("started_at")).total_seconds()
+                    if run.get("finished_at") and run.get("started_at") else None
                 ),
-                "error_summary": run.error_summary,
-                "test_env_id": run.test_env_id
+                "error_summary": run.get("error_summary"),
+                "test_env_id": run.get("test_env_id")
             }
             for run in runs
         ]
     }
 
 @router.get("/summary")
-async def get_summary_stats(
-    days: int = 7,
-    db: Session = Depends(get_db)
-):
+async def get_summary_stats(days: int = 7):
     """
     Get summary statistics
     
@@ -99,53 +105,55 @@ async def get_summary_stats(
     """
     
     # Calculate date range
-    from_date = datetime.utcnow() - timedelta(days=days)
+    from_date = datetime.now(timezone.utc) - timedelta(days=days)
     
     # Get all runs in range
-    runs = db.query(TestRun).filter(TestRun.started_at >= from_date).all()
+    runs = list(test_runs_collection.find({"started_at": {"$gte": from_date}}))
     
     total_runs = len(runs)
-    passed_runs = len([r for r in runs if r.status == 'passed'])
-    failed_runs = len([r for r in runs if r.status == 'failed'])
-    cancelled_runs = len([r for r in runs if r.status == 'cancelled'])
+    passed_runs = len([r for r in runs if r.get('status') == 'passed'])
+    failed_runs = len([r for r in runs if r.get('status') == 'failed'])
+    cancelled_runs = len([r for r in runs if r.get('status') == 'cancelled'])
     
     overall_pass_rate = (passed_runs / total_runs * 100) if total_runs > 0 else 0
     
     # Per-flow statistics
     flow_stats = {}
     for run in runs:
-        if not run.flow_id:
+        fid = run.get('flow_id')
+        if not fid:
             continue
         
-        if run.flow_id not in flow_stats:
-            flow_stats[run.flow_id] = {
-                'flow_id': run.flow_id,
-                'flow_name': run.flow_name,
+        if fid not in flow_stats:
+            flow_stats[fid] = {
+                'flow_id': fid,
+                'flow_name': run.get('flow_name'),
                 'total': 0,
                 'passed': 0,
                 'failed': 0,
                 'durations': []
             }
         
-        flow_stats[run.flow_id]['total'] += 1
+        flow_stats[fid]['total'] += 1
         
-        if run.status == 'passed':
-            flow_stats[run.flow_id]['passed'] += 1
-        elif run.status == 'failed':
-            flow_stats[run.flow_id]['failed'] += 1
+        if run.get('status') == 'passed':
+            flow_stats[fid]['passed'] += 1
+        elif run.get('status') == 'failed':
+            flow_stats[fid]['failed'] += 1
         
-        if run.started_at and run.finished_at:
-            duration = (run.finished_at - run.started_at).total_seconds()
-            flow_stats[run.flow_id]['durations'].append(duration)
+        started = run.get('started_at')
+        finished = run.get('finished_at')
+        if started and finished:
+            duration = (finished - started).total_seconds()
+            flow_stats[fid]['durations'].append(duration)
     
     # Calculate pass rates and detect flaky tests
     flaky_flows = []
     flow_summaries = []
     
-    for flow_id, stats in flow_stats.items():
+    for fid, stats in flow_stats.items():
         total = stats['total']
         passed = stats['passed']
-        failed = stats['failed']
         
         pass_rate = (passed / total * 100) if total > 0 else 0
         
@@ -158,11 +166,11 @@ async def get_summary_stats(
         is_flaky = (20 <= pass_rate <= 80) and total >= 5
         
         flow_summary = {
-            'flow_id': flow_id,
+            'flow_id': fid,
             'flow_name': stats['flow_name'],
             'total_runs': total,
             'passed': passed,
-            'failed': failed,
+            'failed': stats['failed'],
             'pass_rate': round(pass_rate, 2),
             'average_duration_seconds': round(avg_duration, 2),
             'is_flaky': is_flaky
@@ -179,7 +187,7 @@ async def get_summary_stats(
     return {
         "period_days": days,
         "from_date": from_date.isoformat(),
-        "to_date": datetime.utcnow().isoformat(),
+        "to_date": datetime.now(timezone.utc).isoformat(),
         "overall": {
             "total_runs": total_runs,
             "passed": passed_runs,
@@ -192,82 +200,62 @@ async def get_summary_stats(
     }
 
 @router.get("/runs/{run_id}/export")
-async def export_run(run_id: str, db: Session = Depends(get_db)):
+async def export_run(run_id: str):
     """
     Export full run report as JSON
-    
-    Includes:
-    - Run metadata
-    - All step logs with screenshots
-    - Network events
-    - Console logs
-    - RCA report (if available)
     """
     
     # Get run
-    test_run = db.query(TestRun).filter(TestRun.run_id == run_id).first()
+    test_run = test_runs_collection.find_one({"run_id": run_id})
     if not test_run:
         raise HTTPException(status_code=404, detail="Test run not found")
     
     # Get step logs
-    step_logs = db.query(StepLog).filter(StepLog.run_id == run_id).order_by(StepLog.step_number).all()
+    step_logs = list(step_logs_collection.find({"run_id": run_id}).sort("step_number", 1))
     
     # Get RCA report
-    rca_report = db.query(RCAReport).filter(RCAReport.run_id == run_id).first()
+    rca_report = rca_reports_collection.find_one({"run_id": run_id})
     
-    # Get network data
-    from core.network_monitor import NetworkMonitor
-    monitor = NetworkMonitor(run_id)
-    network_summary = monitor.get_summary()
+    started = test_run.get('started_at')
+    finished = test_run.get('finished_at')
     
     report = {
         "run": {
-            "run_id": test_run.run_id,
-            "flow_id": test_run.flow_id,
-            "flow_name": test_run.flow_name,
-            "status": test_run.status,
-            "started_at": test_run.started_at.isoformat() if test_run.started_at else None,
-            "finished_at": test_run.finished_at.isoformat() if test_run.finished_at else None,
-            "duration_seconds": (
-                (test_run.finished_at - test_run.started_at).total_seconds()
-                if test_run.finished_at and test_run.started_at else None
-            ),
-            "variables_used": test_run.variables_used,
-            "error_summary": test_run.error_summary,
-            "test_env_id": test_run.test_env_id
+            "run_id": test_run.get('run_id'),
+            "flow_id": test_run.get('flow_id'),
+            "flow_name": test_run.get('flow_name'),
+            "status": test_run.get('status'),
+            "started_at": started.isoformat() if started else None,
+            "finished_at": finished.isoformat() if finished else None,
+            "duration_seconds": (finished - started).total_seconds() if started and finished else None,
+            "variables_used": test_run.get('variables_used'),
+            "error_summary": test_run.get('error_summary'),
+            "test_env_id": test_run.get('test_env_id')
         },
         "steps": [
             {
-                "step_number": log.step_number,
-                "description": log.step_description,
-                "action": log.action,
-                "target": log.target,
-                "value": log.value,
-                "status": log.status,
-                "timestamp": log.timestamp.isoformat() if log.timestamp else None,
-                "duration_ms": log.duration_ms,
-                "error_message": log.error_message,
-                "screenshot_b64": log.screenshot_b64,
-                "retry_count": log.retry_count,
-                "details": log.details
+                "step_number": log.get("step_number"),
+                "description": log.get("step_description"),
+                "action": log.get("action"),
+                "target": log.get("target"),
+                "value": log.get("value"),
+                "status": log.get("status"),
+                "timestamp": log.get("timestamp").isoformat() if log.get("timestamp") else None,
+                "duration_ms": log.get("duration_ms"),
+                "error_message": log.get("error_message"),
+                "screenshot_b64": log.get("screenshot_b64"),
+                "retry_count": log.get("retry_count"),
+                "details": log.get("details")
             }
             for log in step_logs
         ],
-        "network": {
-            "summary": {
-                "total_events": network_summary['total_network_events'],
-                "total_anomalies": network_summary['total_anomalies'],
-                "console_errors": network_summary['console_errors']
-            },
-            "anomalies": network_summary['anomalies']
-        },
         "rca": {
-            "root_cause": rca_report.root_cause if rca_report else None,
-            "ai_explanation": rca_report.ai_explanation if rca_report else None,
-            "suggested_fix": rca_report.suggested_fix if rca_report else None,
-            "confidence_score": rca_report.confidence_score if rca_report else None
+            "root_cause": rca_report.get('root_cause') if rca_report else None,
+            "ai_explanation": rca_report.get('ai_explanation') if rca_report else None,
+            "suggested_fix": rca_report.get('suggested_fix') if rca_report else None,
+            "confidence_score": rca_report.get('confidence_score') if rca_report else None
         } if rca_report else None,
-        "export_timestamp": datetime.utcnow().isoformat()
+        "export_timestamp": datetime.now(timezone.utc).isoformat()
     }
     
     # Return as downloadable JSON
@@ -279,11 +267,7 @@ async def export_run(run_id: str, db: Session = Depends(get_db)):
     )
 
 @router.get("/flows/{flow_id}/stats")
-async def get_flow_stats(
-    flow_id: str,
-    days: int = 30,
-    db: Session = Depends(get_db)
-):
+async def get_flow_stats(flow_id: str, days: int = 30):
     """Get detailed statistics for a specific flow"""
     
     # Validate flow exists
@@ -291,12 +275,12 @@ async def get_flow_stats(
     if not flow:
         raise HTTPException(status_code=404, detail="Flow not found")
     
-    from_date = datetime.utcnow() - timedelta(days=days)
+    from_date = datetime.now(timezone.utc) - timedelta(days=days)
     
-    runs = db.query(TestRun).filter(
-        TestRun.flow_id == flow_id,
-        TestRun.started_at >= from_date
-    ).order_by(TestRun.started_at).all()
+    runs = list(test_runs_collection.find({
+        "flow_id": flow_id,
+        "started_at": {"$gte": from_date}
+    }).sort("started_at", 1))
     
     if not runs:
         return {
@@ -308,25 +292,25 @@ async def get_flow_stats(
         }
     
     total = len(runs)
-    passed = len([r for r in runs if r.status == 'passed'])
-    failed = len([r for r in runs if r.status == 'failed'])
+    passed = len([r for r in runs if r.get('status') == 'passed'])
+    failed = len([r for r in runs if r.get('status') == 'failed'])
     
     durations = [
-        (r.finished_at - r.started_at).total_seconds()
+        (r.get('finished_at') - r.get('started_at')).total_seconds()
         for r in runs
-        if r.started_at and r.finished_at
+        if r.get('started_at') and r.get('finished_at')
     ]
     
     # Trend data (last 10 runs)
     recent_runs = runs[-10:]
     trend = [
         {
-            "run_id": r.run_id,
-            "status": r.status,
-            "started_at": r.started_at.isoformat() if r.started_at else None,
+            "run_id": r.get('run_id'),
+            "status": r.get('status'),
+            "started_at": r.get('started_at').isoformat() if r.get('started_at') else None,
             "duration_seconds": (
-                (r.finished_at - r.started_at).total_seconds()
-                if r.finished_at and r.started_at else None
+                (r.get('finished_at') - r.get('started_at')).total_seconds()
+                if r.get('finished_at') and r.get('started_at') else None
             )
         }
         for r in recent_runs
