@@ -1,38 +1,64 @@
-from fastapi import FastAPI, APIRouter
+from fastapi import FastAPI, APIRouter, Request
 from fastapi.responses import StreamingResponse
 from dotenv import load_dotenv
 from starlette.middleware.cors import CORSMiddleware
+from slowapi import _rate_limit_exceeded_handler
+from slowapi.errors import RateLimitExceeded
 import os
 import logging
 from pathlib import Path
 import json
 import redis
 import asyncio
+import structlog
 
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
 
-# Configure logging
-logging.basicConfig(
-    level=os.getenv('LOG_LEVEL', 'INFO'),
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+# Configure structured logging
+structlog.configure(
+    processors=[
+        structlog.stdlib.filter_by_level,
+        structlog.stdlib.add_logger_name,
+        structlog.stdlib.add_log_level,
+        structlog.stdlib.PositionalArgumentsFormatter(),
+        structlog.processors.TimeStamper(fmt="iso"),
+        structlog.processors.StackInfoRenderer(),
+        structlog.processors.format_exc_info,
+        structlog.processors.UnicodeDecoder(),
+        structlog.processors.JSONRenderer()
+    ],
+    context_class=dict,
+    logger_factory=structlog.stdlib.LoggerFactory(),
+    cache_logger_on_first_use=True,
 )
-logger = logging.getLogger(__name__)
+
+logger = structlog.get_logger(__name__)
 
 # Initialize database
 from models import init_db
 try:
     init_db()
-    logger.info("Database initialized successfully")
+    logger.info("database_initialized")
 except Exception as e:
-    logger.error(f"Database initialization failed: {e}")
+    logger.error("database_initialization_failed", error=str(e))
 
 # Create the main app
 app = FastAPI(
     title="QA Automation API",
-    description="AI-powered QA test automation backend",
-    version="1.0.0"
+    description="AI-powered QA test automation platform with self-healing and network monitoring",
+    version="2.0.0"
 )
+
+# Add middleware
+from middleware import RequestIDMiddleware, LoggingMiddleware, limiter
+
+app.add_middleware(RequestIDMiddleware)
+app.add_middleware(LoggingMiddleware)
+
+# Rate limiting
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
 # Create a router with the /api prefix
 api_router = APIRouter(prefix="/api")
