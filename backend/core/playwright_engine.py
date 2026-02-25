@@ -8,6 +8,7 @@ from playwright.async_api import async_playwright, Page, Browser, BrowserContext
 from datetime import datetime
 import redis
 from dotenv import load_dotenv
+from core.network_monitor import NetworkMonitor
 
 load_dotenv()
 
@@ -29,9 +30,11 @@ class PlaywrightEngine:
         self.redis_client = redis.from_url(redis_url)
         self.pubsub_channel = f"test_run:{run_id}:events"
         
-        # Network and console logs
-        self.network_logs = []
-        self.console_logs = []
+        # Network monitor
+        self.network_monitor = NetworkMonitor(run_id)
+        
+        # Request/response tracking
+        self.pending_requests = {}
         
         # Retry config
         self.max_retries = 3
