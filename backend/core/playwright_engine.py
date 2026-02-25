@@ -77,30 +77,80 @@ class PlaywrightEngine:
     
     def _handle_request(self, request) -> None:
         """Capture network requests"""
-        self.network_logs.append({
-            "type": "request",
-            "method": request.method,
-            "url": request.url,
-            "timestamp": datetime.utcnow().isoformat()
-        })
+        request_data = {
+            'url': request.url,
+            'method': request.method,
+            'headers': dict(request.headers),
+            'postData': request.post_data,
+            'resourceType': request.resource_type,
+            'timestamp': datetime.utcnow().isoformat()
+        }
+        
+        # Track pending requests for duration calculation
+        self.pending_requests[request.url] = datetime.utcnow()
+        
+        # Capture via network monitor
+        self.network_monitor.capture_request(request_data)
     
     def _handle_response(self, response) -> None:
         """Capture network responses"""
-        self.network_logs.append({
-            "type": "response",
-            "method": response.request.method,
-            "url": response.url,
-            "status": response.status,
-            "timestamp": datetime.utcnow().isoformat()
-        })
+        # Calculate duration
+        start_time = self.pending_requests.pop(response.url, None)
+        duration_ms = 0
+        if start_time:
+            duration_ms = int((datetime.utcnow() - start_time).total_seconds() * 1000)
+        
+        response_data = {
+            'url': response.url,
+            'method': response.request.method,
+            'status': response.status,
+            'headers': dict(response.headers),
+            'duration_ms': duration_ms,
+            'timestamp': datetime.utcnow().isoformat()
+        }
+        
+        # Capture response body for API calls (async, don't block)
+        asyncio.create_task(self._capture_response_body(response, response_data))
+    
+    async def _capture_response_body(self, response, response_data: Dict[str, Any]) -> None:
+        """Capture response body asynchronously"""
+        try:
+            # Only capture body for API calls and if status indicates issue
+            if response_data['status'] >= 400 or '/api/' in response_data['url']:
+                body = await response.text()
+                response_data['body'] = body[:10000]  # Limit to 10KB
+        except:
+            pass
+        
+        # Capture via network monitor
+        self.network_monitor.capture_response(response_data)
+    
+    def _handle_request_failed(self, request) -> None:
+        """Capture failed requests"""
+        failure_data = {
+            'url': request.url,
+            'method': request.method,
+            'errorText': request.failure,
+            'timestamp': datetime.utcnow().isoformat()
+        }
+        
+        # Clean up pending
+        self.pending_requests.pop(request.url, None)
+        
+        # Capture via network monitor
+        self.network_monitor.capture_failure(failure_data)
     
     def _handle_console(self, msg) -> None:
         """Capture console messages"""
-        self.console_logs.append({
-            "type": msg.type,
-            "text": msg.text,
-            "timestamp": datetime.utcnow().isoformat()
-        })
+        console_data = {
+            'type': msg.type,
+            'text': msg.text,
+            'location': msg.location,
+            'timestamp': datetime.utcnow().isoformat()
+        }
+        
+        # Capture via network monitor
+        self.network_monitor.capture_console(console_data)
     
     async def _emit_event(self, event_type: str, data: Dict[str, Any]) -> None:
         """Emit event to Redis pub-sub for SSE streaming"""
