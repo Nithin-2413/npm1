@@ -57,6 +57,18 @@ class FlowRegistry:
             json.dump(flow_data, f, indent=2)
         
         self.flows[flow_id] = flow_data
+    
+    def delete_flow(self, flow_id: str) -> bool:
+        """Delete a flow template"""
+        if flow_id not in self.flows:
+            return False
+        
+        filepath = self.templates_dir / f"{flow_id}.json"
+        if filepath.exists():
+            filepath.unlink()
+        
+        del self.flows[flow_id]
+        return True
 
 
 # Global flow registry instance
