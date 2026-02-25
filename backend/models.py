@@ -1,132 +1,282 @@
-from sqlalchemy import create_engine, Column, String, DateTime, Integer, Text, Float, Boolean, JSON
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import sessionmaker
-from datetime import datetime
+from pymongo import MongoClient
+from datetime import datetime, timezone
+from bson import ObjectId
 import os
 from dotenv import load_dotenv
 
 load_dotenv()
 
-Base = declarative_base()
+# MongoDB connection
+MONGO_URL = os.getenv("MONGO_URL", "mongodb://localhost:27017")
+DB_NAME = os.getenv("DB_NAME", "qa_automation")
 
-# Database URL
-DATABASE_URL = os.getenv("DATABASE_URL", "postgresql://qa_user:qa_password@localhost:5432/qa_automation")
+client = MongoClient(MONGO_URL)
+db = client[DB_NAME]
 
-engine = create_engine(DATABASE_URL, echo=False)
-SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+# Collections
+test_runs_collection = db["test_runs"]
+step_logs_collection = db["step_logs"]
+rca_reports_collection = db["rca_reports"]
+test_environments_collection = db["test_environments"]
+flow_templates_collection = db["flow_templates"]
+schedules_collection = db["schedules"]
 
-# Dependency to get DB session
 def get_db():
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
+    """Get database instance"""
+    return db
 
+def serialize_doc(doc):
+    """Convert MongoDB document to JSON-serializable dict"""
+    if doc is None:
+        return None
+    if isinstance(doc, list):
+        return [serialize_doc(d) for d in doc]
+    if isinstance(doc, dict):
+        result = {}
+        for key, value in doc.items():
+            if key == "_id":
+                result["id"] = str(value)
+            elif isinstance(value, ObjectId):
+                result[key] = str(value)
+            elif isinstance(value, datetime):
+                result[key] = value.isoformat()
+            elif isinstance(value, dict):
+                result[key] = serialize_doc(value)
+            elif isinstance(value, list):
+                result[key] = serialize_doc(value)
+            else:
+                result[key] = value
+        return result
+    return doc
 
-class TestRun(Base):
-    """Stores test run metadata"""
-    __tablename__ = "test_runs"
-    
-    id = Column(Integer, primary_key=True, index=True)
-    run_id = Column(String(100), unique=True, index=True, nullable=False)
-    flow_id = Column(String(100), index=True)
-    flow_name = Column(String(200))
-    status = Column(String(50), default="pending")  # pending, running, passed, failed, cancelled
-    started_at = Column(DateTime, default=datetime.utcnow)
-    finished_at = Column(DateTime, nullable=True)
-    variables_used = Column(JSON, nullable=True)
-    order_id_captured = Column(String(100), nullable=True)
-    test_env_id = Column(String(100), nullable=True)  # Reference to secret/test environment
-    error_summary = Column(Text, nullable=True)
-    natural_language_input = Column(Text, nullable=True)
-    created_at = Column(DateTime, default=datetime.utcnow)
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+# Schema definitions for validation
+TEST_RUN_SCHEMA = {
+    "run_id": str,
+    "flow_id": str,
+    "flow_name": str,
+    "status": str,  # pending, running, passed, failed, cancelled
+    "started_at": datetime,
+    "finished_at": datetime,
+    "variables_used": dict,
+    "order_id_captured": str,
+    "test_env_id": str,
+    "error_summary": str,
+    "natural_language_input": str,
+    "created_at": datetime,
+    "updated_at": datetime,
+}
 
+STEP_LOG_SCHEMA = {
+    "run_id": str,
+    "step_number": int,
+    "step_description": str,
+    "action": str,
+    "target": str,
+    "value": str,
+    "status": str,
+    "screenshot_b64": str,
+    "timestamp": datetime,
+    "duration_ms": int,
+    "error_message": str,
+    "retry_count": int,
+    "details": dict,
+}
 
-class StepLog(Base):
-    """Stores individual step execution logs"""
-    __tablename__ = "step_logs"
-    
-    id = Column(Integer, primary_key=True, index=True)
-    run_id = Column(String(100), index=True, nullable=False)
-    step_number = Column(Integer, nullable=False)
-    step_description = Column(Text, nullable=False)
-    action = Column(String(50))  # click, fill, select, wait, etc.
-    target = Column(Text)
-    value = Column(Text, nullable=True)
-    status = Column(String(50))  # pending, running, success, failure
-    screenshot_b64 = Column(Text, nullable=True)
-    timestamp = Column(DateTime, default=datetime.utcnow)
-    duration_ms = Column(Integer, nullable=True)
-    error_message = Column(Text, nullable=True)
-    retry_count = Column(Integer, default=0)
-    details = Column(JSON, nullable=True)
+RCA_REPORT_SCHEMA = {
+    "run_id": str,
+    "error_summary": str,
+    "root_cause": str,
+    "affected_step": int,
+    "network_errors": list,
+    "console_errors": list,
+    "ai_explanation": str,
+    "suggested_fix": str,
+    "confidence_score": float,
+    "created_at": datetime,
+}
 
+TEST_ENVIRONMENT_SCHEMA = {
+    "env_id": str,
+    "test_env": str,
+    "release_branch": str,
+    "url": str,
+    "username": str,
+    "password": str,
+    "created_at": datetime,
+    "updated_at": datetime,
+}
 
-class RCAReport(Base):
-    """Stores Root Cause Analysis reports for failed tests"""
-    __tablename__ = "rca_reports"
-    
-    id = Column(Integer, primary_key=True, index=True)
-    run_id = Column(String(100), index=True, nullable=False)
-    error_summary = Column(Text)
-    root_cause = Column(Text)
-    affected_step = Column(Integer)
-    network_errors = Column(JSON, nullable=True)
-    console_errors = Column(JSON, nullable=True)
-    ai_explanation = Column(Text, nullable=True)
-    suggested_fix = Column(Text, nullable=True)
-    confidence_score = Column(Float, nullable=True)
-    created_at = Column(DateTime, default=datetime.utcnow)
+FLOW_TEMPLATE_SCHEMA = {
+    "flow_id": str,
+    "name": str,
+    "category": str,
+    "description": str,
+    "template_json": dict,
+    "estimated_duration_seconds": int,
+    "created_at": datetime,
+    "updated_at": datetime,
+    "is_active": bool,
+}
 
+SCHEDULE_SCHEMA = {
+    "schedule_id": str,
+    "name": str,
+    "flow_id": str,
+    "cron_expression": str,
+    "variables": dict,
+    "test_env_id": str,
+    "is_active": bool,
+    "created_at": datetime,
+    "last_run_at": datetime,
+    "next_run_at": datetime,
+    "total_runs": int,
+}
 
-class TestEnvironment(Base):
-    """Stores test environment secrets/credentials"""
-    __tablename__ = "test_environments"
-    
-    id = Column(String(100), primary_key=True)
-    test_env = Column(String(200), nullable=False)
-    release_branch = Column(String(200), nullable=True)
-    url = Column(Text, nullable=False)
-    username = Column(String(200), nullable=True)
-    password = Column(Text, nullable=True)  # Should be encrypted in production
-    created_at = Column(DateTime, default=datetime.utcnow)
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
-
-
-class FlowTemplate(Base):
-    """Stores flow templates in database (in addition to JSON files)"""
-    __tablename__ = "flow_templates"
-    
-    id = Column(String(100), primary_key=True)
-    name = Column(String(200), nullable=False)
-    category = Column(String(100))
-    description = Column(Text)
-    template_json = Column(JSON, nullable=False)
-    estimated_duration_seconds = Column(Integer)
-    created_at = Column(DateTime, default=datetime.utcnow)
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
-    is_active = Column(Boolean, default=True)
-
-
-class Schedule(Base):
-    """Scheduled test execution"""
-    __tablename__ = "schedules"
-    
-    id = Column(String(100), primary_key=True)
-    name = Column(String(200), nullable=False)
-    flow_id = Column(String(100), nullable=False)
-    cron_expression = Column(String(100), nullable=False)
-    variables = Column(JSON)
-    test_env_id = Column(String(100))
-    is_active = Column(Boolean, default=True)
-    created_at = Column(DateTime, default=datetime.utcnow)
-    last_run_at = Column(DateTime, nullable=True)
-    next_run_at = Column(DateTime, nullable=True)
-    total_runs = Column(Integer, default=0)
-
-
-# Create all tables
 def init_db():
-    Base.metadata.create_all(bind=engine)
+    """Initialize database with indexes"""
+    # Create indexes for better query performance
+    test_runs_collection.create_index("run_id", unique=True)
+    test_runs_collection.create_index("status")
+    test_runs_collection.create_index("flow_id")
+    test_runs_collection.create_index("created_at")
+    
+    step_logs_collection.create_index("run_id")
+    step_logs_collection.create_index([("run_id", 1), ("step_number", 1)])
+    
+    rca_reports_collection.create_index("run_id")
+    
+    test_environments_collection.create_index("env_id", unique=True)
+    
+    flow_templates_collection.create_index("flow_id", unique=True)
+    
+    schedules_collection.create_index("schedule_id", unique=True)
+    schedules_collection.create_index("is_active")
+    
+    print("Database indexes created successfully")
+
+# Helper functions for CRUD operations
+def create_test_run(data: dict) -> dict:
+    """Create a new test run"""
+    now = datetime.now(timezone.utc)
+    doc = {
+        "run_id": data.get("run_id"),
+        "flow_id": data.get("flow_id"),
+        "flow_name": data.get("flow_name", ""),
+        "status": data.get("status", "pending"),
+        "started_at": data.get("started_at", now),
+        "finished_at": data.get("finished_at"),
+        "variables_used": data.get("variables_used", {}),
+        "order_id_captured": data.get("order_id_captured"),
+        "test_env_id": data.get("test_env_id"),
+        "error_summary": data.get("error_summary"),
+        "natural_language_input": data.get("natural_language_input"),
+        "created_at": now,
+        "updated_at": now,
+    }
+    result = test_runs_collection.insert_one(doc)
+    doc["id"] = str(result.inserted_id)
+    return serialize_doc(doc)
+
+def get_test_run(run_id: str) -> dict:
+    """Get a test run by run_id"""
+    doc = test_runs_collection.find_one({"run_id": run_id})
+    return serialize_doc(doc)
+
+def update_test_run(run_id: str, updates: dict) -> dict:
+    """Update a test run"""
+    updates["updated_at"] = datetime.now(timezone.utc)
+    test_runs_collection.update_one(
+        {"run_id": run_id},
+        {"$set": updates}
+    )
+    return get_test_run(run_id)
+
+def create_step_log(data: dict) -> dict:
+    """Create a step log entry"""
+    doc = {
+        "run_id": data.get("run_id"),
+        "step_number": data.get("step_number"),
+        "step_description": data.get("step_description"),
+        "action": data.get("action"),
+        "target": data.get("target"),
+        "value": data.get("value"),
+        "status": data.get("status", "pending"),
+        "screenshot_b64": data.get("screenshot_b64"),
+        "timestamp": datetime.now(timezone.utc),
+        "duration_ms": data.get("duration_ms"),
+        "error_message": data.get("error_message"),
+        "retry_count": data.get("retry_count", 0),
+        "details": data.get("details"),
+    }
+    result = step_logs_collection.insert_one(doc)
+    doc["id"] = str(result.inserted_id)
+    return serialize_doc(doc)
+
+def get_step_logs(run_id: str) -> list:
+    """Get all step logs for a run"""
+    docs = list(step_logs_collection.find({"run_id": run_id}).sort("step_number", 1))
+    return serialize_doc(docs)
+
+def create_rca_report(data: dict) -> dict:
+    """Create an RCA report"""
+    doc = {
+        "run_id": data.get("run_id"),
+        "error_summary": data.get("error_summary"),
+        "root_cause": data.get("root_cause"),
+        "affected_step": data.get("affected_step"),
+        "network_errors": data.get("network_errors", []),
+        "console_errors": data.get("console_errors", []),
+        "ai_explanation": data.get("ai_explanation"),
+        "suggested_fix": data.get("suggested_fix"),
+        "confidence_score": data.get("confidence_score"),
+        "created_at": datetime.now(timezone.utc),
+    }
+    result = rca_reports_collection.insert_one(doc)
+    doc["id"] = str(result.inserted_id)
+    return serialize_doc(doc)
+
+def get_rca_report(run_id: str) -> dict:
+    """Get RCA report for a run"""
+    doc = rca_reports_collection.find_one({"run_id": run_id})
+    return serialize_doc(doc)
+
+def create_test_environment(data: dict) -> dict:
+    """Create a test environment"""
+    now = datetime.now(timezone.utc)
+    doc = {
+        "env_id": data.get("env_id"),
+        "test_env": data.get("test_env"),
+        "release_branch": data.get("release_branch"),
+        "url": data.get("url"),
+        "username": data.get("username"),
+        "password": data.get("password"),
+        "created_at": now,
+        "updated_at": now,
+    }
+    result = test_environments_collection.insert_one(doc)
+    doc["id"] = str(result.inserted_id)
+    return serialize_doc(doc)
+
+def get_test_environment(env_id: str) -> dict:
+    """Get a test environment by env_id"""
+    doc = test_environments_collection.find_one({"env_id": env_id})
+    return serialize_doc(doc)
+
+def list_test_environments() -> list:
+    """List all test environments"""
+    docs = list(test_environments_collection.find())
+    return serialize_doc(docs)
+
+def update_test_environment(env_id: str, updates: dict) -> dict:
+    """Update a test environment"""
+    updates["updated_at"] = datetime.now(timezone.utc)
+    test_environments_collection.update_one(
+        {"env_id": env_id},
+        {"$set": updates}
+    )
+    return get_test_environment(env_id)
+
+def delete_test_environment(env_id: str) -> bool:
+    """Delete a test environment"""
+    result = test_environments_collection.delete_one({"env_id": env_id})
+    return result.deleted_count > 0
