@@ -118,17 +118,21 @@ def main():
     print(f"\n✨ Verification Results: {passed}/{total} checks passed ({percentage:.1f}%)")
     
     if passed == total:
-        print("\n🎉 All components verified! Phase 1 + Phase 2 COMPLETE!")
+        print("\n🎉 All components verified! Phase 1 + Phase 2 + Phase 3 COMPLETE!")
         print("\n📖 Documentation:")
         print("  - Phase 1: /app/DOCUMENTATION.md")
         print("  - Phase 2: /app/PHASE2_DOCUMENTATION.md")
+        print("  - Phase 3: /app/PHASE3_DOCUMENTATION.md")
         print("\n📖 Next Steps:")
         print("  1. Set GROQ_API_KEY in /app/backend/.env")
-        print("  2. Run: ./start.sh (or manually start services)")
+        print("  2. Run: ./start.sh (or docker-compose up)")
         print("  3. Initialize database: python init_db.py")
         print("  4. Access API docs: http://localhost:8001/docs")
-        print("  5. Test natural language: POST /api/runs with natural_language_input")
-        print("  6. Start building amazing tests! 🚀")
+        print("  5. Test features:")
+        print("     - Natural language: POST /api/runs")
+        print("     - Network monitoring: GET /api/runs/{run_id}/network")
+        print("     - RCA streaming: POST /api/runs/{run_id}/rca/trigger?streaming=true")
+        print("  6. Start building amazing tests with AI! 🚀")
         return 0
     else:
         print(f"\n⚠️  {total - passed} components missing. Please review.")
