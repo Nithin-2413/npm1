@@ -1,0 +1,121 @@
+{
+  "id": "create_order_multi_tn",
+  "name": "Create Order with Multiple TNs",
+  "category": "order_creation",
+  "description": "Create a new order for multiple telephone numbers (2-10 TNs) with existing location",
+  "estimated_duration_seconds": 120,
+  "required_params": ["service_location"],
+  "optional_params": ["customer", "quantity", "user_type", "order_type"],
+  "defaults": {
+    "quantity": 3,
+    "user_type": "existing",
+    "order_type": "Add New Phone Numbers"
+  },
+  "steps": [
+    {
+      "step": 1,
+      "description": "Wait after login",
+      "action": "wait",
+      "duration_ms": 2000,
+      "human_reasoning": "Give the dashboard time to fully render"
+    },
+    {
+      "step": 2,
+      "description": "Click Create Order button",
+      "action": "click_button",
+      "locator_strategies": [
+        {"priority": 1, "type": "role", "name": "Create Order"},
+        {"priority": 2, "type": "text", "value": "Create Order"}
+      ],
+      "human_reasoning": "Initiate the order creation flow"
+    },
+    {
+      "step": 3,
+      "description": "Select service location",
+      "action": "select_dropdown",
+      "locator_strategies": [
+        {"priority": 1, "type": "label", "value": "Service Location"}
+      ],
+      "select_value": "{{service_location}}",
+      "select_by": "text",
+      "human_reasoning": "Select the service location from dropdown"
+    },
+    {
+      "step": 4,
+      "description": "Click Continue",
+      "action": "click_button",
+      "locator_strategies": [
+        {"priority": 1, "type": "role", "name": "Continue"}
+      ],
+      "human_reasoning": "Proceed to order type"
+    },
+    {
+      "step": 5,
+      "description": "Fill quantity field",
+      "action": "fill_field",
+      "locator_strategies": [
+        {"priority": 1, "type": "label", "value": "Quantity"}
+      ],
+      "value": "{{quantity}}",
+      "human_reasoning": "Enter number of phone numbers"
+    },
+    {
+      "step": 6,
+      "description": "Click Reserve Numbers",
+      "action": "click_button",
+      "locator_strategies": [
+        {"priority": 1, "type": "role", "name": "Reserve Numbers"}
+      ],
+      "human_reasoning": "Reserve the telephone numbers"
+    },
+    {
+      "step": 7,
+      "description": "Wait for TN list to load",
+      "action": "wait_for_element",
+      "locator_strategies": [
+        {"priority": 1, "type": "selector", "value": ".tn-list"}
+      ],
+      "max_wait_ms": 10000,
+      "human_reasoning": "Wait for TN reservation to complete"
+    },
+    {
+      "step": 8,
+      "description": "Extract reserved TN numbers",
+      "action": "extract_text",
+      "locator_strategies": [
+        {"priority": 1, "type": "selector", "value": ".tn-number"}
+      ],
+      "save_to_context": "tn_numbers",
+      "human_reasoning": "Capture the reserved TN numbers for validation"
+    },
+    {
+      "step": 9,
+      "description": "Click Submit Order",
+      "action": "click_button",
+      "locator_strategies": [
+        {"priority": 1, "type": "role", "name": "Submit Order"}
+      ],
+      "human_reasoning": "Submit the order"
+    },
+    {
+      "step": 10,
+      "description": "Extract Order ID",
+      "action": "extract_text",
+      "locator_strategies": [
+        {"priority": 1, "type": "text", "value": "Order ID"}
+      ],
+      "save_to_context": "order_id",
+      "extract_pattern": "\\d+",
+      "human_reasoning": "Capture the order ID for validation"
+    },
+    {
+      "step": 11,
+      "description": "Validate order in database",
+      "action": "db_validate",
+      "wait_before_ms": 5000,
+      "order_id_from_context": "order_id",
+      "expected_fields": ["status", "service_location", "quantity"],
+      "human_reasoning": "Verify the order was created successfully in the backend"
+    }
+  ]
+}

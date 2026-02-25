@@ -1,0 +1,81 @@
+{
+  "id": "validate_order_400_tn",
+  "name": "Validate 400 TN Warning",
+  "category": "validation",
+  "description": "Attempt to create order with 400+ TNs and validate warning message",
+  "estimated_duration_seconds": 45,
+  "required_params": ["service_location"],
+  "optional_params": [],
+  "defaults": {
+    "quantity": 401
+  },
+  "steps": [
+    {
+      "step": 1,
+      "description": "Click Create Order",
+      "action": "click_button",
+      "locator_strategies": [
+        {"priority": 1, "type": "role", "name": "Create Order"}
+      ],
+      "human_reasoning": "Start order creation"
+    },
+    {
+      "step": 2,
+      "description": "Select service location",
+      "action": "select_dropdown",
+      "locator_strategies": [
+        {"priority": 1, "type": "label", "value": "Service Location"}
+      ],
+      "select_value": "{{service_location}}",
+      "select_by": "text",
+      "human_reasoning": "Select location"
+    },
+    {
+      "step": 3,
+      "description": "Fill quantity with 401",
+      "action": "fill_field",
+      "locator_strategies": [
+        {"priority": 1, "type": "label", "value": "Quantity"}
+      ],
+      "value": "401",
+      "human_reasoning": "Enter quantity above 400 limit"
+    },
+    {
+      "step": 4,
+      "description": "Click Reserve Numbers",
+      "action": "click_button",
+      "locator_strategies": [
+        {"priority": 1, "type": "role", "name": "Reserve Numbers"}
+      ],
+      "human_reasoning": "Attempt to reserve"
+    },
+    {
+      "step": 5,
+      "description": "Validate 400 TN warning appears",
+      "action": "wait_for_element",
+      "locator_strategies": [
+        {"priority": 1, "type": "text", "value": "Maximum 400 telephone numbers allowed per order"}
+      ],
+      "max_wait_ms": 5000,
+      "human_reasoning": "Verify exact warning text matches expected"
+    },
+    {
+      "step": 6,
+      "description": "Extract warning message",
+      "action": "extract_text",
+      "locator_strategies": [
+        {"priority": 1, "type": "selector", "value": ".warning-message"}
+      ],
+      "save_to_context": "warning_message",
+      "human_reasoning": "Capture the warning for assertion"
+    },
+    {
+      "step": 7,
+      "description": "Assert warning text",
+      "action": "assert",
+      "expected_value": "Maximum 400 telephone numbers allowed per order",
+      "actual_value_from_context": "warning_message",
+      "human_reasoning": "Verify exact warning text matches"
+    }
+  ]
+}
