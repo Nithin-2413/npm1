@@ -109,13 +109,17 @@ def main():
     print(f"\n✨ Verification Results: {passed}/{total} checks passed ({percentage:.1f}%)")
     
     if passed == total:
-        print("\n🎉 All components verified! Phase 1 is COMPLETE!")
+        print("\n🎉 All components verified! Phase 1 + Phase 2 COMPLETE!")
+        print("\n📖 Documentation:")
+        print("  - Phase 1: /app/DOCUMENTATION.md")
+        print("  - Phase 2: /app/PHASE2_DOCUMENTATION.md")
         print("\n📖 Next Steps:")
-        print("  1. Review DOCUMENTATION.md for detailed information")
+        print("  1. Set GROQ_API_KEY in /app/backend/.env")
         print("  2. Run: ./start.sh (or manually start services)")
         print("  3. Initialize database: python init_db.py")
         print("  4. Access API docs: http://localhost:8001/docs")
-        print("  5. Start testing with your application!")
+        print("  5. Test natural language: POST /api/runs with natural_language_input")
+        print("  6. Start building amazing tests! 🚀")
         return 0
     else:
         print(f"\n⚠️  {total - passed} components missing. Please review.")
