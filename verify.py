@@ -89,7 +89,8 @@ def main():
     all_checks.append(check_file_exists("/app/init_db.py", "Database init script"))
     all_checks.append(check_file_exists("/app/start.sh", "Quick start script"))
     all_checks.append(check_file_exists("/app/README.md", "Main README"))
-    all_checks.append(check_file_exists("/app/DOCUMENTATION.md", "Complete documentation"))
+    all_checks.append(check_file_exists("/app/DOCUMENTATION.md", "Phase 1 documentation"))
+    all_checks.append(check_file_exists("/app/PHASE2_DOCUMENTATION.md", "Phase 2 documentation"))
     all_checks.append(check_file_exists("/app/image_testing.md", "Image testing guide"))
     print()
     
