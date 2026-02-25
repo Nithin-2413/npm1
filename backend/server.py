@@ -38,12 +38,13 @@ app = FastAPI(
 api_router = APIRouter(prefix="/api")
 
 # Import routers
-from routers import runs, flows, secrets
+from routers import runs, flows, secrets, network_rca
 
 # Include routers
 api_router.include_router(runs.router)
 api_router.include_router(flows.router)
 api_router.include_router(secrets.router)
+api_router.include_router(network_rca.router)
 
 # Health check endpoint
 @api_router.get("/health")
