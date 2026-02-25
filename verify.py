@@ -53,12 +53,22 @@ def main():
     print()
     
     # 3. Core Components
-    print("⚙️  Core Components:")
+    print("⚙️  Core Components (Phase 1):")
     all_checks.append(check_file_exists("/app/backend/core/__init__.py", "Core init"))
     all_checks.append(check_file_exists("/app/backend/core/playwright_engine.py", "Playwright engine"))
     all_checks.append(check_file_exists("/app/backend/core/context_store.py", "Context store"))
     all_checks.append(check_file_exists("/app/backend/core/flow_registry.py", "Flow registry"))
-    all_checks.append(check_file_exists("/app/backend/core/llm_service.py", "LLM service"))
+    all_checks.append(check_file_exists("/app/backend/core/llm_service.py", "LLM service (Phase 1)"))
+    print()
+    
+    # 3b. Phase 2 LLM Components
+    print("🧠 Phase 2 LLM Orchestration:")
+    all_checks.append(check_directory_exists("/app/backend/core/llm", "LLM package"))
+    all_checks.append(check_file_exists("/app/backend/core/llm/__init__.py", "LLM init"))
+    all_checks.append(check_file_exists("/app/backend/core/llm/intent_parser.py", "Intent parser"))
+    all_checks.append(check_file_exists("/app/backend/core/llm/flow_selector.py", "Flow selector"))
+    all_checks.append(check_file_exists("/app/backend/core/llm/variable_resolver.py", "Variable resolver"))
+    all_checks.append(check_file_exists("/app/backend/core/llm/step_builder.py", "Step builder"))
     print()
     
     # 4. Flow Templates
