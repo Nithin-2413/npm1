@@ -55,6 +55,7 @@ class PlaywrightEngine:
         # Enable network and console monitoring
         self.context.on("request", self._handle_request)
         self.context.on("response", self._handle_response)
+        self.context.on("requestfailed", self._handle_request_failed)
         
         self.page = await self.context.new_page()
         self.page.on("console", self._handle_console)
