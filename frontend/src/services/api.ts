@@ -34,13 +34,60 @@ export interface FlowSummary {
   estimated_duration_seconds: number;
 }
 
+export interface FlowDetail extends FlowSummary {
+  defaults: Record<string, any>;
+  steps: Array<{
+    step: number;
+    description: string;
+    action: string;
+    [key: string]: any;
+  }>;
+}
+
 export interface Secret {
   id: string;
+  env_id: string;
   test_env: string;
   release_branch?: string;
   url: string;
   username?: string;
   created_at: string;
+}
+
+export interface TestRun {
+  run_id: string;
+  flow_id: string;
+  flow_name: string;
+  status: string;
+  started_at: string;
+  finished_at?: string;
+  duration_seconds?: number;
+  error_summary?: string;
+  test_env_id?: string;
+}
+
+export interface ReportSummary {
+  period_days: number;
+  from_date: string;
+  to_date: string;
+  overall: {
+    total_runs: number;
+    passed: number;
+    failed: number;
+    cancelled: number;
+    pass_rate: number;
+  };
+  flows: Array<{
+    flow_id: string;
+    flow_name: string;
+    total_runs: number;
+    passed: number;
+    failed: number;
+    pass_rate: number;
+    average_duration_seconds: number;
+    is_flaky: boolean;
+  }>;
+  flaky_flows: Array<any>;
 }
 
 class ApiService {
@@ -61,6 +108,22 @@ class ApiService {
     if (!response.ok) {
       const error = await response.json();
       throw new Error(error.detail || 'Failed to start test run');
+    }
+    
+    return response.json();
+  }
+
+  async listRuns(options?: { status?: string; flow_id?: string; limit?: number; skip?: number }): Promise<{ runs: TestRun[]; total: number }> {
+    const params = new URLSearchParams();
+    if (options?.status) params.append('status', options.status);
+    if (options?.flow_id) params.append('flow_id', options.flow_id);
+    if (options?.limit) params.append('limit', String(options.limit));
+    if (options?.skip) params.append('skip', String(options.skip));
+    
+    const response = await fetch(`${this.baseUrl}/runs?${params}`);
+    
+    if (!response.ok) {
+      throw new Error('Failed to fetch runs');
     }
     
     return response.json();
@@ -133,7 +196,7 @@ class ApiService {
     return response.json();
   }
 
-  async getFlow(flowId: string): Promise<any> {
+  async getFlow(flowId: string): Promise<FlowDetail> {
     const response = await fetch(`${this.baseUrl}/flows/${flowId}`);
     
     if (!response.ok) {
@@ -143,8 +206,48 @@ class ApiService {
     return response.json();
   }
 
+  async createFlow(flow: Partial<FlowDetail>): Promise<{ flow_id: string; message: string }> {
+    const response = await fetch(`${this.baseUrl}/flows`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(flow),
+    });
+    
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.detail || 'Failed to create flow');
+    }
+    
+    return response.json();
+  }
+
+  async updateFlow(flowId: string, flow: Partial<FlowDetail>): Promise<{ flow_id: string; message: string }> {
+    const response = await fetch(`${this.baseUrl}/flows/${flowId}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(flow),
+    });
+    
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.detail || 'Failed to update flow');
+    }
+    
+    return response.json();
+  }
+
+  async deleteFlow(flowId: string): Promise<void> {
+    const response = await fetch(`${this.baseUrl}/flows/${flowId}`, {
+      method: 'DELETE',
+    });
+    
+    if (!response.ok) {
+      throw new Error('Failed to delete flow');
+    }
+  }
+
   // Secrets (Test Environments)
-  async createSecret(secret: Omit<Secret, 'id' | 'created_at'>): Promise<Secret> {
+  async createSecret(secret: { test_env: string; release_branch?: string; url: string; username?: string; password?: string }): Promise<Secret> {
     const response = await fetch(`${this.baseUrl}/secrets`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -179,7 +282,7 @@ class ApiService {
     return response.json();
   }
 
-  async updateSecret(id: string, secret: Omit<Secret, 'id' | 'created_at'>): Promise<Secret> {
+  async updateSecret(id: string, secret: { test_env: string; release_branch?: string; url: string; username?: string; password?: string }): Promise<Secret> {
     const response = await fetch(`${this.baseUrl}/secrets/${id}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
@@ -203,8 +306,47 @@ class ApiService {
     }
   }
 
+  // Reports
+  async getReportsSummary(days: number = 7): Promise<ReportSummary> {
+    const response = await fetch(`${this.baseUrl}/reports/summary?days=${days}`);
+    
+    if (!response.ok) {
+      throw new Error('Failed to fetch reports summary');
+    }
+    
+    return response.json();
+  }
+
+  async getRunHistory(options?: { limit?: number; offset?: number; flow_id?: string; status?: string; from_date?: string; to_date?: string }): Promise<{ total: number; runs: TestRun[] }> {
+    const params = new URLSearchParams();
+    if (options?.limit) params.append('limit', String(options.limit));
+    if (options?.offset) params.append('offset', String(options.offset));
+    if (options?.flow_id) params.append('flow_id', options.flow_id);
+    if (options?.status) params.append('status', options.status);
+    if (options?.from_date) params.append('from_date', options.from_date);
+    if (options?.to_date) params.append('to_date', options.to_date);
+    
+    const response = await fetch(`${this.baseUrl}/reports/runs?${params}`);
+    
+    if (!response.ok) {
+      throw new Error('Failed to fetch run history');
+    }
+    
+    return response.json();
+  }
+
+  async exportRun(runId: string): Promise<any> {
+    const response = await fetch(`${this.baseUrl}/reports/runs/${runId}/export`);
+    
+    if (!response.ok) {
+      throw new Error('Failed to export run');
+    }
+    
+    return response.json();
+  }
+
   // Health Check
-  async healthCheck(): Promise<{ status: string; service: string; version: string }> {
+  async healthCheck(): Promise<{ status: string; timestamp: string; services: Record<string, { status: string; message: string }> }> {
     const response = await fetch(`${this.baseUrl}/health`);
     
     if (!response.ok) {
