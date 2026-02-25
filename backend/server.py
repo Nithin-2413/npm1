@@ -8,40 +8,25 @@ import os
 import logging
 from pathlib import Path
 import json
-import redis
 import asyncio
-import structlog
 
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
 
-# Configure structured logging
-structlog.configure(
-    processors=[
-        structlog.stdlib.filter_by_level,
-        structlog.stdlib.add_logger_name,
-        structlog.stdlib.add_log_level,
-        structlog.stdlib.PositionalArgumentsFormatter(),
-        structlog.processors.TimeStamper(fmt="iso"),
-        structlog.processors.StackInfoRenderer(),
-        structlog.processors.format_exc_info,
-        structlog.processors.UnicodeDecoder(),
-        structlog.processors.JSONRenderer()
-    ],
-    context_class=dict,
-    logger_factory=structlog.stdlib.LoggerFactory(),
-    cache_logger_on_first_use=True,
+# Configure logging
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
 )
-
-logger = structlog.get_logger(__name__)
+logger = logging.getLogger(__name__)
 
 # Initialize database
 from models import init_db
 try:
     init_db()
-    logger.info("database_initialized")
+    logger.info("Database initialized successfully")
 except Exception as e:
-    logger.error("database_initialization_failed", error=str(e))
+    logger.error(f"Database initialization failed: {e}")
 
 # Create the main app
 app = FastAPI(
@@ -67,7 +52,7 @@ api_router = APIRouter(prefix="/api")
 from routers import runs, flows, secrets, network_rca, batch, scheduling, reporting, health
 
 # Include routers
-api_router.include_router(health.router)  # Health at top level
+api_router.include_router(health.router)
 api_router.include_router(runs.router)
 api_router.include_router(flows.router)
 api_router.include_router(secrets.router)
@@ -83,46 +68,21 @@ async def health_check():
     return {
         "status": "healthy",
         "service": "qa-automation-api",
-        "version": "1.0.0"
+        "version": "2.0.0"
     }
 
 # SSE endpoint for real-time logs
 @api_router.get("/runs/{run_id}/stream")
 async def stream_run_logs(run_id: str):
-    """
-    Server-Sent Events (SSE) endpoint for real-time test run logs
-    """
+    """Server-Sent Events (SSE) endpoint for real-time test run logs"""
     async def event_generator():
-        redis_url = os.getenv("REDIS_URL", "redis://localhost:6379/0")
-        redis_client = redis.from_url(redis_url, decode_responses=True)
-        pubsub = redis_client.pubsub()
+        # Send initial connection message
+        yield f"data: {json.dumps({'event': 'connected', 'run_id': run_id})}\n\n"
         
-        channel = f"test_run:{run_id}:events"
-        pubsub.subscribe(channel)
-        
-        try:
-            # Send initial connection message
-            yield f"data: {json.dumps({'event': 'connected', 'run_id': run_id})}\n\n"
-            
-            # Listen for events
-            for message in pubsub.listen():
-                if message['type'] == 'message':
-                    data = message['data']
-                    yield f"data: {data}\n\n"
-                    
-                    # Check if run is complete
-                    try:
-                        event_data = json.loads(data)
-                        if event_data.get('event_type') in ['run_complete', 'run_failed', 'run_cancelled']:
-                            break
-                    except json.JSONDecodeError:
-                        pass
-                
-                await asyncio.sleep(0.1)
-        
-        finally:
-            pubsub.unsubscribe(channel)
-            redis_client.close()
+        # For now, just send a placeholder - real implementation would use Redis pubsub
+        for i in range(10):
+            await asyncio.sleep(1)
+            yield f"data: {json.dumps({'event': 'heartbeat', 'run_id': run_id, 'count': i})}\n\n"
     
     return StreamingResponse(
         event_generator(),
@@ -149,23 +109,17 @@ app.add_middleware(
 # Startup event
 @app.on_event("startup")
 async def startup_event():
-    logger.info("api_startup", version="2.0.0")
+    logger.info("API startup - QA Automation v2.0.0")
     
     # Load flow templates
-    from core.flow_registry import flow_registry
-    flow_registry.load_all_flows()
-    logger.info("flows_loaded", count=len(flow_registry.flows))
-    
-    # Embed flows into ChromaDB for semantic search
     try:
-        from core.llm.flow_selector import flow_selector
-        flows_list = flow_registry.list_flows()
-        flow_selector.embed_flows(flows_list)
-        logger.info("flows_embedded", count=len(flows_list))
+        from core.flow_registry import flow_registry
+        flow_registry.load_all_flows()
+        logger.info(f"Loaded {len(flow_registry.flows)} flow templates")
     except Exception as e:
-        logger.warning("flow_embedding_failed", error=str(e))
+        logger.warning(f"Failed to load flow templates: {e}")
 
 # Shutdown event
 @app.on_event("shutdown")
 async def shutdown_event():
-    logger.info("api_shutdown", message="Graceful shutdown initiated")
+    logger.info("API shutdown - Graceful shutdown initiated")
