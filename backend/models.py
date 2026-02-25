@@ -110,6 +110,23 @@ class FlowTemplate(Base):
     is_active = Column(Boolean, default=True)
 
 
+class Schedule(Base):
+    """Scheduled test execution"""
+    __tablename__ = "schedules"
+    
+    id = Column(String(100), primary_key=True)
+    name = Column(String(200), nullable=False)
+    flow_id = Column(String(100), nullable=False)
+    cron_expression = Column(String(100), nullable=False)
+    variables = Column(JSON)
+    test_env_id = Column(String(100))
+    is_active = Column(Boolean, default=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    last_run_at = Column(DateTime, nullable=True)
+    next_run_at = Column(DateTime, nullable=True)
+    total_runs = Column(Integer, default=0)
+
+
 # Create all tables
 def init_db():
     Base.metadata.create_all(bind=engine)
