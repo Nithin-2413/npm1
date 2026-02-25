@@ -99,6 +99,7 @@ def main():
     all_checks.append(check_file_exists("/app/README.md", "Main README"))
     all_checks.append(check_file_exists("/app/DOCUMENTATION.md", "Phase 1 documentation"))
     all_checks.append(check_file_exists("/app/PHASE2_DOCUMENTATION.md", "Phase 2 documentation"))
+    all_checks.append(check_file_exists("/app/PHASE3_DOCUMENTATION.md", "Phase 3 documentation"))
     all_checks.append(check_file_exists("/app/image_testing.md", "Image testing guide"))
     print()
     
