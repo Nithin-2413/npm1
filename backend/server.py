@@ -64,13 +64,17 @@ app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 api_router = APIRouter(prefix="/api")
 
 # Import routers
-from routers import runs, flows, secrets, network_rca
+from routers import runs, flows, secrets, network_rca, batch, scheduling, reporting, health
 
 # Include routers
+api_router.include_router(health.router)  # Health at top level
 api_router.include_router(runs.router)
 api_router.include_router(flows.router)
 api_router.include_router(secrets.router)
 api_router.include_router(network_rca.router)
+api_router.include_router(batch.router)
+api_router.include_router(scheduling.router)
+api_router.include_router(reporting.router)
 
 # Health check endpoint
 @api_router.get("/health")
