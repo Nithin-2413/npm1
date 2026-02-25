@@ -71,6 +71,14 @@ def main():
     all_checks.append(check_file_exists("/app/backend/core/llm/step_builder.py", "Step builder"))
     print()
     
+    # 3c. Phase 3 Network & RCA
+    print("🔍 Phase 3 Network Monitoring & RCA:")
+    all_checks.append(check_file_exists("/app/backend/core/network_monitor.py", "Network monitor"))
+    all_checks.append(check_file_exists("/app/backend/core/llm/rca_engine.py", "RCA engine"))
+    all_checks.append(check_file_exists("/app/backend/core/llm/self_healer.py", "Self-healer"))
+    all_checks.append(check_file_exists("/app/backend/routers/network_rca.py", "Network/RCA router"))
+    print()
+    
     # 4. Flow Templates
     print("📋 Flow Templates:")
     all_checks.append(check_directory_exists("/app/flows/templates", "Templates directory"))
