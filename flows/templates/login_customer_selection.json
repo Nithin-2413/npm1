@@ -1,0 +1,138 @@
+{
+  "id": "login_customer_selection",
+  "name": "Login and Customer Selection",
+  "category": "authentication",
+  "description": "Login to the application and select a customer from the dashboard",
+  "estimated_duration_seconds": 30,
+  "required_params": ["url", "username", "password"],
+  "optional_params": ["customer"],
+  "defaults": {
+    "customer": null
+  },
+  "steps": [
+    {
+      "step": 1,
+      "description": "Navigate to login page",
+      "action": "navigate",
+      "locator_strategies": [
+        {
+          "priority": 1,
+          "type": "url",
+          "value": "{{url}}"
+        }
+      ],
+      "human_reasoning": "Start by navigating to the application login page"
+    },
+    {
+      "step": 2,
+      "description": "Fill username field",
+      "action": "fill_field",
+      "locator_strategies": [
+        {
+          "priority": 1,
+          "type": "label",
+          "value": "Username"
+        },
+        {
+          "priority": 2,
+          "type": "placeholder",
+          "value": "Enter username"
+        },
+        {
+          "priority": 3,
+          "type": "selector",
+          "value": "input[name='username']"
+        }
+      ],
+      "value": "{{username}}",
+      "human_reasoning": "Enter the username in the login form"
+    },
+    {
+      "step": 3,
+      "description": "Fill password field",
+      "action": "fill_field",
+      "locator_strategies": [
+        {
+          "priority": 1,
+          "type": "label",
+          "value": "Password"
+        },
+        {
+          "priority": 2,
+          "type": "placeholder",
+          "value": "Enter password"
+        },
+        {
+          "priority": 3,
+          "type": "selector",
+          "value": "input[name='password']"
+        }
+      ],
+      "value": "{{password}}",
+      "human_reasoning": "Enter the password in the login form"
+    },
+    {
+      "step": 4,
+      "description": "Click login button",
+      "action": "click_button",
+      "locator_strategies": [
+        {
+          "priority": 1,
+          "type": "role",
+          "name": "Login"
+        },
+        {
+          "priority": 2,
+          "type": "role",
+          "name": "Sign In"
+        },
+        {
+          "priority": 3,
+          "type": "selector",
+          "value": "button[type='submit']"
+        }
+      ],
+      "human_reasoning": "Submit the login form"
+    },
+    {
+      "step": 5,
+      "description": "Wait for dashboard to load",
+      "action": "wait_for_element",
+      "locator_strategies": [
+        {
+          "priority": 1,
+          "type": "text",
+          "value": "Dashboard"
+        },
+        {
+          "priority": 2,
+          "type": "selector",
+          "value": ".dashboard"
+        }
+      ],
+      "max_wait_ms": 15000,
+      "human_reasoning": "Wait for successful login and dashboard load"
+    },
+    {
+      "step": 6,
+      "description": "Select customer (if provided)",
+      "action": "select_dropdown",
+      "locator_strategies": [
+        {
+          "priority": 1,
+          "type": "label",
+          "value": "Select Customer"
+        },
+        {
+          "priority": 2,
+          "type": "selector",
+          "value": "select[name='customer']"
+        }
+      ],
+      "select_value": "{{customer}}",
+      "select_by": "text",
+      "conditional": "customer",
+      "human_reasoning": "Select a specific customer if provided in parameters"
+    }
+  ]
+}

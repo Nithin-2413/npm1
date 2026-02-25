@@ -1,0 +1,336 @@
+{
+  "id": "create_order_single_tn",
+  "name": "Create Order with Single TN",
+  "category": "order_creation",
+  "description": "Create a new order for a single telephone number with existing location",
+  "estimated_duration_seconds": 90,
+  "required_params": ["service_location"],
+  "optional_params": ["customer", "quantity", "user_type", "order_type"],
+  "defaults": {
+    "quantity": 1,
+    "user_type": "existing",
+    "order_type": "Add New Phone Numbers"
+  },
+  "steps": [
+    {
+      "step": 1,
+      "description": "Wait after login",
+      "action": "wait",
+      "duration_ms": 2000,
+      "human_reasoning": "Give the dashboard time to fully render"
+    },
+    {
+      "step": 2,
+      "description": "Click Create Order button",
+      "action": "click_button",
+      "locator_strategies": [
+        {
+          "priority": 1,
+          "type": "role",
+          "name": "Create Order"
+        },
+        {
+          "priority": 2,
+          "type": "text",
+          "value": "Create Order"
+        },
+        {
+          "priority": 3,
+          "type": "selector",
+          "value": "button:has-text('Create Order')"
+        }
+      ],
+      "human_reasoning": "Initiate the order creation flow"
+    },
+    {
+      "step": 3,
+      "description": "Wait for location dropdown",
+      "action": "wait_for_element",
+      "locator_strategies": [
+        {
+          "priority": 1,
+          "type": "label",
+          "value": "Service Location"
+        },
+        {
+          "priority": 2,
+          "type": "selector",
+          "value": "select[name='location']"
+        }
+      ],
+      "max_wait_ms": 10000,
+      "human_reasoning": "Wait for order form to appear with location dropdown"
+    },
+    {
+      "step": 4,
+      "description": "Select service location",
+      "action": "select_dropdown",
+      "locator_strategies": [
+        {
+          "priority": 1,
+          "type": "label",
+          "value": "Service Location"
+        },
+        {
+          "priority": 2,
+          "type": "selector",
+          "value": "select[name='location']"
+        }
+      ],
+      "select_value": "{{service_location}}",
+      "select_by": "text",
+      "human_reasoning": "Select the service location from dropdown"
+    },
+    {
+      "step": 5,
+      "description": "Click Continue after location selection",
+      "action": "click_button",
+      "locator_strategies": [
+        {
+          "priority": 1,
+          "type": "role",
+          "name": "Continue"
+        },
+        {
+          "priority": 2,
+          "type": "text",
+          "value": "Continue"
+        }
+      ],
+      "human_reasoning": "Proceed to order type selection"
+    },
+    {
+      "step": 6,
+      "description": "Fill order type search field",
+      "action": "fill_field",
+      "locator_strategies": [
+        {
+          "priority": 1,
+          "type": "placeholder",
+          "value": "Search..."
+        },
+        {
+          "priority": 2,
+          "type": "label",
+          "value": "Order Type"
+        },
+        {
+          "priority": 3,
+          "type": "selector",
+          "value": "input[type='search']"
+        }
+      ],
+      "value": "{{order_type}}",
+      "human_reasoning": "Search for order type in the dropdown"
+    },
+    {
+      "step": 7,
+      "description": "Click order type from dropdown results",
+      "action": "click_button",
+      "locator_strategies": [
+        {
+          "priority": 1,
+          "type": "text",
+          "value": "{{order_type}}"
+        }
+      ],
+      "wait_for_element": true,
+      "human_reasoning": "Select the order type from search results"
+    },
+    {
+      "step": 8,
+      "description": "Click Continue for user selection",
+      "action": "click_button",
+      "locator_strategies": [
+        {
+          "priority": 1,
+          "type": "role",
+          "name": "Continue"
+        },
+        {
+          "priority": 2,
+          "type": "text",
+          "value": "Continue"
+        }
+      ],
+      "human_reasoning": "Proceed to quantity and user assignment"
+    },
+    {
+      "step": 9,
+      "description": "Double-click and clear quantity field",
+      "action": "double_click_field",
+      "locator_strategies": [
+        {
+          "priority": 1,
+          "type": "label",
+          "value": "Quantity"
+        },
+        {
+          "priority": 2,
+          "type": "selector",
+          "value": "input[name='quantity']"
+        }
+      ],
+      "human_reasoning": "Clear existing quantity value by double-clicking"
+    },
+    {
+      "step": 10,
+      "description": "Type quantity value",
+      "action": "fill_field",
+      "locator_strategies": [
+        {
+          "priority": 1,
+          "type": "label",
+          "value": "Quantity"
+        },
+        {
+          "priority": 2,
+          "type": "selector",
+          "value": "input[name='quantity']"
+        }
+      ],
+      "value": "{{quantity}}",
+      "human_reasoning": "Enter the desired quantity of phone numbers"
+    },
+    {
+      "step": 11,
+      "description": "Click Reserve Numbers button",
+      "action": "click_button",
+      "locator_strategies": [
+        {
+          "priority": 1,
+          "type": "role",
+          "name": "Reserve Numbers"
+        },
+        {
+          "priority": 2,
+          "type": "text",
+          "value": "Reserve Numbers"
+        }
+      ],
+      "human_reasoning": "Reserve the telephone numbers"
+    },
+    {
+      "step": 12,
+      "description": "Select user from Assign User dropdown",
+      "action": "select_dropdown",
+      "locator_strategies": [
+        {
+          "priority": 1,
+          "type": "label",
+          "value": "Assign User"
+        },
+        {
+          "priority": 2,
+          "type": "selector",
+          "value": "select[name='user']"
+        }
+      ],
+      "select_value": "1",
+      "select_by": "index",
+      "human_reasoning": "Assign the first available user"
+    },
+    {
+      "step": 13,
+      "description": "Click Review Order button",
+      "action": "click_button",
+      "locator_strategies": [
+        {
+          "priority": 1,
+          "type": "role",
+          "name": "Review Order"
+        },
+        {
+          "priority": 2,
+          "type": "text",
+          "value": "Review Order"
+        }
+      ],
+      "human_reasoning": "Proceed to order review page"
+    },
+    {
+      "step": 14,
+      "description": "Click Submit Order (first click)",
+      "action": "click_button",
+      "locator_strategies": [
+        {
+          "priority": 1,
+          "type": "role",
+          "name": "Submit Order"
+        },
+        {
+          "priority": 2,
+          "type": "text",
+          "value": "Submit Order"
+        }
+      ],
+      "human_reasoning": "Submit the order for processing"
+    },
+    {
+      "step": 15,
+      "description": "Click Submit Order (second click in modal)",
+      "action": "click_button",
+      "locator_strategies": [
+        {
+          "priority": 1,
+          "type": "role",
+          "name": "Submit Order"
+        },
+        {
+          "priority": 2,
+          "type": "text",
+          "value": "Submit Order"
+        }
+      ],
+      "wait_for_modal": true,
+      "human_reasoning": "Confirm submission in the confirmation modal"
+    },
+    {
+      "step": 16,
+      "description": "Extract Order ID",
+      "action": "extract_text",
+      "locator_strategies": [
+        {
+          "priority": 1,
+          "type": "text",
+          "value": "Order ID"
+        },
+        {
+          "priority": 2,
+          "type": "selector",
+          "value": ".order-id"
+        }
+      ],
+      "save_to_context": "order_id",
+      "extract_pattern": "\\d+",
+      "human_reasoning": "Capture the order ID for verification"
+    },
+    {
+      "step": 17,
+      "description": "Click OK to close success message",
+      "action": "click_button",
+      "locator_strategies": [
+        {
+          "priority": 1,
+          "type": "role",
+          "name": "OK"
+        },
+        {
+          "priority": 2,
+          "type": "text",
+          "value": "OK"
+        }
+      ],
+      "human_reasoning": "Close the success confirmation modal"
+    },
+    {
+      "step": 18,
+      "description": "Validate order in database",
+      "action": "db_validate",
+      "wait_before_ms": 20000,
+      "order_id_from_context": "order_id",
+      "expected_fields": ["status", "service_location", "quantity"],
+      "human_reasoning": "Verify the order was created successfully in the backend"
+    }
+  ]
+}

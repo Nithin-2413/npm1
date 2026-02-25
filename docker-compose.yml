@@ -1,0 +1,93 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: qa_postgres
+    environment:
+      POSTGRES_USER: qa_user
+      POSTGRES_PASSWORD: qa_password
+      POSTGRES_DB: qa_automation
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U qa_user"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: qa_redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  chromadb:
+    image: chromadb/chroma:latest
+    container_name: qa_chromadb
+    ports:
+      - "8000:8000"
+    volumes:
+      - chroma_data:/chroma/chroma
+    environment:
+      - IS_PERSISTENT=TRUE
+      - ANONYMIZED_TELEMETRY=FALSE
+
+  fastapi:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: qa_fastapi
+    ports:
+      - "8001:8001"
+    environment:
+      - DATABASE_URL=postgresql://qa_user:qa_password@postgres:5432/qa_automation
+      - REDIS_URL=redis://redis:6379/0
+      - CHROMADB_URL=http://chromadb:8000
+      - CELERY_BROKER_URL=redis://redis:6379/1
+      - CELERY_RESULT_BACKEND=redis://redis:6379/2
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      chromadb:
+        condition: service_started
+    volumes:
+      - ./backend:/app
+      - ./flows:/app/flows
+    command: uvicorn server:app --host 0.0.0.0 --port 8001 --reload
+
+  celery_worker:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: qa_celery_worker
+    environment:
+      - DATABASE_URL=postgresql://qa_user:qa_password@postgres:5432/qa_automation
+      - REDIS_URL=redis://redis:6379/0
+      - CHROMADB_URL=http://chromadb:8000
+      - CELERY_BROKER_URL=redis://redis:6379/1
+      - CELERY_RESULT_BACKEND=redis://redis:6379/2
+    depends_on:
+      - postgres
+      - redis
+      - chromadb
+    volumes:
+      - ./backend:/app
+      - ./flows:/app/flows
+    command: celery -A tasks.celery_app worker --loglevel=info --concurrency=2
+
+volumes:
+  postgres_data:
+  redis_data:
+  chroma_data:

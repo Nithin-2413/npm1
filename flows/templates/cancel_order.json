@@ -1,0 +1,219 @@
+{
+  "id": "cancel_order",
+  "name": "Cancel Existing Order",
+  "category": "order_management",
+  "description": "Cancel an existing order by order ID",
+  "estimated_duration_seconds": 45,
+  "required_params": ["order_id"],
+  "optional_params": ["cancellation_reason"],
+  "defaults": {
+    "cancellation_reason": "Test cancellation"
+  },
+  "steps": [
+    {
+      "step": 1,
+      "description": "Navigate to Orders page",
+      "action": "click_button",
+      "locator_strategies": [
+        {
+          "priority": 1,
+          "type": "role",
+          "name": "Orders"
+        },
+        {
+          "priority": 2,
+          "type": "text",
+          "value": "Orders"
+        },
+        {
+          "priority": 3,
+          "type": "link",
+          "value": "Orders"
+        }
+      ],
+      "human_reasoning": "Navigate to the orders management page"
+    },
+    {
+      "step": 2,
+      "description": "Wait for orders list to load",
+      "action": "wait_for_element",
+      "locator_strategies": [
+        {
+          "priority": 1,
+          "type": "selector",
+          "value": ".orders-table"
+        },
+        {
+          "priority": 2,
+          "type": "text",
+          "value": "Order ID"
+        }
+      ],
+      "max_wait_ms": 10000,
+      "human_reasoning": "Wait for orders table to render"
+    },
+    {
+      "step": 3,
+      "description": "Search for order by ID",
+      "action": "fill_field",
+      "locator_strategies": [
+        {
+          "priority": 1,
+          "type": "placeholder",
+          "value": "Search orders..."
+        },
+        {
+          "priority": 2,
+          "type": "label",
+          "value": "Search"
+        },
+        {
+          "priority": 3,
+          "type": "selector",
+          "value": "input[type='search']"
+        }
+      ],
+      "value": "{{order_id}}",
+      "human_reasoning": "Filter orders to find the specific order"
+    },
+    {
+      "step": 4,
+      "description": "Click on the order row",
+      "action": "click_button",
+      "locator_strategies": [
+        {
+          "priority": 1,
+          "type": "text",
+          "value": "{{order_id}}"
+        },
+        {
+          "priority": 2,
+          "type": "selector",
+          "value": "tr:has-text('{{order_id}}')"
+        }
+      ],
+      "human_reasoning": "Open the order details"
+    },
+    {
+      "step": 5,
+      "description": "Wait for order details page",
+      "action": "wait_for_element",
+      "locator_strategies": [
+        {
+          "priority": 1,
+          "type": "text",
+          "value": "Order Details"
+        },
+        {
+          "priority": 2,
+          "type": "selector",
+          "value": ".order-details"
+        }
+      ],
+      "max_wait_ms": 5000,
+      "human_reasoning": "Wait for order details to load"
+    },
+    {
+      "step": 6,
+      "description": "Click Cancel Order button",
+      "action": "click_button",
+      "locator_strategies": [
+        {
+          "priority": 1,
+          "type": "role",
+          "name": "Cancel Order"
+        },
+        {
+          "priority": 2,
+          "type": "text",
+          "value": "Cancel Order"
+        }
+      ],
+      "human_reasoning": "Initiate order cancellation"
+    },
+    {
+      "step": 7,
+      "description": "Fill cancellation reason",
+      "action": "fill_field",
+      "locator_strategies": [
+        {
+          "priority": 1,
+          "type": "label",
+          "value": "Cancellation Reason"
+        },
+        {
+          "priority": 2,
+          "type": "placeholder",
+          "value": "Enter reason"
+        },
+        {
+          "priority": 3,
+          "type": "selector",
+          "value": "textarea[name='reason']"
+        }
+      ],
+      "value": "{{cancellation_reason}}",
+      "human_reasoning": "Provide reason for cancellation"
+    },
+    {
+      "step": 8,
+      "description": "Confirm cancellation",
+      "action": "click_button",
+      "locator_strategies": [
+        {
+          "priority": 1,
+          "type": "role",
+          "name": "Confirm"
+        },
+        {
+          "priority": 2,
+          "type": "text",
+          "value": "Confirm"
+        },
+        {
+          "priority": 3,
+          "type": "role",
+          "name": "Yes"
+        }
+      ],
+      "human_reasoning": "Confirm the cancellation action"
+    },
+    {
+      "step": 9,
+      "description": "Wait for success message",
+      "action": "wait_for_element",
+      "locator_strategies": [
+        {
+          "priority": 1,
+          "type": "text",
+          "value": "Order cancelled successfully"
+        },
+        {
+          "priority": 2,
+          "type": "text",
+          "value": "Success"
+        }
+      ],
+      "max_wait_ms": 10000,
+      "human_reasoning": "Verify cancellation was successful"
+    },
+    {
+      "step": 10,
+      "description": "Click OK to close confirmation",
+      "action": "click_button",
+      "locator_strategies": [
+        {
+          "priority": 1,
+          "type": "role",
+          "name": "OK"
+        },
+        {
+          "priority": 2,
+          "type": "text",
+          "value": "OK"
+        }
+      ],
+      "human_reasoning": "Close the success message"
+    }
+  ]
+}
