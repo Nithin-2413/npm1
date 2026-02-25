@@ -101,6 +101,9 @@ async def _execute_test_run_async(run_id: str, flow_id: Optional[str],
             step_description = step['description']
             action = step['action']
             
+            # Update network monitor step
+            playwright_engine.set_current_step(step_number)
+            
             # Update progress
             context.set("progress", {
                 "current_step": step_number,
