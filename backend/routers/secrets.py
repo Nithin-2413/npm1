@@ -1,13 +1,18 @@
-from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy.orm import Session
+from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 from typing import List, Optional
-from datetime import datetime
+from datetime import datetime, timezone
 import uuid
+import logging
 
-from models import get_db, TestEnvironment
+from models import (
+    create_test_environment, get_test_environment, 
+    list_test_environments, update_test_environment,
+    delete_test_environment
+)
 
 router = APIRouter(prefix="/secrets", tags=["Test Environments"])
+logger = logging.getLogger(__name__)
 
 class SecretCreate(BaseModel):
     test_env: str
@@ -18,91 +23,110 @@ class SecretCreate(BaseModel):
 
 class SecretResponse(BaseModel):
     id: str
+    env_id: str
     test_env: str
-    release_branch: Optional[str]
+    release_branch: Optional[str] = None
     url: str
-    username: Optional[str]
-    created_at: datetime
-    
-    class Config:
-        from_attributes = True
+    username: Optional[str] = None
+    created_at: Optional[str] = None
 
 @router.post("", response_model=SecretResponse)
-async def create_secret(secret: SecretCreate, db: Session = Depends(get_db)):
-    """
-    Create a new test environment secret
-    """
-    secret_id = str(uuid.uuid4())
+async def create_secret(secret: SecretCreate):
+    """Create a new test environment secret"""
+    env_id = str(uuid.uuid4())
     
-    db_secret = TestEnvironment(
-        id=secret_id,
+    result = create_test_environment({
+        "env_id": env_id,
+        "test_env": secret.test_env,
+        "release_branch": secret.release_branch,
+        "url": secret.url,
+        "username": secret.username,
+        "password": secret.password
+    })
+    
+    return SecretResponse(
+        id=result.get('id', env_id),
+        env_id=env_id,
         test_env=secret.test_env,
         release_branch=secret.release_branch,
         url=secret.url,
         username=secret.username,
-        password=secret.password  # Should be encrypted in production
+        created_at=result.get('created_at')
     )
-    
-    db.add(db_secret)
-    db.commit()
-    db.refresh(db_secret)
-    
-    return db_secret
 
 @router.get("", response_model=List[SecretResponse])
-async def list_secrets(db: Session = Depends(get_db)):
-    """
-    List all test environment secrets (without passwords)
-    """
-    secrets = db.query(TestEnvironment).all()
-    return secrets
+async def list_secrets():
+    """List all test environment secrets (without passwords)"""
+    secrets = list_test_environments()
+    return [
+        SecretResponse(
+            id=s.get('id', s.get('env_id', '')),
+            env_id=s.get('env_id', ''),
+            test_env=s.get('test_env', ''),
+            release_branch=s.get('release_branch'),
+            url=s.get('url', ''),
+            username=s.get('username'),
+            created_at=s.get('created_at')
+        )
+        for s in secrets
+    ]
 
-@router.get("/{secret_id}", response_model=SecretResponse)
-async def get_secret(secret_id: str, db: Session = Depends(get_db)):
-    """
-    Get a specific test environment secret
-    """
-    secret = db.query(TestEnvironment).filter(TestEnvironment.id == secret_id).first()
+@router.get("/{env_id}", response_model=SecretResponse)
+async def get_secret(env_id: str):
+    """Get a specific test environment secret"""
+    secret = get_test_environment(env_id)
     
     if not secret:
-        raise HTTPException(status_code=404, detail=f"Secret '{secret_id}' not found")
+        raise HTTPException(status_code=404, detail=f"Secret '{env_id}' not found")
     
-    return secret
+    return SecretResponse(
+        id=secret.get('id', env_id),
+        env_id=secret.get('env_id', env_id),
+        test_env=secret.get('test_env', ''),
+        release_branch=secret.get('release_branch'),
+        url=secret.get('url', ''),
+        username=secret.get('username'),
+        created_at=secret.get('created_at')
+    )
 
-@router.put("/{secret_id}", response_model=SecretResponse)
-async def update_secret(secret_id: str, secret: SecretCreate, db: Session = Depends(get_db)):
-    """
-    Update a test environment secret
-    """
-    db_secret = db.query(TestEnvironment).filter(TestEnvironment.id == secret_id).first()
+@router.put("/{env_id}", response_model=SecretResponse)
+async def update_secret(env_id: str, secret: SecretCreate):
+    """Update a test environment secret"""
+    existing = get_test_environment(env_id)
     
-    if not db_secret:
-        raise HTTPException(status_code=404, detail=f"Secret '{secret_id}' not found")
+    if not existing:
+        raise HTTPException(status_code=404, detail=f"Secret '{env_id}' not found")
     
-    db_secret.test_env = secret.test_env
-    db_secret.release_branch = secret.release_branch
-    db_secret.url = secret.url
-    db_secret.username = secret.username
+    updates = {
+        "test_env": secret.test_env,
+        "release_branch": secret.release_branch,
+        "url": secret.url,
+        "username": secret.username
+    }
+    
     if secret.password:
-        db_secret.password = secret.password
-    db_secret.updated_at = datetime.utcnow()
+        updates["password"] = secret.password
     
-    db.commit()
-    db.refresh(db_secret)
+    result = update_test_environment(env_id, updates)
     
-    return db_secret
+    return SecretResponse(
+        id=result.get('id', env_id),
+        env_id=env_id,
+        test_env=secret.test_env,
+        release_branch=secret.release_branch,
+        url=secret.url,
+        username=secret.username,
+        created_at=result.get('created_at')
+    )
 
-@router.delete("/{secret_id}")
-async def delete_secret(secret_id: str, db: Session = Depends(get_db)):
-    """
-    Delete a test environment secret
-    """
-    db_secret = db.query(TestEnvironment).filter(TestEnvironment.id == secret_id).first()
+@router.delete("/{env_id}")
+async def delete_secret(env_id: str):
+    """Delete a test environment secret"""
+    existing = get_test_environment(env_id)
     
-    if not db_secret:
-        raise HTTPException(status_code=404, detail=f"Secret '{secret_id}' not found")
+    if not existing:
+        raise HTTPException(status_code=404, detail=f"Secret '{env_id}' not found")
     
-    db.delete(db_secret)
-    db.commit()
+    delete_test_environment(env_id)
     
     return {"message": "Secret deleted successfully"}
