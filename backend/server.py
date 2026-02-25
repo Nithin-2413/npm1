@@ -149,23 +149,23 @@ app.add_middleware(
 # Startup event
 @app.on_event("startup")
 async def startup_event():
-    logger.info("QA Automation API started successfully")
+    logger.info("api_startup", version="2.0.0")
     
     # Load flow templates
     from core.flow_registry import flow_registry
     flow_registry.load_all_flows()
-    logger.info(f"Loaded {len(flow_registry.flows)} flow templates")
+    logger.info("flows_loaded", count=len(flow_registry.flows))
     
     # Embed flows into ChromaDB for semantic search
     try:
         from core.llm.flow_selector import flow_selector
         flows_list = flow_registry.list_flows()
         flow_selector.embed_flows(flows_list)
-        logger.info("Flows embedded into ChromaDB for semantic search")
+        logger.info("flows_embedded", count=len(flows_list))
     except Exception as e:
-        logger.warning(f"Failed to embed flows: {e}. Semantic search may not work optimally.")
+        logger.warning("flow_embedding_failed", error=str(e))
 
 # Shutdown event
 @app.on_event("shutdown")
 async def shutdown_event():
-    logger.info("QA Automation API shutting down")
+    logger.info("api_shutdown", message="Graceful shutdown initiated")
