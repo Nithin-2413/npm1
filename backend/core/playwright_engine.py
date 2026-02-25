@@ -602,8 +602,12 @@ class PlaywrightEngine:
     
     def get_network_logs(self) -> list:
         """Get all network logs"""
-        return self.network_logs
+        return self.network_monitor.get_all_network_events()
     
     def get_console_logs(self) -> list:
         """Get all console logs"""
-        return self.console_logs
+        return self.network_monitor.get_all_console_events()
+    
+    def set_current_step(self, step_number: int) -> None:
+        """Update current step number for network monitor"""
+        self.network_monitor.set_step(step_number)
